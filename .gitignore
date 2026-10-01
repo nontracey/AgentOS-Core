@@ -67,3 +67,6 @@ deploy/components/image-pin.txt
 deploy/components/compose.local.json
 
 .pytest-tmp/
+
+# Isolated container acceptance state includes identity material.
+/container-check-state/

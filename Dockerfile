@@ -6,7 +6,9 @@ RUN npm ci --no-audit --no-fund
 COPY frontend/workflow/ ./
 RUN npm run typecheck && npm run build
 # The upstream CLI owns inference and compaction; no custom execution engine.
-RUN npm install --prefix /opt/codex --omit=dev --no-audit --no-fund @openai/codex@0.159.2
+ARG NPM_REGISTRY=https://registry.npmjs.org
+RUN npm install --prefix /opt/codex --omit=dev --no-audit --no-fund \
+    --registry="$NPM_REGISTRY" --fetch-retries=1 --fetch-timeout=180000 @openai/codex@0.159.2
 
 FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS app
 
@@ -31,9 +33,14 @@ COPY --from=assets /opt/codex /opt/codex
 COPY --from=assets /usr/local/bin/node /usr/local/bin/node
 RUN uv sync --frozen --no-dev
 
+# Node's official binary requires the matching Debian C++ runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN printf 'git_commit=%s\nbuild_time=%s\n' "$GIT_COMMIT" "$BUILD_TIME" > /app/BUILD_INFO
 
 ENV PATH="/app/.venv/bin:/opt/codex/node_modules/.bin:$PATH" AGENTOS_DATA_DIR=/data
+RUN node --version && codex --version
 EXPOSE 8000
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz')" || exit 1

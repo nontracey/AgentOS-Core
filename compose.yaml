@@ -9,7 +9,7 @@ services:
       AGENTOS_DATA_DIR: /data
       # AGENTOS_MODEL_PROVIDER: openai_compat
       # AGENTOS_MODEL_BASE_URL: https://your-endpoint/v1
-      # AGENTOS_MODEL_API_KEY: （用 `docker compose run gateway env` 注入或 secrets，勿入库）
+      # AGENTOS_MODEL_API_KEY: ${AGENTOS_MODEL_API_KEY:?inject with a protected environment or secret}
     volumes:
       - agentos-data:/data
     restart: unless-stopped
