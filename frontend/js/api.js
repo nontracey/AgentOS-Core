@@ -11,8 +11,16 @@ const REFRESH_PERSIST_KEY = "agentos_refresh";        // 保持登录（localSto
 const REFRESH_SESSION_KEY = "agentos_refresh_session"; // 不保持（sessionStorage）
 const SESSION_KIND_KEY = "agentos_session_kind";
 const STATIC_TOKEN_KEY = "agentos_token";              // 高级回退：粘贴令牌（sessionStorage）
+const SESSION_EPOCH_KEY = "agentos_session_epoch";
 
 export const TOKEN_KEY = STATIC_TOKEN_KEY;
+export function getSessionEpoch() { return sessionStorage.getItem(SESSION_EPOCH_KEY) || ""; }
+
+export function bindSessionRequest(request) {
+  const epoch = getSessionEpoch();
+  return (...args) => epoch === getSessionEpoch() ? request(...args)
+    : Promise.reject(new ApiError(401, "session_changed", "会话已变更，请重新打开工作流"));
+}
 
 export class ApiError extends Error {
   constructor(status, code, message) {
@@ -39,6 +47,7 @@ export function getToken() {
   return getAccessToken() || getStaticToken();
 }
 function storeTokens(access, refresh, remember, kind = sessionStorage.getItem(SESSION_KIND_KEY) || "admin") {
+  if (!getSessionEpoch()) sessionStorage.setItem(SESSION_EPOCH_KEY, crypto.randomUUID());
   sessionStorage.setItem(SESSION_KIND_KEY, kind);
   sessionStorage.setItem(ACCESS_KEY, access);
   if (refresh) {
@@ -52,6 +61,7 @@ function storeTokens(access, refresh, remember, kind = sessionStorage.getItem(SE
   }
 }
 export function clearAuth() {
+  sessionStorage.removeItem(SESSION_EPOCH_KEY);
   sessionStorage.removeItem(ACCESS_KEY);
   sessionStorage.removeItem(REFRESH_SESSION_KEY);
   sessionStorage.removeItem(STATIC_TOKEN_KEY);
@@ -63,6 +73,7 @@ export function clearAuth() {
 }
 /** 高级回退：粘贴令牌（静态 owner token），仅本标签页会话。 */
 export function setStaticToken(t) {
+  sessionStorage.setItem(SESSION_EPOCH_KEY, crypto.randomUUID());
   sessionStorage.setItem(SESSION_KIND_KEY, "admin");
   sessionStorage.setItem(STATIC_TOKEN_KEY, t);
 }
@@ -158,6 +169,7 @@ export function createApi() {
         throw new ApiError(resp.status, body.detail?.code || "denied",
           body.detail?.message || `登录失败（HTTP ${resp.status}）`);
       }
+      sessionStorage.setItem(SESSION_EPOCH_KEY, crypto.randomUUID());
       storeTokens(body.access_token, body.refresh_token, remember, "admin");
       return body;
     },
@@ -247,6 +259,10 @@ export function createApi() {
     // ---- 能力（只读健康）----
     listSkills: (all = false) => request(`/v1/skills${all ? "?include_disabled=true" : ""}`),
     listMcp: () => request("/v1/mcp/servers"),
+    listMcpProposals: () => request("/v1/mcp/proposals"),
+    proposeMcp: (body) => request("/v1/mcp/proposals", {method: "POST", body}),
+    applyMcpProposal: (id, reviewed_hash) => request(`/v1/mcp/proposals/${encodeURIComponent(id)}/apply`,
+      {method: "POST", body: {reviewed_hash}}),
     listNodes: () => request("/v1/nodes"),
     knowledgeCapabilities: () => request("/v1/knowledge/capabilities"),
     /** 能力中心的管理动作（服务端一律 admin 核权；游客/旧 UI 直调仍拒）。 */
@@ -284,6 +300,7 @@ export function createApi() {
         throw new ApiError(resp.status, d.code || "denied", d.message || "演示暂时不可进入");
       }
       sessionStorage.removeItem("agentos_guest_expired");
+      sessionStorage.setItem(SESSION_EPOCH_KEY, crypto.randomUUID());
       storeTokens(body.access_token, body.refresh_token, false, "guest");
       return body;
     },
@@ -299,6 +316,7 @@ export function createApi() {
           body.detail?.message || `兑换失败（HTTP ${resp.status}）`);
       }
       // 游客会话只在当前标签页：不写入 localStorage 的长期 refresh
+      sessionStorage.setItem(SESSION_EPOCH_KEY, crypto.randomUUID());
       sessionStorage.removeItem("agentos_guest_expired");
       storeTokens(body.access_token, body.refresh_token, false, "guest");
       return body;

@@ -63,3 +63,10 @@
 }
 
 :root[data-theme="dark"] .flow-editor .flow-primary { color:#202123; }
+
+.flow-config fieldset { min-width:0; border:1px solid var(--border); border-radius:8px; padding:12px; margin:16px 0; }
+.flow-config fieldset legend { padding:0 4px; font-size:13px; color:var(--text-2); }
+.flow-config fieldset p { overflow-wrap:anywhere; }
+.flow-config input[type="checkbox"] { width:auto; }
+
+.flow-editor > .flow-content { min-width:0; margin:0; padding:0; border:0; }

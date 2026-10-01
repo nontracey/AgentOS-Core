@@ -44,6 +44,22 @@ class FlowGraph(BoundaryModel):
                 raise ValueError('unknown registered business template')
             if node.kind == 'condition' and node.config.get('operator') not in ('eq', 'ne', 'contains', 'exists'):
                 raise ValueError('condition operator must be explicitly supported')
+            def check_refs(value: Any, dependencies: list[str] = node.depends_on) -> None:
+                if isinstance(value, dict) and set(value) == {'$ref'}:
+                    path = value['$ref']
+                    if not isinstance(path, str) or not re.fullmatch(
+                            r'(inputs|nodes)(\.[a-zA-Z0-9_-]+)*', path):
+                        raise ValueError('invalid input reference')
+                    parts = path.split('.')
+                    if parts[0] == 'nodes' and (len(parts) < 2 or parts[1] not in dependencies):
+                        raise ValueError('node reference requires a declared dependency')
+                elif isinstance(value, dict):
+                    for item in value.values():
+                        check_refs(item)
+                elif isinstance(value, list):
+                    for item in value:
+                        check_refs(item)
+            check_refs(node.config)
         while len(done) < len(names):
             ready = {n.id for n in self.nodes if n.id not in done and set(n.depends_on) <= done}
             if not ready:

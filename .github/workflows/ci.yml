@@ -21,6 +21,9 @@ jobs:
         run: uv run mypy src/agentos
       - name: Import boundaries (kernel/runtime independence)
         run: uv run lint-imports
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Tests
         run: uv run pytest
       - name: Contract schema drift check
@@ -39,14 +42,12 @@ jobs:
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
       - name: Public file privacy gate (redacted)
         run: GITLEAKS_BIN=/tmp/gitleaks uv run python scripts/check_privacy.py
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
       - name: Build same-origin workflow editor
         working-directory: frontend/workflow
         run: |
           npm ci
           npm run typecheck
+          npm test
           npm run build
       - name: Build and verify standalone wheel
         run: |

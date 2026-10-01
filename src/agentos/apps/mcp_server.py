@@ -47,6 +47,50 @@ def mount(app: FastAPI, handle: SystemHandle) -> MCPServer:
         return actor, credential.token
 
     @server.tool()
+    async def capabilities_list() -> list[dict[str, Any]]:
+        """Discover currently scoped capabilities; discovery never grants execution rights."""
+        actor, _ = await identity()
+        handle.access.require(actor, 'capabilities.read')
+        from agentos.services.capabilities import CapabilityCatalog
+
+        assert isinstance(handle.deps.tools, CapabilityCatalog)
+        return await handle.deps.tools.describe(actor)
+
+    @server.tool()
+    async def mcp_connection_propose(config: dict[str, Any]) -> dict[str, Any]:
+        """Save a connection proposal only. No discovery, process or permissions change.
+
+        config: server_id, either url or command (argument list), env (env:VARIABLE
+        references only), risks, kind (tool or agent). Administrator reviews the
+        exact config/hash in Web UI, then probes and enables the connection.
+        """
+        actor, _ = await identity()
+        return handle.connections.propose(actor, config)
+
+    @server.tool()
+    async def workflow_definitions_list() -> list[dict[str, Any]]:
+        """Discover published immutable workflows for explicit versioned invocation."""
+        actor, _ = await identity()
+        handle.access.require(actor, 'workflow.list')
+        return handle.store.list_workflow_definitions(actor.tenant_id)
+
+    @server.tool()
+    async def workflow_start(workflow_id: str, version: int, inputs: dict[str, Any],
+                             idempotency_key: str) -> dict[str, Any]:
+        """Start an explicitly chosen version as a governed task; returns a launch receipt.
+
+        Every node still obeys scope, approval and configured per-task budget.
+        """
+        actor, _ = await identity()
+        handle.access.require_write_allowed(actor, 'workflow.start')
+        if not actor.has_scope('write'):
+            raise AgentOSError(ErrorCode.DENIED, 'workflow start requires write scope')
+        definition = handle.workflows.export(actor, workflow_id, version)['definition']
+        if definition.get('nodes') and handle.workflow_driver.engine is None:
+            raise AgentOSError(ErrorCode.UNAVAILABLE, 'workflow engine unavailable')
+        return handle.workflows.start(actor, workflow_id, version, inputs, idempotency_key)
+
+    @server.tool()
     async def task_submit(goal: str, idempotency_key: str) -> dict[str, Any]:
         """Submit a governed task; returns a persistent handle, never waits for the model."""
         actor, token = await identity()

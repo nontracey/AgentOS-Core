@@ -14,6 +14,8 @@ export function taskTitle(run) {
   return goal.startsWith("workflow:") ? "流程 · " + goal.slice(9) : goal;
 }
 export function capabilitySource(tool) {
+  if (tool.name?.startsWith("workflow.")) return "已发布工作流";
+  if (tool.description?.startsWith("[External Agent via MCP]")) return "外部 Agent · MCP";
   // MCP names are namespaced by the existing adapter; no guessed host identity.
   return tool.name.includes(":") ? "MCP 服务" : "核心工具";
 }

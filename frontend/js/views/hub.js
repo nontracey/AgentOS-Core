@@ -50,12 +50,13 @@ export async function renderHub(ctx) {
     try {
       const me = await api.authMe();
       admin = me.role === "admin";
-      const [capabilities, servers, skills, nodes, knowledge, catalog] = await Promise.all([
+      const [capabilities, servers, skills, nodes, knowledge, catalog, proposals] = await Promise.all([
         api.getCapabilities(),
         api.listMcp(), api.listSkills(admin), api.listNodes(), api.knowledgeCapabilities(), api.capabilityCatalog(),
+        admin ? api.listMcpProposals() : Promise.resolve([]),
       ]);
       if (stopped) return false;
-      snapshot = { capabilities, servers, skills, nodes, knowledge, catalog };
+      snapshot = { capabilities, servers, skills, nodes, knowledge, catalog, proposals };
       draw();
       return true;
     } catch (e) {
@@ -80,7 +81,7 @@ export async function renderHub(ctx) {
     if (!snapshot) return;
     const expanded = new Map([...el.querySelectorAll("[data-capability]")].map(card => [card.dataset.capability,
       [...card.querySelectorAll("details")].map(d => d.open)]));
-    const { capabilities, servers, skills, nodes, knowledge, catalog } = snapshot;
+    const { capabilities, servers, skills, nodes, knowledge, catalog, proposals } = snapshot;
     const cards = [];
     const actions = admin ? `<div class="hub-manage-actions">
       ${tab === "all" || tab === "mcp" ? '<button class="btn" data-hub-add="mcp">连接 MCP</button>' : ""}
@@ -104,6 +105,15 @@ export async function renderHub(ctx) {
       }
     }
     if (tab === "mcp") {
+      for (const proposal of proposals || []) {
+        if (proposal.applied) continue;
+        const config = proposal.payload.config;
+        cards.push(card({glyph: "plug", title: `接入草稿 · ${config.server_id}`, status: "待管理员确认",
+          desc: esc(config.kind === "agent" ? "外部 Agent · MCP 协议" : "MCP 工具服务"),
+          foot: "尚未连接、执行或授予权限",
+          actions: `<button class="link-btn" data-review-proposal="${esc(proposal.id)}">审阅配置</button>`,
+        }));
+      }
       for (const s of servers) {
         const tools = (s.tools || []).map((t) => t.name || t).slice(0, 6);
         cards.push(card({
@@ -205,6 +215,21 @@ export async function renderHub(ctx) {
       const open = expanded.get(card.dataset.capability) || [];
       card.querySelectorAll("details").forEach((d, i) => { d.open = Boolean(open[i]); });
     });
+    el.querySelectorAll("[data-review-proposal]").forEach(btn => btn.addEventListener("click", () => {
+      const proposal = proposals.find(p => p.id === btn.dataset.reviewProposal);
+      const c = proposal.payload.config;
+      const {mask, close} = dialog("审阅 MCP 接入草稿", `<p>确认后只登记为停用连接；真实探针和启用需另外操作。请核对命令、端点及风险。</p>
+        <dl><dt>服务名称</dt><dd>${esc(c.server_id)}</dd><dt>类型</dt><dd>${c.kind === "agent" ? "外部 Agent" : "工具"}</dd>
+        <dt>端点</dt><dd>${esc(c.url || "本机进程")}</dd><dt>命令参数</dt><dd>${(c.command || []).map(v => `<div>${esc(v)}</div>`).join("") || "无"}</dd>
+        <dt>凭据引用</dt><dd>${Object.entries(c.env || {}).map(([k,v]) => `${esc(k)} → ${esc(v)}`).join("<br>") || "无"}</dd>
+        <dt>声明风险</dt><dd>${esc(riskLabels(c.risks).join("、"))}</dd></dl>
+        <button class="btn primary" data-apply-proposal>确认登记，保持停用</button><p role="status"></p>`);
+      mask.querySelector("[data-apply-proposal]").addEventListener("click", async e => {
+        e.target.disabled = true;
+        try { await api.applyMcpProposal(proposal.id, proposal.payload.hash); close(); await load(); }
+        catch(error) { mask.querySelector('[role="status"]').textContent = error.message; e.target.disabled = false; }
+      });
+    }));
     el.querySelectorAll("[data-hub-add]").forEach(btn => btn.addEventListener("click", () => openManage(btn.dataset.hubAdd)));
     el.querySelectorAll("[data-backend]").forEach(btn => btn.addEventListener("click", async () => {
       btn.disabled = true;
@@ -257,7 +282,9 @@ export async function renderHub(ctx) {
       : `<input name="${name}" value="${esc(value)}">`}</label>`;
     const definitions = {
       mcp: ["连接 MCP", field("id", "服务名称") + field("url", "HTTP 地址（使用本机命令时留空）")
-        + `<details><summary>本机命令</summary>${field("command", "命令与参数，每行一项", true)}</details>`],
+        + `<label class="field">能力类型<select name="kind"><option value="tool">工具服务</option><option value="agent">外部 Agent（MCP）</option></select></label>
+        <details><summary>本机命令</summary>${field("command", "命令与参数，每行一项", true)}</details>
+        <p>先生成草稿供审阅；不会立即连接或运行命令。</p>`],
       skill: ["安装 Skill", `<p class="muted small">粘贴 SKILL.md，版本相同的内容不可改写；安装后仍须逐次授权工具。</p>`
         + field("text", "SKILL.md 内容", true, "---\nname: report-helper\nversion: 1\ndescription: 根据材料写报告\nallowed_tools: material.read\n---\n只能使用授权材料，事实不足时明确标注。")],
       ingest: ["添加知识", field("id", "来源名称") + field("text", "知识正文", true)
@@ -275,7 +302,7 @@ export async function renderHub(ctx) {
       try {
         if (kind === "mcp") {
           const command = get("command").split("\n").map(v => v.trim()).filter(Boolean);
-          await api.registerMcp({ server_id: get("id"), ...(get("url") ? { url: get("url") } : { command }) });
+          await api.proposeMcp({ server_id: get("id"), kind: get("kind"), ...(get("url") ? { url: get("url") } : { command }) });
         } else if (kind === "skill") await api.installSkill(get("text"));
         else if (kind === "ingest") await api.knowledgeIngest({ source_id: get("id"), text: get("text") });
         else {

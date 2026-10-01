@@ -85,6 +85,9 @@ class McpHubAdapter:
     async def set_enabled(self, actor: AuthContext, server_id: str, enabled: bool) -> dict[str, Any]:
         """启用/停用：停用后不再出现在工具清单、不再可解析/调用（新 run 立即受阻）。"""
         self._require_server(actor.tenant_id, server_id)
+        if enabled:
+            # Offline proposals are never enabled until real discovery succeeds.
+            await self.discover(actor, server_id)
         self._store.set_mcp_server_enabled(actor.tenant_id, server_id, enabled)
         self._discovery.pop((actor.tenant_id, server_id), None)
         self._store.audit_append(
@@ -196,7 +199,7 @@ class McpHubAdapter:
 
     async def _stdio_discover(self, row: dict[str, Any]) -> tuple[str, list[Any]]:
         command = shlex.split(str(row["command"]))
-        env = {k: v for k, v in json.loads(row["env_json"]).items()}
+        env = self._stdio_env(row)
         params = StdioServerParameters(command=command[0], args=command[1:], env=env or None)
         async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
             result = await session.initialize()
@@ -251,7 +254,7 @@ class McpHubAdapter:
 
     async def _stdio_call(self, row: dict[str, Any], tool: str, args: dict[str, Any]) -> Any:
         command = shlex.split(str(row["command"]))
-        env = {k: v for k, v in json.loads(row["env_json"]).items()}
+        env = self._stdio_env(row)
         params = StdioServerParameters(command=command[0], args=command[1:], env=env or None)
         async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
             await session.initialize()
@@ -282,7 +285,8 @@ class McpHubAdapter:
                     ToolSpec(
                         name=f"{row['id']}:{t['name']}",
                         version=row["protocol_version"] or "",
-                        description=t.get("description", ""),
+                        description=("[External Agent via MCP] " if row.get("kind") == "agent" else "")
+                                    + t.get("description", ""),
                         input_schema=t.get("input_schema") or {"type": "object"},
                         risks=risks,
                         recovery="manual",
@@ -314,6 +318,22 @@ class McpHubAdapter:
         return row
 
     @staticmethod
+    def _stdio_env(row: dict[str, Any]) -> dict[str, str]:
+        import os
+
+        values = json.loads(row["env_json"])
+        env: dict[str, str] = {}
+        for key, value in values.items():
+            if value.startswith("env:"):
+                resolved = os.environ.get(value[4:])
+                if resolved is None:
+                    raise AgentOSError(ErrorCode.DENIED, "required credential environment variable is unavailable")
+                env[key] = resolved
+            else:
+                env[key] = value  # compatibility with existing protected registrations
+        return env
+
+    @staticmethod
     def _auth_headers(row: dict[str, Any]) -> dict[str, str]:
         """FR-TOOL-07：令牌只存环境变量名，从进程环境读取明文。"""
         env_spec = json.loads(row["env_json"])
@@ -323,8 +343,9 @@ class McpHubAdapter:
                 import os
 
                 token = os.environ.get(value[4:])
-                if token:
-                    headers[key] = token
+                if token is None:
+                    raise AgentOSError(ErrorCode.DENIED, "required credential environment variable is unavailable")
+                headers[key] = token
             else:
                 headers[key] = value
         return headers

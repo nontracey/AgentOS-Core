@@ -26,7 +26,9 @@ from agentos.services.approvals import ApprovalService
 from agentos.services.assets import AssetService
 from agentos.services.audit import AuditService
 from agentos.services.budget import BudgetService
+from agentos.services.connections import ConnectionService
 from agentos.services.demo import DemoService
+from agentos.services.drafts import DraftService
 from agentos.services.identity import IdentityService
 from agentos.services.ingress import IngressService
 from agentos.services.nodes import NodeRegistryService
@@ -54,6 +56,8 @@ class SystemHandle:
     knowledge: Any  # U4-06/07 知识后端（KnowledgePort 实现；业务调用者只依赖端口）
     access: AccessService  # U4-01 统一资源授权（gateway/服务/非 HTTP 入口共用）
     demo: DemoService  # U4-01/02 演示发布与游客只读投影
+    drafts: DraftService
+    connections: ConnectionService
     transcriber: Any = None  # 语音入口 STT 后端（M6 切片；None=语音端点 501）
     collaboration: Any = None
     model_gate: Any = None
@@ -288,6 +292,11 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
     flow_driver.custom["passthrough"] = passthrough
     loop._workflow_driver = flow_driver
     workflows = WorkflowService(store, access, settings.run_budget_microusd)
+    from agentos.adapters.tools.workflows import WorkflowTools
+
+    catalog.workflow_tools = WorkflowTools(workflows, lambda: flow_driver.engine is not None)
+    drafts = DraftService(store, access)
+    connections = ConnectionService(drafts)
     ingress = IngressService(
         store,
         identity,
@@ -333,6 +342,8 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         planner=planner,
         collaboration=collaboration,
         workflows=workflows,
+        drafts=drafts,
+        connections=connections,
         ingress=ingress,
         skills=skills_service,
         tool_hub=tool_hub,

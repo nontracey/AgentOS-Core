@@ -7,7 +7,7 @@
  */
 "use strict";
 
-import { ApiError, clearGuestResources, createApi, getStaticToken, setStaticToken } from "./api.js";
+import { ApiError, bindSessionRequest, clearGuestResources, createApi, getStaticToken, getToken, setStaticToken } from "./api.js";
 import { renderDemoAccess } from "./views/demo-admin.js";
 import { renderGuestAbout, renderGuestArtifacts, renderGuestExpired, renderGuestHome,
   renderGuestTask } from "./views/guest.js";
@@ -102,6 +102,8 @@ let roleInfo = null;       // /v1/auth/me 结果（subject/role/grant/到期）
 let roleError = "";        // 角色查询失败原因：显示错误态，不猜 admin
 let recents = [];          // 侧栏「最近任务」
 let activeViewCleanup = null;
+let activeViewGuard = null;
+let activeViewHash = location.hash || "#/enter";
 
 /**
  * 访问角色由服务端裁定。
@@ -393,15 +395,24 @@ function go(hash) {
 }
 
 async function route() {
+  const requestedHash = location.hash || "#/enter";
+  const guardVersion = ++routeVersion;
+  if (activeViewGuard && getToken() && !await activeViewGuard()) {
+    if (guardVersion === routeVersion) history.replaceState(null, "", activeViewHash);
+    return;
+  }
+  if (guardVersion !== routeVersion) return;
   document.getElementById("sidebar")?.classList.remove("is-open");
   document.getElementById("side-scrim")?.classList.remove("on");
-  const version = ++routeVersion;
+  const version = guardVersion;
   poller.stop();
   window.scrollTo(0, 0);
   if (typeof activeViewCleanup === "function") {
     try { activeViewCleanup(); } catch (_) { /* 视图自行忽略 */ }
     activeViewCleanup = null;
   }
+  activeViewGuard = null;
+  activeViewHash = requestedHash;
   const hash = location.hash || "#/enter";
   const raw = hash.replace(/^#\//, "").split("?")[0];
   const parts = raw.split("/").filter(Boolean);
@@ -491,7 +502,9 @@ async function route() {
         link.rel = "stylesheet"; link.href = "/ui/workflow-dist/editor.css"; document.head.append(link);
       }
       const editor = await import("/ui/workflow-dist/editor.js");
-      out = {destroy: editor.mount(el, {request: api.workflowRequest, navigate: go, confirm: body => confirmDialog({title: "替换当前草稿？", body, confirmText: "替换草稿"})})};
+      out = {destroy: editor.mount(el, {request: bindSessionRequest(api.workflowRequest), navigate: go,
+        registerGuard: guard => { activeViewGuard = guard; },
+        confirm: body => confirmDialog({title: "确认操作", body, confirmText: "确认"})})};
     }
     else if (view === "hub") out = await renderHub(ctx);
     else if (view === "inbox") out = await renderInbox(ctx);

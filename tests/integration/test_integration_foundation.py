@@ -119,11 +119,15 @@ def test_flow_cycles_unknown_dependencies_and_cross_node_reads_are_denied(tmp_pa
                 {"id": "b", "kind": "custom", "config": {"adapter": "passthrough", "inputs": {"$ref": "nodes.a"}}},
             ],
         }
+        with pytest.raises(AgentOSError, match="invalid workflow graph"):
+            h.workflows.publish(actor, graph)
+        assert h.store.list_runs("default") == []
+        graph["nodes"][1]["depends_on"] = ["a"]
         p = h.workflows.publish(actor, graph)
         r = h.workflows.start(actor, graph["id"], p["version"], {}, "scope-test")
         binding = {"tenant_id": "default", "run_id": r["internal_run_id"]}
         assert (await h.workflow_driver.node({**binding, "node_id": "a"}))["status"] == "completed"
-        assert (await h.workflow_driver.node({**binding, "node_id": "b"}))["status"] == "failed"
+        assert (await h.workflow_driver.node({**binding, "node_id": "b"}))["status"] == "completed"
         assert len(h.store.list_steps("default", r["internal_run_id"])) == 1
 
     asyncio.run(run())

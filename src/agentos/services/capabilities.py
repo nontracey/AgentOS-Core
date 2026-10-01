@@ -5,7 +5,7 @@ use; approval, grants, arguments and effects remain the runtime policy's authori
 """
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol
 
 from agentos.kernel.errors import AgentOSError, ErrorCode
 from agentos.kernel.ports import ToolPort
@@ -17,9 +17,22 @@ def required_scopes(spec: ToolSpec) -> list[str]:
     return sorted({"read", *(mapping[r] for r in spec.risks if r in mapping)})
 
 
+class CapabilityProvider(Protocol):
+    async def list_tools(self, actor: AuthContext) -> list[ToolSpec]: ...
+    async def resolve(self, actor: AuthContext, name: str) -> ToolSpec: ...
+    async def call(self, name: str, args: dict[str, Any], ctx: CallContext) -> ToolResult: ...
+
+
 class CapabilityCatalog:
     def __init__(self, tools: ToolPort) -> None:
         self._tools = tools
+        self.workflow_tools: CapabilityProvider | None = None
+
+    async def _all(self, actor: AuthContext) -> list[ToolSpec]:
+        specs = await self._tools.list_tools(actor)
+        if self.workflow_tools:
+            specs += await self.workflow_tools.list_tools(actor)
+        return specs
 
     @staticmethod
     def visible(actor: AuthContext, spec: ToolSpec) -> bool:
@@ -31,14 +44,15 @@ class CapabilityCatalog:
                  "required_scopes": required_scopes(spec),
                  "authorization": "policy_at_dispatch",
                  "available": spec.discovery_status != "unavailable"}
-                for spec in await self._tools.list_tools(actor) if self.visible(actor, spec)]
+                for spec in await self._all(actor) if self.visible(actor, spec)]
 
     async def list_tools(self, actor: AuthContext) -> list[ToolSpec]:
-        return [spec for spec in await self._tools.list_tools(actor)
+        return [spec for spec in await self._all(actor)
                 if self.visible(actor, spec) and spec.discovery_status != "unavailable"]
 
     async def resolve(self, actor: AuthContext, name: str) -> ToolSpec:
-        spec = await self._tools.resolve(actor, name)
+        port = self.workflow_tools if name.startswith("workflow.") and self.workflow_tools else self._tools
+        spec = await port.resolve(actor, name)
         if not self.visible(actor, spec):
             raise AgentOSError(ErrorCode.DENIED, "capability is outside caller scope")
         if spec.discovery_status == "unavailable":
@@ -49,7 +63,8 @@ class CapabilityCatalog:
         spec = await self.resolve(ctx.actor, name)
         if ctx.expected_revision and spec.revision != ctx.expected_revision:
             raise AgentOSError(ErrorCode.CONFLICT, "capability contract changed before dispatch")
-        return await self._tools.call(name, args, ctx)
+        port = self.workflow_tools if name.startswith("workflow.") and self.workflow_tools else self._tools
+        return await port.call(name, args, ctx)
 
     async def poll(self, external_ref: str, ctx: CallContext) -> ToolResult:
         return await self._tools.poll(external_ref, ctx)
@@ -87,8 +102,12 @@ class CapabilityCatalog:
             config = node.get("config", {})
             if node.get("kind") == "tool":
                 spec = await self.resolve(actor, str(config.get("tool", "")))
+                if spec.name.startswith("workflow.") and spec.name != "workflow.status":
+                    raise AgentOSError(ErrorCode.INVALID, "nested workflow launches are not supported")
                 config["capability_bindings"] = {spec.name: spec.revision}
             elif node.get("kind") == "agent":
                 specs = [await self.resolve(actor, str(name)) for name in config.get("tools", [])]
+                if any(s.name.startswith("workflow.") and s.name != "workflow.status" for s in specs):
+                    raise AgentOSError(ErrorCode.INVALID, "nested workflow launches are not supported")
                 config["capability_bindings"] = {s.name: s.revision for s in specs}
         return bound

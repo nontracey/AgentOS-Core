@@ -57,3 +57,24 @@ def test_member_settings_hide_admin_password_and_demo_management() -> None:
         {'role': 'admin', 'password': True, 'demo': True, 'member': False},
         {'role': None, 'password': False, 'demo': False, 'member': False},
     ]
+
+
+def test_draft_requests_never_cross_logout_or_account_switch() -> None:
+    api = (ROOT / 'frontend/js/api.js').as_uri()
+    actual = node("""
+      const values=new Map();
+      globalThis.sessionStorage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k)};
+      globalThis.localStorage={getItem:()=>null,removeItem:()=>{}};
+      const {bindSessionRequest,setStaticToken,clearAuth}=await import(API);
+      setStaticToken('synthetic-first');
+      let writes=0;
+      const write=bindSessionRequest(async()=>{writes++;return 'saved';});
+      await write('/draft',{payload:'private'});
+      clearAuth();
+      let denied=0;
+      try{await write('/draft',{payload:'private'});}catch{denied++;}
+      setStaticToken('synthetic-second');
+      try{await write('/draft',{payload:'private'});}catch{denied++;}
+      console.log(JSON.stringify({writes,denied}));
+    """.replace('API', json.dumps(api)))
+    assert actual == {'writes': 1, 'denied': 2}

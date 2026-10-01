@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-transform-types --test tests/drafts.test.mjs"
   },
   "dependencies": {
     "@rjsf/core": "6.11.0",

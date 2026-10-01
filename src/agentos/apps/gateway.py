@@ -796,6 +796,7 @@ def create_app(
         assert isinstance(catalog, CapabilityCatalog)
         tools = await catalog.describe(actor)
         return {"engine_enabled": handle.workflow_driver.engine is not None,
+                "can_edit": actor.has_scope("write"),
                 "engine_status": ("available" if handle.workflow_driver.engine is not None
                                   else "unavailable" if handle.settings.temporal_address else "disabled"),
                 "node_types": ["agent", "tool", "condition", "wait", "custom"],
@@ -812,6 +813,55 @@ def create_app(
         catalog = handle.deps.tools
         assert isinstance(catalog, CapabilityCatalog)
         return {"tools": await catalog.describe(actor)}
+
+    @app.get("/v1/workflow-drafts")
+    async def flow_drafts(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+        return handle.drafts.list(await _actor(authorization), "workflow")
+
+    @app.get("/v1/workflow-drafts/{draft_id}")
+    async def get_flow_draft(draft_id: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        return handle.drafts.get(await _actor(authorization), "workflow", draft_id)
+
+    @app.post("/v1/workflow-drafts/{draft_id}")
+    async def save_flow_draft(draft_id: str, body: dict[str, Any],
+                              authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _actor(authorization)
+        if not actor.has_scope("write"):
+            raise HTTPException(403, detail={"code": "denied", "message": "draft editing requires write scope"})
+        payload = body.get("payload")
+        if not isinstance(payload, dict):
+            raise AgentOSError(ErrorCode.INVALID, "draft payload must be an object")
+        return handle.drafts.save(actor, "workflow", draft_id,
+                                  payload, body.get("expected_revision", -1))
+
+    @app.post("/v1/workflow-drafts/{draft_id}/delete")
+    async def delete_flow_draft(draft_id: str, body: dict[str, Any],
+                                authorization: str | None = Header(default=None)) -> dict[str, bool]:
+        handle.drafts.delete(await _actor(authorization), "workflow", draft_id, body.get("expected_revision", -1))
+        return {"deleted": True}
+
+    @app.get("/v1/mcp/proposals")
+    async def connection_proposals(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+        actor = await _admin_actor(authorization, "mcp.register")
+        rows = handle.store.list_connection_drafts(actor.tenant_id)
+        result = []
+        for row in rows:
+            server = handle.store.get_mcp_server(actor.tenant_id,
+                json.loads(row["payload_json"])["config"]["server_id"])
+            result.append({**handle.drafts._project(row), "proposed_by": row["subject"],
+                           "applied": bool(server and server.get("proposal_id") == row["id"])})
+        return result
+
+    @app.post("/v1/mcp/proposals", status_code=201)
+    async def propose_connection(body: dict[str, Any],
+                                 authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        return handle.connections.propose(await _actor(authorization), body)
+
+    @app.post("/v1/mcp/proposals/{proposal_id}/apply")
+    async def apply_connection(proposal_id: str, body: dict[str, Any],
+                               authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _admin_actor(authorization, "mcp.register")
+        return handle.connections.apply(actor, proposal_id, str(body.get("reviewed_hash", "")))
 
     @app.get("/v1/workflow-definitions")
     async def flow_definitions(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:

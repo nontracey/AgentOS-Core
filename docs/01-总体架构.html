@@ -77,7 +77,7 @@ flowchart TB
 <tr><td>入口</td><td>用户、应用和其他 Agent 提交及查看任务</td><td>FastAPI 同源 UI、HTTP、官方入站 MCP 已有；真实 IM 后置</td></tr>
 <tr><td>任务与治理</td><td>统一资源、执行身份、审批、预算、幂等与成果</td><td>AgentOS 保留业务差异与治理规则；企业身份通过 Authlib/PyJWT 接入</td></tr>
 <tr><td>执行与编排</td><td>自主选择工具，或执行确定的业务流程</td><td>Codex 承载真实推理与上下文；Temporal 按需承载持久工作流</td></tr>
-<tr><td>能力接入</td><td>通过协议与 Adapter 复用既有能力</td><td>MCP/Skill/Knowledge/Node 等 Port；统一工具目录已接通，工作流/外部 Agent 工具化后置</td></tr>
+<tr><td>能力接入</td><td>通过协议与 Adapter 复用既有能力</td><td>MCP/Skill/Knowledge/Node 等 Port；统一目录包含固定工作流启动与 MCP 外部 Agent；其他协议经 Adapter 扩展</td></tr>
 <tr><td>数据与运维</td><td>保存状态与效果、恢复、追踪与部署配置</td><td>当前单核心 SQLite/文件资产；OTel 只发元数据，多核心与 HA 待验</td></tr>
 </tbody></table>
 <h2 id="3-核心与可选能力">3. 核心与可选能力</h2>
@@ -96,7 +96,7 @@ flowchart TB
 <tr><td>企业身份</td><td>连接企业已有系统</td><td>本地身份可启动；OIDC/ID4/JWT 是可选接入通道</td></tr>
 <tr><td>项目、额度、渠道</td><td>复用旧系统与协议</td><td>Port 已留，真实业务适配按需求后续实现</td></tr>
 </tbody></table>
-<p>知识关闭、工具发现状态、目录同步与参数表单已实现；完整跨工作流/外部 Agent 接入仍按 <a href="04-开发计划.md">开发计划</a> 推进。</p>
+<p>知识关闭、工具发现状态、目录同步与参数表单已实现；固定工作流启动、MCP 外部 Agent 与受控接入草稿已接通，其他协议按 <a href="04-开发计划.md">开发计划</a> 推进。</p>
 <h2 id="4-部署形态">4. 部署形态</h2>
 <img src="diagrams/01-current-2.svg" alt="架构与执行关系图 2">
 <details><summary>查看 Mermaid 源码</summary><pre><code>%%{init: {"flowchart": {"wrappingWidth": 320}, "theme": "base"}}%%
@@ -131,8 +131,8 @@ flowchart LR
 </tbody></table>
 <p><code>kernel</code> 不依赖具体实现，<code>runtime</code> 不导入 <code>adapters/apps</code>，由组合根配置实现。成熟开源件负责通用引擎；业务治理和必要适配的保留理由见 <a href="08-集成底座改造方案.md#10-开源优先复核与保留例外">开源取舍</a>。</p>
 <h2 id="6-自主执行与工作流">6. 自主执行与工作流</h2>
-<p>普通任务不要求用户先画流程：Codex 读取平台提供的工具描述与参数 schema，选择合适工具，所有调用仍经过服务端核权、审批、预算和效果账本。当前不会自动选择或生成任意已发布工作流、主动配置外部服务或加载全机 Skill。</p>
-<p>固定工作流用于需要明确节点、业务顺序、分支或持久等待的任务。MCP 工具可从统一目录选择，参数表单使用 RJSF/AJV，编辑器定期同步接入变化，发布固定契约；跨 Skill/Agent/工作流的统一调用仍需完善。选择路径与缺口详见 <a href="modules/capabilities.md">能力接入模块</a>。</p>
+<p>普通任务不要求用户先画流程：Codex 读取平台提供的工具描述与参数 schema，选择合适工具，所有调用仍经过服务端核权、审批、预算和效果账本。可选择目录内的固定版本工作流启动或 MCP 外部 Agent；不会自动生成流程、配置外部服务或加载全机 Skill。</p>
+<p>固定工作流用于需要明确节点、业务顺序、分支或持久等待的任务。MCP 工具可从统一目录选择，参数表单使用 RJSF/AJV，编辑器定期同步接入变化，发布固定契约；已发布工作流可作为固定版本能力启动，外部 Agent 经 MCP 工具调用；Skill 保持固定版本资源语义，不伪装成函数。选择路径与缺口详见 <a href="modules/capabilities.md">能力接入模块</a>。</p>
 <h2 id="7-治理与扩展约束">7. 治理与扩展约束</h2>
 <p>发现能力只代表“知道它存在”，执行仍由平台核权。已有授权内的只读动作可直接执行；写入、执行、费用或数据出域按策略审批，参数改变重新裁定。权限不足、预算不足、服务断开或结果未知可能导致拒绝/暂停，并非只需用户点击授权就一定能继续。</p>
 <p>成果不可变，效果账本绑定稳定步骤键；已确认成功不重放，未知结果先对账。撤权后拒绝后续读取和派发，已下载数据无法远程收回。凭据、内部路径和私有正文不进入公开投影。</p>

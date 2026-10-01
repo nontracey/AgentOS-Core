@@ -58,6 +58,14 @@ class WorkflowService:
                 raise AgentOSError(ErrorCode.INVALID, "invalid legacy workflow plan") from exc
             definition = dict(definition)
             definition["tasks"] = [t.model_dump(mode="json") for t in plan.tasks]
+        from jsonschema import SchemaError
+        from jsonschema.validators import validator_for
+
+        try:
+            schema = definition.get("input_schema", {})
+            validator_for(schema).check_schema(schema)
+        except (SchemaError, TypeError, AttributeError) as exc:
+            raise AgentOSError(ErrorCode.INVALID, "invalid workflow input schema") from exc
         definition_hash = _canonical_hash(definition)
 
         wf_id = str(definition.get("id") or "wf")
@@ -81,25 +89,59 @@ class WorkflowService:
     def start(
         self, actor: AuthContext, workflow_id: str, version: int,
         inputs: dict[str, Any], idempotency_key: str,
+        *, parent_run_id: str | None = None, parent_reservation_id: str | None = None,
     ) -> dict[str, Any]:
         """按固定版本启动：创建内部 run（计划注入 payload），登记 workflow_run 映射。"""
         if self._access:
             self._access.require_write_allowed(actor, "workflow.start")
+        if actor.is_expired or not actor.has_scope("write"):
+            raise AgentOSError(ErrorCode.DENIED, "workflow start requires active write scope")
         if not isinstance(inputs, dict):
             raise AgentOSError(ErrorCode.INVALID, "workflow inputs must be an object")
         definition_row = self._store.get_workflow_definition(actor.tenant_id, workflow_id, version)
         if definition_row is None or definition_row["status"] != "published":
             raise AgentOSError(ErrorCode.INVALID, f"workflow version not published: {workflow_id}@{version}")
         definition = json.loads(definition_row["definition_json"])
+        if definition.get("nodes"):
+            try:
+                FlowGraph.model_validate(definition)
+            except ModelValidationError as exc:
+                raise AgentOSError(ErrorCode.INVALID,
+                    "published graph has invalid input references; republish required") from exc
         from jsonschema import SchemaError, ValidationError, validate
 
         try:
             validate(inputs, definition.get("input_schema", {}))
         except (ValidationError, SchemaError) as exc:
             raise AgentOSError(ErrorCode.INVALID, "workflow inputs do not match published schema") from exc
+        def check_inputs(value: Any) -> None:
+            if isinstance(value, dict) and set(value) == {"$ref"}:
+                parts = str(value["$ref"]).split(".")
+                if parts[0] == "inputs":
+                    current: Any = inputs
+                    for key in parts[1:]:
+                        if not isinstance(current, dict) or key not in current:
+                            raise AgentOSError(ErrorCode.INVALID, "required mapped workflow input is missing")
+                        current = current[key]
+            elif isinstance(value, dict):
+                for item in value.values():
+                    check_inputs(item)
+            elif isinstance(value, list):
+                for item in value:
+                    check_inputs(item)
+        for node in definition.get("nodes", []):
+            check_inputs(node.get("config", {}))
         execution = ({"workflow_graph": definition} if definition.get("nodes") else
                      {"plan": {"plan_id": f"wf_{workflow_id}", "version": 1,
                                "goal_id": workflow_id, "goal_version": 1, "tasks": definition["tasks"]}})
+        budget = self._budget
+        if parent_run_id:
+            totals = self._store.budget_totals(actor.tenant_id, parent_run_id)
+            budget = min(budget, max(0, (totals["budget"] - totals["reserved"] - totals["settled"]) // 2))
+            if self._budget > 0 and budget == 0:
+                prior = self._store.find_idempotent_receipt(actor.tenant_id, actor.subject, "workflow", idempotency_key)
+                if prior is None:
+                    raise AgentOSError(ErrorCode.BUDGET_EXCEEDED, "no budget available for workflow delegation")
         receipt: Receipt = self._store.accept_once(
             envelope_json=json.dumps({
                 "id": "wf", "thread_id": None,
@@ -111,7 +153,8 @@ class WorkflowService:
             idempotency_key=idempotency_key,
             payload_hash=_canonical_hash({"workflow_id": workflow_id, "version": version, "inputs": inputs}),
             tenant_id=actor.tenant_id, subject=actor.subject, channel="workflow",
-            run_budget_microusd=self._budget, attachment_ids=[],
+            run_budget_microusd=budget, attachment_ids=[], parent_run_id=parent_run_id,
+            parent_reservation_id=parent_reservation_id,
         )
         wf_run_id = f"wfr_{receipt.run_id[4:]}"
         if self._store.get_workflow_run(actor.tenant_id, wf_run_id) is None:
@@ -146,6 +189,8 @@ class WorkflowService:
         }
 
     def export(self, actor: AuthContext, workflow_id: str, version: int) -> dict[str, Any]:
+        if self._access:
+            self._access.require(actor, "workflow.list")
         row = self._store.get_workflow_definition(actor.tenant_id, workflow_id, version)
         if row is None:
             raise AgentOSError(ErrorCode.INVALID, f"workflow not found: {workflow_id}@{version}")

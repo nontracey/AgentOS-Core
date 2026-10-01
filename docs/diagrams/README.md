@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | [总体架构](../01-总体架构.md) | [五层总图](01-current-1.svg)、[通用部署](01-current-2.svg) | 看系统层次与核心/可选能力，不绑定机器 |
 | [执行模块](../modules/execution.md) | [组件调用](execution-current-1.svg)、[动作时序](execution-current-2.svg) | 引擎、编排、预算、审批和效果账本的内部细节 |
-| [能力接入模块](../modules/capabilities.md) | [工具目录与扩展边界](capabilities-current-1.svg) | 已实现工具目录与双入口，虚线标明后续能力 |
+| [能力接入模块](../modules/capabilities.md) | [工具目录与扩展边界](capabilities-current-1.svg) | 已实现统一目录、自主/工作流双入口及受控配置草稿 |
 
 唯一维护源是 Markdown Mermaid 块。使用官方 [Mermaid CLI](https://github.com/mermaid-js/mermaid-cli) `@mermaid-js/mermaid-cli@12.0.0`（MIT），关闭字体嵌入；本机 Chromium 配置通过 `MERMAID_PUPPETEER_CONFIG` 指定，不写入仓库。
 

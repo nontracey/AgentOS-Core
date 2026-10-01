@@ -152,6 +152,11 @@ CREATE TABLE IF NOT EXISTS mcp_servers (
   registered_at TEXT NOT NULL,
   PRIMARY KEY(tenant_id, id));
 
+CREATE TABLE IF NOT EXISTS resource_drafts (
+  tenant_id TEXT NOT NULL, subject TEXT NOT NULL, kind TEXT NOT NULL, id TEXT NOT NULL,
+  payload_json TEXT NOT NULL, revision INTEGER NOT NULL, updated_at TEXT NOT NULL,
+  PRIMARY KEY(tenant_id, subject, kind, id));
+
 CREATE TABLE IF NOT EXISTS workflow_definitions (
   tenant_id TEXT NOT NULL, id TEXT NOT NULL, version INTEGER NOT NULL,
   name TEXT NOT NULL DEFAULT '',
@@ -159,6 +164,10 @@ CREATE TABLE IF NOT EXISTS workflow_definitions (
   status TEXT NOT NULL CHECK(status IN ('draft','published','retired')),
   published_at TEXT, created_at TEXT NOT NULL,
   PRIMARY KEY(tenant_id, id, version));
+
+CREATE TABLE IF NOT EXISTS workflow_delegations (
+  tenant_id TEXT NOT NULL, child_run_id TEXT NOT NULL, parent_run_id TEXT NOT NULL,
+  reservation_id TEXT NOT NULL, PRIMARY KEY(tenant_id, child_run_id));
 
 CREATE TABLE IF NOT EXISTS workflow_runs (
   tenant_id TEXT NOT NULL, id TEXT NOT NULL, workflow_id TEXT NOT NULL,
@@ -365,6 +374,11 @@ class SqliteStore:
             if col not in cols:
                 self._conn.execute(stmt)
         # U5-01：既有库补 demo_grants.kind（默认 invite，旧数据行为不变）
+        mcp_cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(mcp_servers)")}
+        for column in ("kind", "proposal_id"):
+            if column not in mcp_cols:
+                default = "tool" if column == "kind" else ""
+                self._conn.execute(f"ALTER TABLE mcp_servers ADD COLUMN {column} TEXT NOT NULL DEFAULT '{default}'")
         grant_cols = {r["name"] for r in self._conn.execute("PRAGMA table_info(demo_grants)").fetchall()}
         if "kind" not in grant_cols:
             self._conn.execute("ALTER TABLE demo_grants ADD COLUMN kind TEXT NOT NULL DEFAULT 'invite'")
@@ -443,6 +457,8 @@ class SqliteStore:
         channel: str,
         run_budget_microusd: int,
         attachment_ids: list[str],
+        parent_run_id: str | None = None,
+        parent_reservation_id: str | None = None,
     ) -> ReceiptModel:
         now = _now()
         run_id = f"run_{uuid.uuid4().hex[:16]}"
@@ -484,6 +500,25 @@ class SqliteStore:
                         (datetime.now(UTC) + timedelta(days=30)).isoformat(),
                     ),
                 )
+                if parent_run_id is not None:
+                    parent = self._conn.execute(
+                        "SELECT subject,state,channel,budget_microusd FROM runs WHERE tenant_id=? AND id=?",
+                        (tenant_id, parent_run_id)).fetchone()
+                    if (not parent or parent["subject"] != subject or parent["channel"] == "workflow"
+                            or parent["state"] != RunState.RUNNING or not parent_reservation_id):
+                        raise AgentOSError(ErrorCode.DENIED, "invalid workflow delegation parent")
+                    used = self._conn.execute(
+                        "SELECT COALESCE(SUM(CASE WHEN state='settled' THEN settled_microusd "
+                        "WHEN state='reserved' THEN reserved_microusd ELSE 0 END),0) FROM budget_reservations "
+                        "WHERE tenant_id=? AND run_id=?", (tenant_id, parent_run_id)).fetchone()[0]
+                    if used + run_budget_microusd > parent["budget_microusd"]:
+                        raise AgentOSError(ErrorCode.BUDGET_EXCEEDED, "workflow allocation exceeds parent budget")
+                    self._conn.execute(
+                        "INSERT INTO budget_reservations(tenant_id,call_id,run_id,reserved_microusd,state) "
+                        "VALUES(?,?,?,?,'reserved')",
+                        (tenant_id, parent_reservation_id, parent_run_id, run_budget_microusd))
+                    self._conn.execute("INSERT INTO workflow_delegations VALUES(?,?,?,?)",
+                        (tenant_id, run_id, parent_run_id, parent_reservation_id))
                 self._conn.execute(
                     "INSERT INTO jobs(tenant_id,id,run_id,state,available_at) VALUES(?,?,?,?,?)",
                     (tenant_id, job_id, run_id, "ready", now),
@@ -577,6 +612,20 @@ class SqliteStore:
                 self._conn.commit()
                 return None
             self._event_locked(tenant_id, run_id, "run.state_changed", {"to": to_state.value, **(event_detail or {})})
+            if to_state in RUN_TERMINAL:
+                delegation = self._conn.execute(
+                    "SELECT reservation_id FROM workflow_delegations WHERE tenant_id=? AND child_run_id=?",
+                    (tenant_id, run_id)).fetchone()
+                if delegation:
+                    # Outstanding usage is conservatively charged, never freed on an unknown effect.
+                    used = self._conn.execute(
+                        "SELECT COALESCE(SUM(CASE WHEN state='settled' THEN settled_microusd "
+                        "WHEN state='reserved' THEN reserved_microusd ELSE 0 END),0) FROM budget_reservations "
+                        "WHERE tenant_id=? AND run_id=?", (tenant_id, run_id)).fetchone()[0]
+                    self._conn.execute(
+                        "UPDATE budget_reservations SET state='settled', settled_microusd=? "
+                        "WHERE tenant_id=? AND call_id=? AND state='reserved'",
+                        (used, tenant_id, delegation["reservation_id"]))
             self._conn.commit()
             return self.get_run(tenant_id, run_id)
 
@@ -1312,7 +1361,7 @@ class SqliteStore:
                 "protocol_version,enabled,tools_json,registered_at) VALUES(?,?,?,?,?,?,?,?,1,'[]',?) "
                 "ON CONFLICT(tenant_id,id) DO UPDATE SET transport=excluded.transport,"
                 "command=excluded.command,url=excluded.url,env_json=excluded.env_json,"
-                "risks_json=excluded.risks_json,enabled=excluded.enabled",
+                "risks_json=excluded.risks_json,enabled=excluded.enabled,proposal_id=''",
                 (
                     record["tenant_id"],
                     record["id"],
@@ -1355,6 +1404,58 @@ class SqliteStore:
         with self._lock:
             self._conn.execute("DELETE FROM mcp_servers WHERE tenant_id=? AND id=?", (tenant_id, server_id))
             self._conn.commit()
+
+    def list_drafts(self, tenant_id: str, subject: str, kind: str) -> list[dict[str, Any]]:
+        with self._lock:
+            return [dict(r) for r in self._conn.execute(
+                "SELECT * FROM resource_drafts WHERE tenant_id=? AND subject=? AND kind=? AND payload_json!='null' "
+                "ORDER BY updated_at DESC", (tenant_id, subject, kind))]
+
+    def list_connection_drafts(self, tenant_id: str) -> list[dict[str, Any]]:
+        with self._lock:
+            return [dict(r) for r in self._conn.execute(
+                "SELECT * FROM resource_drafts WHERE tenant_id=? AND kind='mcp' AND payload_json!='null' "
+                "ORDER BY updated_at DESC",
+                (tenant_id,))]
+
+    def insert_mcp_proposal(self, record: dict[str, Any]) -> bool:
+        with self._lock, self._conn:
+            return self._conn.execute(
+                "INSERT OR IGNORE INTO mcp_servers(tenant_id,id,transport,command,url,env_json,risks_json,"
+                "enabled,registered_at,kind,proposal_id) VALUES(?,?,?,?,?,?,?,0,?,?,?)",
+                (record["tenant_id"], record["id"], record["transport"], record["command"], record["url"],
+                 record["env_json"], record["risks_json"], _now(), record["kind"], record["proposal_id"])
+            ).rowcount == 1
+
+    def get_draft(self, tenant_id: str, subject: str, kind: str, id: str) -> dict[str, Any] | None:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM resource_drafts WHERE tenant_id=? AND subject=? AND kind=? AND id=? "
+                "AND payload_json!='null'",
+                (tenant_id, subject, kind, id)).fetchone()
+            return dict(row) if row else None
+
+    def save_draft(self, tenant_id: str, subject: str, kind: str, id: str,
+                   payload_json: str, expected_revision: int) -> bool:
+        with self._lock, self._conn:
+            if expected_revision == 0:
+                cursor = self._conn.execute(
+                    "INSERT OR IGNORE INTO resource_drafts VALUES(?,?,?,?,?,1,?)",
+                    (tenant_id, subject, kind, id, payload_json, _now()))
+            else:
+                cursor = self._conn.execute(
+                    "UPDATE resource_drafts SET payload_json=?, revision=revision+1, updated_at=? "
+                    "WHERE tenant_id=? AND subject=? AND kind=? AND id=? AND revision=? AND payload_json!='null'",
+                    (payload_json, _now(), tenant_id, subject, kind, id, expected_revision))
+            return cursor.rowcount == 1
+
+    def delete_draft(self, tenant_id: str, subject: str, kind: str, id: str,
+                     expected_revision: int) -> bool:
+        with self._lock, self._conn:
+            return self._conn.execute(
+                "UPDATE resource_drafts SET payload_json='null', revision=revision+1 "
+                "WHERE tenant_id=? AND subject=? AND kind=? AND id=? AND revision=? AND payload_json!='null'",
+                (tenant_id, subject, kind, id, expected_revision)).rowcount == 1
 
     def next_workflow_version_atomic(self, tenant_id: str, workflow_id: str) -> int:
         with self._lock:
