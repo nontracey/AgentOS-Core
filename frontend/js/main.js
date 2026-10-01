@@ -21,8 +21,10 @@ import { renderThread } from "./views/thread.js";
 import { renderWorkspaceHome } from "./views/home.js";
 import { closePreviews } from "./preview.js";
 import { esc } from "./safe-export.js";
-import { icon, toast } from "./ui.js";
+import { confirmDialog, icon, toast } from "./ui.js";
 import { applyTheme } from "./theme.js";
+
+import { ATTENTION_STATES, taskTitle } from "./workspace-data.js";
 
 applyTheme();
 
@@ -193,7 +195,7 @@ function drawRecents() {
   if (!box) return;
   box.innerHTML = recents.slice(0, 5).map((r) => `
     <a href="#/tasks/${esc(r.id)}"><span class="rdot ${esc(r.state)}"></span>
-      <span class="rlabel">${esc(r.goal || r.id)}</span></a>`).join("")
+      <span class="rlabel">${esc(taskTitle(r))}</span></a>`).join("")
     || `<div class="muted small r-empty">还没有任务</div>`;
 }
 
@@ -268,7 +270,7 @@ async function renderEnter(el, reason) {
           不能创建、修改、审批或下载未授权内容。</p>
         <div class="notice" id="guest-hint" hidden></div>
         <div class="divider"><span>或</span></div>
-        <div id="enterprise-logins"></div>
+        <div id="enterprise-logins" aria-label="企业账号登录"></div>
         <form id="lg-form" class="enter-admin">
           <input type="hidden" name="username" value="owner" autocomplete="username">
           <div class="field">
@@ -288,7 +290,7 @@ async function renderEnter(el, reason) {
             <button class="btn block small" id="lg-token-btn" type="button">用令牌连接</button>
           </div>
         </details>
-        <p class="login-foot">单机个人版 · 凭据仅保存在本浏览器</p>
+        <p class="login-foot">按部署配置提供企业账号或本地登录</p>
       </div>
     </div>`;
 
@@ -297,10 +299,15 @@ async function renderEnter(el, reason) {
   const enterprise = document.getElementById("enterprise-logins");
   for (const provider of providers) {
     const link = document.createElement("a");
-    link.className = "btn block";
+    link.className = "btn primary block";
     link.textContent = `通过 ${provider.label} 企业账号登录`;
     link.href = `/v1/auth/oidc/${encodeURIComponent(provider.id)}/login`;
     enterprise.appendChild(link);
+  }
+  if (providers.length) {
+    const logins = document.getElementById("enterprise-logins");
+    document.querySelector(".enter-brand").after(logins);
+    document.getElementById("lg-submit").textContent = "使用本地管理员账号登录";
   }
   const setup = await api.authSetup().catch(() => ({}));
   if (setup?.guest && setup.guest.open && !setup.guest.published) {
@@ -370,7 +377,7 @@ async function renderEnter(el, reason) {
 
 /* ---------- 路由 ---------- */
 const ADMIN_ROUTES = { home: "新任务", tasks: "任务空间", library: "成果库", hub: "能力中心",
-  settings: "偏好设置", demo: "演示访问", inbox: "通知" };
+  settings: "偏好设置", workflows: "工作流", demo: "演示访问", inbox: "通知" };
 const GUEST_ROUTES = { guest: "演示任务", "guest/artifacts": "演示成果", "guest-about": "访问说明" };
 
 function ctxFor(el, params) {
@@ -484,7 +491,7 @@ async function route() {
         link.rel = "stylesheet"; link.href = "/ui/workflow-dist/editor.css"; document.head.append(link);
       }
       const editor = await import("/ui/workflow-dist/editor.js");
-      out = {destroy: editor.mount(el, {request: api.workflowRequest, navigate: go})};
+      out = {destroy: editor.mount(el, {request: api.workflowRequest, navigate: go, confirm: body => confirmDialog({title: "替换当前草稿？", body, confirmText: "替换草稿"})})};
     }
     else if (view === "hub") out = await renderHub(ctx);
     else if (view === "inbox") out = await renderInbox(ctx);
@@ -567,8 +574,9 @@ function refreshRecents() { loadRecents(); }
 async function refreshBadges() {
   try {
     const [approvals, runs] = await Promise.all([api.listApprovals(), api.listRuns()]);
-    const needAttention = approvals.length
-      + runs.filter((r) => ["paused", "failed"].includes(r.state)).length;
+    const pending = new Set(runs.filter(r => ATTENTION_STATES.has(r.state)).map(r => r.id));
+    approvals.forEach(a => pending.add(String(a.call_id || a.id).split(":")[0]));
+    const needAttention = pending.size;
     const badge = document.getElementById("ap-badge");
     if (badge) badge.textContent = needAttention ? String(needAttention) : "";
     recents = runs.slice(0, 8);
@@ -595,6 +603,10 @@ try {
 buildShell();
 if ("serviceWorker" in navigator) {
   // 静态外壳缓存升级由 sw.js 版本控制；API/私有素材不进缓存
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hadController) toast("界面已有更新，请先保存未提交内容，再刷新载入。", "");
+  });
   navigator.serviceWorker.register("/ui/sw.js").then((reg) => {
     const activate = () => reg.waiting?.postMessage({ type: "ACTIVATE_SHELL" });
     activate();

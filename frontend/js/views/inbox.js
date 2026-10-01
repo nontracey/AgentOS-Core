@@ -5,6 +5,8 @@
 import { esc } from "../safe-export.js";
 import { emptyState, icon, stateBadge, timeShort } from "../ui.js";
 
+import { ATTENTION_STATES, taskTitle } from "../workspace-data.js";
+
 export async function renderInbox(ctx) {
   const { el, api, navigate } = ctx;
   let stopped = false;
@@ -21,7 +23,7 @@ export async function renderInbox(ctx) {
     if (stopped) return false;
     const [approvals, runs] = await Promise.all([api.listApprovals(), api.listRuns()]);
     if (stopped) return false;
-    const needRuns = runs.filter((r) => ["awaiting_approval", "paused", "failed"].includes(r.state));
+    const needRuns = runs.filter((r) => ATTENTION_STATES.has(r.state));
     const goalOf = (runId) => runs.find((r) => r.id === runId)?.goal || runId;
 
     const blocks = [];
@@ -38,12 +40,13 @@ export async function renderInbox(ctx) {
     }
     if (needRuns.length) {
       blocks.push(`<div class="inbox-group">
-        <div class="subhead"><h3>需要核对或重跑的任务</h3></div>
+        <div class="subhead"><h3>需要跟进的任务</h3></div>
         ${needRuns.map((r) => `<button class="row-item" data-open="${esc(r.id)}">
-          <span class="row-main"><b>${esc(r.goal || r.id)}</b>
+          <span class="row-main"><b>${esc(taskTitle(r))}</b>
             <p>${esc(r.state === "paused" ? "外部执行结果未知，先核对再决定下一步"
               : r.state === "failed" ? "任务未完成，查看失败步骤与服务端原因"
-                : "等待你的批准")} · 最近活动 ${timeShort(r.updated_at)}</p></span>
+                : r.state === "awaiting_input" ? "等待补充资料"
+                : r.state === "awaiting_review" ? "等待评审" : "等待你的批准")} · 最近活动 ${timeShort(r.updated_at)}</p></span>
           <span class="row-side">${stateBadge(r.state)}</span></button>`).join("")}</div>`);
     }
     el.querySelector("#ib-body").innerHTML = blocks.join("")

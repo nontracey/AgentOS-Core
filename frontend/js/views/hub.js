@@ -6,15 +6,18 @@
 import { esc } from "../safe-export.js";
 import { emptyState, icon, modelZh, timeShort, toast } from "../ui.js";
 
+import { capabilitySource, riskLabels } from "../workspace-data.js";
+
 const TABS = [
-  ["all", "全部"], ["mcp", "MCP 工具"], ["skill", "Skills"],
-  ["knowledge", "知识后端"], ["nodes", "执行设备"],
+  ["all", "工具目录"], ["mcp", "MCP 服务"], ["skill", "Skills"],
+  ["knowledge", "知识后端"], ["nodes", "执行环境"],
 ];
 
 export async function renderHub(ctx) {
   const { el, api } = ctx;
   let stopped = false, tab = "all", snapshot = null, admin = false;
   const dialogs = new Set();
+  let loading = false;
 
   el.innerHTML = `
     <section class="page">
@@ -26,6 +29,7 @@ export async function renderHub(ctx) {
         ${TABS.map(([key, name]) => `<button data-hub="${key}" class="${key === tab ? "on" : ""}"
           role="tab">${name}</button>`).join("")}
       </div>
+      <div class="hub-search"><input type="search" id="hub-search" aria-label="搜索能力" placeholder="搜索名称或用途…"><span class="hub-summary" id="hub-summary"></span></div>
       <div id="hub-body"><div class="skeleton" style="height:160px"></div></div>
       <p class="side-caption">安装或连接能力不自动授予执行权限；每次调用仍由服务端策略、审批与预算裁定。
         知识后端切换只影响新任务，已有任务固定其来源与版本。</p>
@@ -36,34 +40,47 @@ export async function renderHub(ctx) {
     el.querySelectorAll("[data-hub]").forEach((b) => b.classList.toggle("on", b === btn));
     draw();
   }));
-  el.querySelector("#hub-refresh").addEventListener("click", () => load().catch(() => {}));
+  el.querySelector("#hub-search").addEventListener("input", () => draw());
+  el.querySelector("#hub-refresh").addEventListener("click", () => load().catch(e => toast(e.message, "err")));
 
   async function load() {
     if (stopped) return false;
-    const me = await api.authMe();
-    admin = me.role === "admin";
-    const [capabilities, servers, skills, nodes, knowledge] = await Promise.all([
-      api.getCapabilities(),
-      api.listMcp(), api.listSkills(admin), api.listNodes(), api.knowledgeCapabilities(),
-    ]);
-    if (stopped) return false;
-    snapshot = { capabilities, servers, skills, nodes, knowledge };
-    draw();
-    return true;
+    if (loading) return true;
+    loading = true;
+    try {
+      const me = await api.authMe();
+      admin = me.role === "admin";
+      const [capabilities, servers, skills, nodes, knowledge, catalog] = await Promise.all([
+        api.getCapabilities(),
+        api.listMcp(), api.listSkills(admin), api.listNodes(), api.knowledgeCapabilities(), api.capabilityCatalog(),
+      ]);
+      if (stopped) return false;
+      snapshot = { capabilities, servers, skills, nodes, knowledge, catalog };
+      draw();
+      return true;
+    } catch (e) {
+      if (!stopped) {
+        el.querySelector("#hub-summary").textContent = "读取失败，请重试；当前显示可能是旧目录";
+        if (!snapshot) el.querySelector("#hub-body").innerHTML = `<div class="notice err" role="alert">${esc(e.message)}</div>`;
+      }
+      throw e;
+    } finally { loading = false; }
   }
 
-  function card({ glyph, title, status, tone, desc, foot, actions = "" }) {
-    return `<article class="cap-card">
+  function card({ glyph, title, status, tone, desc, foot, actions = "", details = "" }) {
+    return `<article class="cap-card" data-capability="${esc(title)}">
       <div class="cap-top"><span class="cap-icon">${icon(glyph, 18)}</span>
         <h3>${esc(title)}</h3><span class="badge ${esc(tone || "")}">${esc(status)}</span></div>
       <p>${desc}</p>
-      <div class="cap-foot"><span class="muted small">${esc(foot)}</span><div class="cap-actions">${actions}</div></div>
+      <div class="cap-foot"><span class="muted small">${esc(foot)}</span><div class="cap-actions">${actions}</div></div>${details}
     </article>`;
   }
 
   function draw() {
     if (!snapshot) return;
-    const { capabilities, servers, skills, nodes, knowledge } = snapshot;
+    const expanded = new Map([...el.querySelectorAll("[data-capability]")].map(card => [card.dataset.capability,
+      [...card.querySelectorAll("details")].map(d => d.open)]));
+    const { capabilities, servers, skills, nodes, knowledge, catalog } = snapshot;
     const cards = [];
     const actions = admin ? `<div class="hub-manage-actions">
       ${tab === "all" || tab === "mcp" ? '<button class="btn" data-hub-add="mcp">连接 MCP</button>' : ""}
@@ -71,7 +88,22 @@ export async function renderHub(ctx) {
       ${(tab === "all" || tab === "knowledge") && knowledge.enabled !== false ? '<button class="btn" data-hub-add="ingest">添加知识</button><button class="btn" data-hub-add="search">检索知识</button>' : ""}
     </div>` : "";
 
-    if (tab === "all" || tab === "mcp") {
+    if (tab === "all") {
+      for (const tool of catalog.tools || []) {
+        cards.push(card({glyph: "blocks", title: tool.name,
+          status: tool.available === false ? "暂不可用" : "可用于任务", tone: tool.available === false ? "" : "good",
+          desc: esc(tool.description || "用途未声明，请查看参数与授权范围。"),
+          foot: capabilitySource(tool) + " · " + (riskLabels(tool.risks).join("、") || "风险未声明"),
+          details: `<details class="cap-detail"><summary>权限与技术详情</summary><dl>
+            <dt>所需权限</dt><dd>${esc((tool.required_scopes || []).join("、") || "未声明")}</dd>
+            <dt>发现状态</dt><dd>${esc(({local:"本地能力",cached:"缓存发现，执行时核验",refreshed:"最近发现，执行时核验",unavailable:"发现失败"})[tool.discovery_status] || "未记录")}</dd>
+            <dt>版本</dt><dd>${esc(tool.version || "未记录")}</dd>
+            <dt>执行授权</dt><dd>能发现不代表已批准；执行时裁定权限、参数、风险与预算。</dd>
+            </dl><details><summary>参数定义（高级）</summary><pre>${esc(JSON.stringify(tool.input_schema || {}, null, 2))}</pre></details></details>`,
+        }));
+      }
+    }
+    if (tab === "mcp") {
       for (const s of servers) {
         const tools = (s.tools || []).map((t) => t.name || t).slice(0, 6);
         cards.push(card({
@@ -92,7 +124,7 @@ export async function renderHub(ctx) {
       }
     }
 
-    if (tab === "all" || tab === "skill") {
+    if (tab === "skill") {
       for (const s of skills) {
         cards.push(card({
           glyph: "doc", title: s.id, status: `v${s.version || "未记录"} · ${s.enabled === false ? "已停用" : "已启用"}`,
@@ -110,13 +142,12 @@ export async function renderHub(ctx) {
       }
     }
 
-    if (tab === "all" || tab === "knowledge") {
+    if (tab === "knowledge") {
       const backend = capabilities.knowledge_backend || knowledge.backend || "builtin";
       cards.push(card({
         glyph: "files", title: knowledge.enabled === false ? "知识库未启用" : `${backend === "weknora" ? "WeKnora" : "内置检索"}（当前）`,
         status: knowledge.enabled === false ? "按需接入" : "配置已生效", tone: "active",
-        desc: knowledge.enabled === false ? "当前只运行核心。需要知识能力时，由部署配置启用内置检索或接入已有知识库。" : `统一 KnowledgePort 提供 ingest / search / resolve / delete 语义。`
-          + `已声明能力：${esc(Object.keys(knowledge).filter(k => knowledge[k] === true).join("、") || "未记录")}。`,
+        desc: knowledge.enabled === false ? "当前只运行核心。需要知识能力时，由部署配置启用内置检索或接入已有知识库。" : "为任务提供授权资料的导入、检索、引用回查和删除。检索结果仍受来源授权限制。",
         foot: `版本 ${knowledge.version || "未记录"} · 新任务生效，旧任务保持绑定`,
         actions: admin ? (knowledge.choices || []).filter(b => b.backend !== backend).map(b =>
           `<button class="link-btn" data-backend="${esc(b.backend)}">切换到 ${esc(b.backend)}</button>`).join("") : "",
@@ -129,7 +160,7 @@ export async function renderHub(ctx) {
       }));
     }
 
-    if (tab === "all" || tab === "nodes") {
+    if (tab === "nodes") {
       for (const n of nodes) {
         const paired = n.status === "paired";
         cards.push(card({
@@ -146,7 +177,7 @@ export async function renderHub(ctx) {
       }
     }
 
-    if (tab === "all" || tab === "mcp") {
+    if (tab === "nodes") {
       const model = capabilities.model || {};
       cards.push(card({
         glyph: "sparkles", title: `模型 · ${modelZh(model.name)}`,
@@ -161,8 +192,19 @@ export async function renderHub(ctx) {
       }));
     }
 
-    el.querySelector("#hub-body").innerHTML = `${actions}<div class="cap-grid">${cards.join("")}</div>`;
+    const query = el.querySelector("#hub-search").value.trim().toLowerCase();
+    const shown = cards.filter(html => {
+      const template = document.createElement("template"); template.innerHTML = html;
+      return !query || template.content.textContent.toLowerCase().includes(query);
+    });
+    el.querySelector("#hub-summary").textContent = `${shown.length} 项 · 目录按当前账号权限显示`;
+    el.querySelector("#hub-body").innerHTML = `${actions}<div class="cap-grid">${shown.length ? shown.join("")
+      : emptyState(icon("search", 24), query ? "没有匹配的能力" : "暂无可用能力", query ? "试试其他名称或用途。" : "按需连接已有工具，发现和执行仍受授权限制。")}</div>`;
 
+    el.querySelectorAll("[data-capability]").forEach(card => {
+      const open = expanded.get(card.dataset.capability) || [];
+      card.querySelectorAll("details").forEach((d, i) => { d.open = Boolean(open[i]); });
+    });
     el.querySelectorAll("[data-hub-add]").forEach(btn => btn.addEventListener("click", () => openManage(btn.dataset.hubAdd)));
     el.querySelectorAll("[data-backend]").forEach(btn => btn.addEventListener("click", async () => {
       btn.disabled = true;
@@ -282,5 +324,5 @@ export async function renderHub(ctx) {
   await load().catch((e) => {
     if (!stopped) toast(e.message, "err");
   });
-  return { destroy: () => { stopped = true; dialogs.forEach(mask => mask.remove()); dialogs.clear(); } };
+  return { poll: () => load(), destroy: () => { stopped = true; dialogs.forEach(mask => mask.remove()); dialogs.clear(); } };
 }

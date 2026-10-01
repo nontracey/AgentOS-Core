@@ -1,12 +1,12 @@
 /* AgentOS 工作台 Service Worker：静态外壳缓存（离线可开 UI），API 不缓存。
- * v39：能力目录与工作流参数表单；升级预取绕过浏览器旧 HTTP 缓存。
+ * v40：任务入口、能力目录、工作流列表与统一主题；升级预取绕过浏览器旧 HTTP 缓存。
  * API/私有素材永不进入外壳缓存（仅缓存 /ui/ 静态资源）。 */
-const SHELL = "agentos-shell-v39";
+const SHELL = "agentos-shell-v40";
 const SHELL_FILES = [
   "/ui/", "/ui/index.html", "/ui/legacy.html",
   "/ui/style.css", "/ui/workspace.css", "/ui/console.css",
   "/ui/safe.js", "/ui/app.js",
-  "/ui/js/main.js", "/ui/js/api.js", "/ui/js/ui.js", "/ui/js/md.js",
+  "/ui/js/workspace-data.js", "/ui/js/main.js", "/ui/js/api.js", "/ui/js/ui.js", "/ui/js/md.js",
   "/ui/js/composer.js", "/ui/js/live.js", "/ui/js/theme.js", "/ui/js/safe-export.js", "/ui/js/execution.js", "/ui/js/conversation.js", "/ui/js/preview.js",
   "/ui/js/views/home.js", "/ui/js/views/tasks.js", "/ui/js/views/thread.js",
   "/ui/js/views/task-new.js", "/ui/js/views/library.js", "/ui/js/views/hub.js",
@@ -42,6 +42,9 @@ self.addEventListener("fetch", (e) => {
         if (resp.ok) await cache.put(e.request, resp.clone());
         return resp;
       }).catch(() => hit);
+      // Keep the worker alive until a stale response has finished refreshing.
+      // Navigation may otherwise terminate the worker before cache.put completes.
+      e.waitUntil(fetchP.then(() => undefined));
       return hit || fetchP;
     })
   );

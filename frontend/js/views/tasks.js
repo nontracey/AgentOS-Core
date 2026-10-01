@@ -4,7 +4,7 @@
 import { esc } from "../safe-export.js";
 import { emptyState, icon, stateBadge, timeShort, toast } from "../ui.js";
 
-const NEEDS = new Set(["awaiting_approval", "paused", "failed"]);
+import { ATTENTION_STATES as NEEDS, filterRuns, taskTitle } from "../workspace-data.js";
 
 export async function renderTasks(ctx, hooks = {}) {
   const { el, api, navigate } = ctx;
@@ -27,9 +27,7 @@ export async function renderTasks(ctx, hooks = {}) {
     </section>`;
 
   function visible() {
-    const q = query.trim().toLowerCase();
-    return runs.filter((r) => (!NEEDS.has(r.state) || filter !== "attention")
-      && (!q || String(r.goal || "").toLowerCase().includes(q)));
+    return filterRuns(runs, filter, query);
   }
 
   async function load(silent = false) {
@@ -44,7 +42,7 @@ export async function renderTasks(ctx, hooks = {}) {
       const box = el.querySelector("#tk-rows");
       box.innerHTML = rows.length ? rows.map((r) => `
         <button class="row-item" data-run="${esc(r.id)}">
-          <span class="row-main"><b>${esc(r.goal || r.id)}</b>
+          <span class="row-main"><b>${esc(taskTitle(r))}</b>
             <p>${esc(r.id)} · 最近活动 ${timeShort(r.updated_at || r.created_at)}</p></span>
           <span class="row-side">${stateBadge(r.state)}</span>
         </button>`).join("")

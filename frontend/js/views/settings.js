@@ -6,6 +6,8 @@ import { esc } from "../safe-export.js";
 import { icon, modelZh, toast } from "../ui.js";
 import { applyTheme } from "../theme.js";
 
+import { roleLabel } from "../workspace-data.js";
+
 function row(label, value, note = "") {
   return `<div class="settings-row"><span>${esc(label)}${
     note ? `<small>${esc(note)}</small>` : ""}</span><b>${value}</b></div>`;
@@ -27,13 +29,13 @@ export async function renderSettings(ctx) {
 
       <div class="settings-group">
         <div class="subhead"><h3>当前会话</h3></div>
-        ${row("访问角色", `<span class="badge good">${me?.role === "guest" ? "游客（只读）" : "管理员"}</span>`,
-          "角色由服务端 /v1/auth/me 裁定，前端不自报")}
+        ${row("访问角色", `<span class="badge good">${esc(roleLabel(me?.role))}</span>`,
+          "权限以当前账号的服务端授权为准")}
         ${row("主体", `<code>${esc(me?.subject || "未读取")}</code>`)}
         ${row("凭据存放", "<b>仅本浏览器</b>",
           "access 令牌在 sessionStorage；勾选保持登录时长驻 refresh（30 天），退出即清")}
         <div class="row gap">
-          <a class="btn small" href="#/demo">${icon("shield", 14)} 演示访问（游客发布与撤销）</a>
+          ${me?.role === "admin" ? `<a class="btn small" href="#/demo">${icon("shield", 14)} 演示访问（游客发布与撤销）</a>` : ""}
           <button class="btn small danger" id="st-logout">退出登录</button>
         </div>
       </div>
@@ -61,7 +63,7 @@ export async function renderSettings(ctx) {
           "保留过渡兼容，不等同当前工作区")}
       </div>
 
-      <div class="settings-group">
+      ${me?.role === "admin" ? `<div class="settings-group">
         <div class="subhead"><h3>修改管理员密码</h3></div>
         <form id="st-pw" class="pw-form">
           <div class="field"><label for="pw-current">当前密码</label>
@@ -74,7 +76,7 @@ export async function renderSettings(ctx) {
           <button class="btn primary small" type="submit">更新密码</button>
           <span class="muted small">修改后所有已登录会话失效，需要重新登录。</span>
         </form>
-      </div>
+      </div>` : ""}
     </section>`;
 
   const appearance = el.querySelector("#appearance");
@@ -82,7 +84,7 @@ export async function renderSettings(ctx) {
   appearance.addEventListener("change", () => applyTheme(appearance.value));
 
   el.querySelector("#st-logout").addEventListener("click", () => session.logout());
-  el.querySelector("#st-pw").addEventListener("submit", async (e) => {
+  el.querySelector("#st-pw")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const msg = el.querySelector("#pw-msg");
     msg.hidden = true;

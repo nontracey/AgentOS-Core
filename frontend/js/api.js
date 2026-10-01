@@ -207,6 +207,7 @@ export function createApi() {
       request(`/v1/tasks/${encodeURIComponent(id)}/trace?cursor=${cursor}&limit=200`),
     workflowRequest: (path, body) => request(path, body === undefined ? {} : {method: "POST", body}),
     getCapabilities: () => request("/v1/capabilities"),
+    capabilityCatalog: () => request("/v1/capabilities/catalog"),
     submitTask: (payload) => request("/v1/tasks", { method: "POST", body: payload }),
     supplementTask: (id, body) => request(`/v1/tasks/${encodeURIComponent(id)}/inputs`, { method: "POST", body }),
     followupTask: (id, body) => request(`/v1/tasks/${encodeURIComponent(id)}/followups`, { method: "POST", body }),
