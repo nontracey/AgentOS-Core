@@ -1,0 +1,92 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "auth": {
+      "enum": [
+        "none",
+        "token",
+        "oauth2",
+        "delegated"
+      ],
+      "title": "Auth",
+      "type": "string"
+    },
+    "data_classes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Data Classes",
+      "type": "array"
+    },
+    "endpoint": {
+      "title": "Endpoint",
+      "type": "string"
+    },
+    "health_path": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Health Path"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "lifecycle": {
+      "default": "registered",
+      "enum": [
+        "registered",
+        "enabled",
+        "disabled"
+      ],
+      "title": "Lifecycle",
+      "type": "string"
+    },
+    "protocol": {
+      "enum": [
+        "mcp",
+        "acp",
+        "http",
+        "webhook",
+        "container",
+        "custom"
+      ],
+      "title": "Protocol",
+      "type": "string"
+    },
+    "recovery": {
+      "default": "manual",
+      "enum": [
+        "idempotency_key",
+        "query",
+        "manual"
+      ],
+      "title": "Recovery",
+      "type": "string"
+    },
+    "schemas": {
+      "additionalProperties": true,
+      "title": "Schemas",
+      "type": "object"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "protocol",
+    "endpoint",
+    "auth"
+  ],
+  "title": "AppManifest",
+  "type": "object"
+}

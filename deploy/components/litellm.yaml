@@ -1,0 +1,20 @@
+model_list:
+  # Generic public route; map the backend model/endpoint to your existing service.
+  - model_name: agentos-model
+    litellm_params:
+      model: openai/agentos-codex:32k
+      api_base: os.environ/OLLAMA_OPENAI_BASE_URL
+      api_key: ollama
+      use_chat_completions_api: true
+litellm_settings:
+  openai_system_messages_first: true
+  drop_params: true
+  set_verbose: false
+  turn_off_message_logging: true
+  num_retries: 0
+  request_timeout: 120
+router_settings:
+  num_retries: 0
+  fallbacks: []
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

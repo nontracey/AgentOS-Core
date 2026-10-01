@@ -1,0 +1,205 @@
+{
+  "scope": "direct dependencies and selected external core; NOT exhaustive transitive/container license approval",
+  "components": [
+    {
+      "kind": "python",
+      "name": "fastapi",
+      "version": "0.141.1",
+      "license": "MIT",
+      "source": "https://pypi.org/project/fastapi/0.141.1/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "uvicorn",
+      "version": "0.54.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/uvicorn/0.54.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "pydantic",
+      "version": "2.13.5",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pydantic/2.13.5/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "typer",
+      "version": "0.27.2",
+      "license": "MIT",
+      "source": "https://pypi.org/project/typer/0.27.2/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "httpx",
+      "version": "0.28.1",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/httpx/0.28.1/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "mcp",
+      "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/mcp/2.2.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "jsonschema",
+      "version": "4.26.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/jsonschema/4.26.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "sqlite-vec",
+      "version": "0.1.9",
+      "license": "MIT OR Apache-2.0",
+      "source": "https://pypi.org/project/sqlite-vec/0.1.9/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "pyjwt",
+      "version": "2.15.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/pyjwt/2.15.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "authlib",
+      "version": "1.8.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/authlib/1.8.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "temporalio",
+      "version": "1.33.0",
+      "license": "MIT",
+      "source": "https://pypi.org/project/temporalio/1.33.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "opentelemetry-sdk",
+      "version": "1.45.0",
+      "license": "Apache-2.0",
+      "source": "https://pypi.org/project/opentelemetry-sdk/1.45.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "python",
+      "name": "itsdangerous",
+      "version": "2.2.0",
+      "license": "BSD-3-Clause",
+      "source": "https://pypi.org/project/itsdangerous/2.2.0/",
+      "review": "direct dependency; wheel license metadata and upstream license"
+    },
+    {
+      "kind": "npm",
+      "name": "@xyflow/react",
+      "version": "12.12.0",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/@xyflow/react",
+      "review": "package-lock license metadata"
+    },
+    {
+      "kind": "npm",
+      "name": "react",
+      "version": "19.3.0",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/react",
+      "review": "package-lock license metadata"
+    },
+    {
+      "kind": "npm",
+      "name": "react-dom",
+      "version": "19.3.0",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/react-dom",
+      "review": "package-lock license metadata"
+    },
+    {
+      "kind": "npm",
+      "name": "typescript",
+      "version": "5.9.3",
+      "license": "Apache-2.0",
+      "source": "https://www.npmjs.com/package/typescript",
+      "review": "package-lock license metadata"
+    },
+    {
+      "kind": "npm",
+      "name": "vite",
+      "version": "7.3.6",
+      "license": "MIT",
+      "source": "https://www.npmjs.com/package/vite",
+      "review": "package-lock license metadata"
+    },
+    {
+      "kind": "external",
+      "name": "codex",
+      "version": "0.159.2",
+      "license": "Apache-2.0",
+      "source": "https://github.com/openai/codex",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "temporal-cli",
+      "version": "1.9.1",
+      "license": "MIT",
+      "source": "https://github.com/temporalio/cli",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "WeKnora",
+      "version": "v0.8.2",
+      "license": "MIT",
+      "source": "https://github.com/Tencent/WeKnora",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "qdrant",
+      "version": "v1.16.3",
+      "license": "Apache-2.0",
+      "source": "https://github.com/qdrant/qdrant",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "gitleaks",
+      "version": "8.30.1",
+      "license": "MIT",
+      "source": "https://github.com/gitleaks/gitleaks",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "LiteLLM OSS",
+      "version": "image digest in deployment guide",
+      "license": "MIT",
+      "source": "https://github.com/BerriAI/litellm",
+      "review": "core license only; excludes enterprise directories and third-party dependencies"
+    },
+    {
+      "kind": "external",
+      "name": "Mermaid CLI (documentation tool)",
+      "version": "12.0.0",
+      "license": "MIT",
+      "source": "https://github.com/mermaid-js/mermaid-cli",
+      "review": "pinned official npm CLI; generated SVGs exclude embedded fonts; tool/transitive packages are not redistributed with runtime"
+    }
+  ]
+}

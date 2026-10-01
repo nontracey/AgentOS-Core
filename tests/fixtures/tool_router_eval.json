@@ -1,0 +1,761 @@
+{
+ "kind": "tool_router_frozen_v1",
+ "tools": [
+  {
+   "name": "fs_tool_00",
+   "category": "fs",
+   "description": "read a text file (variant 0, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_01",
+   "category": "fs",
+   "description": "write config file (variant 1, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_02",
+   "category": "fs",
+   "description": "list directory (variant 2, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_03",
+   "category": "fs",
+   "description": "delete temp file (variant 3, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_04",
+   "category": "fs",
+   "description": "move file to archive (variant 4, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_05",
+   "category": "fs",
+   "description": "read a text file (variant 5, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_06",
+   "category": "fs",
+   "description": "write config file (variant 6, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_07",
+   "category": "fs",
+   "description": "list directory (variant 7, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_08",
+   "category": "fs",
+   "description": "delete temp file (variant 8, 文件 category tool)"
+  },
+  {
+   "name": "fs_tool_09",
+   "category": "fs",
+   "description": "move file to archive (variant 9, 文件 category tool)"
+  },
+  {
+   "name": "db_tool_00",
+   "category": "db",
+   "description": "query user table (variant 0, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_01",
+   "category": "db",
+   "description": "insert order row (variant 1, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_02",
+   "category": "db",
+   "description": "backup database (variant 2, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_03",
+   "category": "db",
+   "description": "run sql migration (variant 3, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_04",
+   "category": "db",
+   "description": "check connection pool (variant 4, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_05",
+   "category": "db",
+   "description": "query user table (variant 5, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_06",
+   "category": "db",
+   "description": "insert order row (variant 6, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_07",
+   "category": "db",
+   "description": "backup database (variant 7, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_08",
+   "category": "db",
+   "description": "run sql migration (variant 8, 数据库 category tool)"
+  },
+  {
+   "name": "db_tool_09",
+   "category": "db",
+   "description": "check connection pool (variant 9, 数据库 category tool)"
+  },
+  {
+   "name": "net_tool_00",
+   "category": "net",
+   "description": "http get request (variant 0, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_01",
+   "category": "net",
+   "description": "download remote file (variant 1, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_02",
+   "category": "net",
+   "description": "check port status (variant 2, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_03",
+   "category": "net",
+   "description": "resolve dns name (variant 3, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_04",
+   "category": "net",
+   "description": "measure ping latency (variant 4, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_05",
+   "category": "net",
+   "description": "http get request (variant 5, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_06",
+   "category": "net",
+   "description": "download remote file (variant 6, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_07",
+   "category": "net",
+   "description": "check port status (variant 7, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_08",
+   "category": "net",
+   "description": "resolve dns name (variant 8, 网络 category tool)"
+  },
+  {
+   "name": "net_tool_09",
+   "category": "net",
+   "description": "measure ping latency (variant 9, 网络 category tool)"
+  },
+  {
+   "name": "img_tool_00",
+   "category": "img",
+   "description": "resize an image (variant 0, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_01",
+   "category": "img",
+   "description": "convert png to jpeg (variant 1, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_02",
+   "category": "img",
+   "description": "crop photo center (variant 2, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_03",
+   "category": "img",
+   "description": "generate thumbnail (variant 3, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_04",
+   "category": "img",
+   "description": "add watermark text (variant 4, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_05",
+   "category": "img",
+   "description": "resize an image (variant 5, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_06",
+   "category": "img",
+   "description": "convert png to jpeg (variant 6, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_07",
+   "category": "img",
+   "description": "crop photo center (variant 7, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_08",
+   "category": "img",
+   "description": "generate thumbnail (variant 8, 图像 category tool)"
+  },
+  {
+   "name": "img_tool_09",
+   "category": "img",
+   "description": "add watermark text (variant 9, 图像 category tool)"
+  },
+  {
+   "name": "msg_tool_00",
+   "category": "msg",
+   "description": "send email notification (variant 0, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_01",
+   "category": "msg",
+   "description": "publish queue message (variant 1, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_02",
+   "category": "msg",
+   "description": "send sms alert (variant 2, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_03",
+   "category": "msg",
+   "description": "post slack message (variant 3, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_04",
+   "category": "msg",
+   "description": "push mobile notify (variant 4, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_05",
+   "category": "msg",
+   "description": "send email notification (variant 5, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_06",
+   "category": "msg",
+   "description": "publish queue message (variant 6, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_07",
+   "category": "msg",
+   "description": "send sms alert (variant 7, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_08",
+   "category": "msg",
+   "description": "post slack message (variant 8, 消息 category tool)"
+  },
+  {
+   "name": "msg_tool_09",
+   "category": "msg",
+   "description": "push mobile notify (variant 9, 消息 category tool)"
+  },
+  {
+   "name": "calc_tool_00",
+   "category": "calc",
+   "description": "add two numbers (variant 0, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_01",
+   "category": "calc",
+   "description": "compute matrix inverse (variant 1, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_02",
+   "category": "calc",
+   "description": "currency convert (variant 2, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_03",
+   "category": "calc",
+   "description": "statistics summary (variant 3, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_04",
+   "category": "calc",
+   "description": "percentage change (variant 4, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_05",
+   "category": "calc",
+   "description": "add two numbers (variant 5, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_06",
+   "category": "calc",
+   "description": "compute matrix inverse (variant 6, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_07",
+   "category": "calc",
+   "description": "currency convert (variant 7, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_08",
+   "category": "calc",
+   "description": "statistics summary (variant 8, 计算 category tool)"
+  },
+  {
+   "name": "calc_tool_09",
+   "category": "calc",
+   "description": "percentage change (variant 9, 计算 category tool)"
+  },
+  {
+   "name": "time_tool_00",
+   "category": "time",
+   "description": "get current utc time (variant 0, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_01",
+   "category": "time",
+   "description": "convert timezone (variant 1, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_02",
+   "category": "time",
+   "description": "parse date string (variant 2, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_03",
+   "category": "time",
+   "description": "schedule cron job (variant 3, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_04",
+   "category": "time",
+   "description": "measure elapsed time (variant 4, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_05",
+   "category": "time",
+   "description": "get current utc time (variant 5, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_06",
+   "category": "time",
+   "description": "convert timezone (variant 6, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_07",
+   "category": "time",
+   "description": "parse date string (variant 7, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_08",
+   "category": "time",
+   "description": "schedule cron job (variant 8, 时间 category tool)"
+  },
+  {
+   "name": "time_tool_09",
+   "category": "time",
+   "description": "measure elapsed time (variant 9, 时间 category tool)"
+  },
+  {
+   "name": "auth_tool_00",
+   "category": "auth",
+   "description": "verify jwt signature (variant 0, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_01",
+   "category": "auth",
+   "description": "hash password bcrypt (variant 1, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_02",
+   "category": "auth",
+   "description": "generate api key (variant 2, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_03",
+   "category": "auth",
+   "description": "check acl permission (variant 3, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_04",
+   "category": "auth",
+   "description": "rotate credentials (variant 4, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_05",
+   "category": "auth",
+   "description": "verify jwt signature (variant 5, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_06",
+   "category": "auth",
+   "description": "hash password bcrypt (variant 6, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_07",
+   "category": "auth",
+   "description": "generate api key (variant 7, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_08",
+   "category": "auth",
+   "description": "check acl permission (variant 8, 安全 category tool)"
+  },
+  {
+   "name": "auth_tool_09",
+   "category": "auth",
+   "description": "rotate credentials (variant 9, 安全 category tool)"
+  },
+  {
+   "name": "deploy_tool_00",
+   "category": "deploy",
+   "description": "build docker image (variant 0, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_01",
+   "category": "deploy",
+   "description": "push container registry (variant 1, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_02",
+   "category": "deploy",
+   "description": "run migration job (variant 2, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_03",
+   "category": "deploy",
+   "description": "scale replicas (variant 3, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_04",
+   "category": "deploy",
+   "description": "rollback release (variant 4, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_05",
+   "category": "deploy",
+   "description": "build docker image (variant 5, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_06",
+   "category": "deploy",
+   "description": "push container registry (variant 6, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_07",
+   "category": "deploy",
+   "description": "run migration job (variant 7, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_08",
+   "category": "deploy",
+   "description": "scale replicas (variant 8, 部署 category tool)"
+  },
+  {
+   "name": "deploy_tool_09",
+   "category": "deploy",
+   "description": "rollback release (variant 9, 部署 category tool)"
+  },
+  {
+   "name": "llm_tool_00",
+   "category": "llm",
+   "description": "chat completion request (variant 0, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_01",
+   "category": "llm",
+   "description": "embed text batch (variant 1, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_02",
+   "category": "llm",
+   "description": "rerank search results (variant 2, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_03",
+   "category": "llm",
+   "description": "vision image caption (variant 3, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_04",
+   "category": "llm",
+   "description": "stream tokens (variant 4, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_05",
+   "category": "llm",
+   "description": "chat completion request (variant 5, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_06",
+   "category": "llm",
+   "description": "embed text batch (variant 6, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_07",
+   "category": "llm",
+   "description": "rerank search results (variant 7, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_08",
+   "category": "llm",
+   "description": "vision image caption (variant 8, 模型 category tool)"
+  },
+  {
+   "name": "llm_tool_09",
+   "category": "llm",
+   "description": "stream tokens (variant 9, 模型 category tool)"
+  }
+ ],
+ "queries": [
+  {
+   "qid": "q-fs-0",
+   "query": "need to read a text file",
+   "gold_prefix": "fs_"
+  },
+  {
+   "qid": "q-fs-1",
+   "query": "need to write config file",
+   "gold_prefix": "fs_"
+  },
+  {
+   "qid": "q-fs-2",
+   "query": "need to list directory",
+   "gold_prefix": "fs_"
+  },
+  {
+   "qid": "q-fs-3",
+   "query": "need to delete temp file",
+   "gold_prefix": "fs_"
+  },
+  {
+   "qid": "q-db-0",
+   "query": "need to query user table",
+   "gold_prefix": "db_"
+  },
+  {
+   "qid": "q-db-1",
+   "query": "need to insert order row",
+   "gold_prefix": "db_"
+  },
+  {
+   "qid": "q-db-2",
+   "query": "need to backup database",
+   "gold_prefix": "db_"
+  },
+  {
+   "qid": "q-db-3",
+   "query": "need to run sql migration",
+   "gold_prefix": "db_"
+  },
+  {
+   "qid": "q-net-0",
+   "query": "need to http get request",
+   "gold_prefix": "net_"
+  },
+  {
+   "qid": "q-net-1",
+   "query": "need to download remote file",
+   "gold_prefix": "net_"
+  },
+  {
+   "qid": "q-net-2",
+   "query": "need to check port status",
+   "gold_prefix": "net_"
+  },
+  {
+   "qid": "q-net-3",
+   "query": "need to resolve dns name",
+   "gold_prefix": "net_"
+  },
+  {
+   "qid": "q-img-0",
+   "query": "need to resize an image",
+   "gold_prefix": "img_"
+  },
+  {
+   "qid": "q-img-1",
+   "query": "need to convert png to jpeg",
+   "gold_prefix": "img_"
+  },
+  {
+   "qid": "q-img-2",
+   "query": "need to crop photo center",
+   "gold_prefix": "img_"
+  },
+  {
+   "qid": "q-img-3",
+   "query": "need to generate thumbnail",
+   "gold_prefix": "img_"
+  },
+  {
+   "qid": "q-msg-0",
+   "query": "need to send email notification",
+   "gold_prefix": "msg_"
+  },
+  {
+   "qid": "q-msg-1",
+   "query": "need to publish queue message",
+   "gold_prefix": "msg_"
+  },
+  {
+   "qid": "q-msg-2",
+   "query": "need to send sms alert",
+   "gold_prefix": "msg_"
+  },
+  {
+   "qid": "q-msg-3",
+   "query": "need to post slack message",
+   "gold_prefix": "msg_"
+  },
+  {
+   "qid": "q-calc-0",
+   "query": "need to add two numbers",
+   "gold_prefix": "calc_"
+  },
+  {
+   "qid": "q-calc-1",
+   "query": "need to compute matrix inverse",
+   "gold_prefix": "calc_"
+  },
+  {
+   "qid": "q-calc-2",
+   "query": "need to currency convert",
+   "gold_prefix": "calc_"
+  },
+  {
+   "qid": "q-calc-3",
+   "query": "need to statistics summary",
+   "gold_prefix": "calc_"
+  },
+  {
+   "qid": "q-time-0",
+   "query": "need to get current utc time",
+   "gold_prefix": "time_"
+  },
+  {
+   "qid": "q-time-1",
+   "query": "need to convert timezone",
+   "gold_prefix": "time_"
+  },
+  {
+   "qid": "q-time-2",
+   "query": "need to parse date string",
+   "gold_prefix": "time_"
+  },
+  {
+   "qid": "q-time-3",
+   "query": "need to schedule cron job",
+   "gold_prefix": "time_"
+  },
+  {
+   "qid": "q-auth-0",
+   "query": "need to verify jwt signature",
+   "gold_prefix": "auth_"
+  },
+  {
+   "qid": "q-auth-1",
+   "query": "need to hash password bcrypt",
+   "gold_prefix": "auth_"
+  },
+  {
+   "qid": "q-auth-2",
+   "query": "need to generate api key",
+   "gold_prefix": "auth_"
+  },
+  {
+   "qid": "q-auth-3",
+   "query": "need to check acl permission",
+   "gold_prefix": "auth_"
+  },
+  {
+   "qid": "q-deploy-0",
+   "query": "need to build docker image",
+   "gold_prefix": "deploy_"
+  },
+  {
+   "qid": "q-deploy-1",
+   "query": "need to push container registry",
+   "gold_prefix": "deploy_"
+  },
+  {
+   "qid": "q-deploy-2",
+   "query": "need to run migration job",
+   "gold_prefix": "deploy_"
+  },
+  {
+   "qid": "q-deploy-3",
+   "query": "need to scale replicas",
+   "gold_prefix": "deploy_"
+  },
+  {
+   "qid": "q-llm-0",
+   "query": "need to chat completion request",
+   "gold_prefix": "llm_"
+  },
+  {
+   "qid": "q-llm-1",
+   "query": "need to embed text batch",
+   "gold_prefix": "llm_"
+  },
+  {
+   "qid": "q-llm-2",
+   "query": "need to rerank search results",
+   "gold_prefix": "llm_"
+  },
+  {
+   "qid": "q-llm-3",
+   "query": "need to vision image caption",
+   "gold_prefix": "llm_"
+  },
+  {
+   "qid": "q-fs-x",
+   "query": "which tool helps to list directory",
+   "gold_prefix": "fs_"
+  },
+  {
+   "qid": "q-db-x",
+   "query": "which tool helps to backup database",
+   "gold_prefix": "db_"
+  },
+  {
+   "qid": "q-net-x",
+   "query": "which tool helps to check port status",
+   "gold_prefix": "net_"
+  },
+  {
+   "qid": "q-img-x",
+   "query": "which tool helps to crop photo center",
+   "gold_prefix": "img_"
+  },
+  {
+   "qid": "q-msg-x",
+   "query": "which tool helps to send sms alert",
+   "gold_prefix": "msg_"
+  },
+  {
+   "qid": "q-calc-x",
+   "query": "which tool helps to currency convert",
+   "gold_prefix": "calc_"
+  },
+  {
+   "qid": "q-time-x",
+   "query": "which tool helps to parse date string",
+   "gold_prefix": "time_"
+  },
+  {
+   "qid": "q-auth-x",
+   "query": "which tool helps to generate api key",
+   "gold_prefix": "auth_"
+  },
+  {
+   "qid": "q-deploy-x",
+   "query": "which tool helps to run migration job",
+   "gold_prefix": "deploy_"
+  },
+  {
+   "qid": "q-llm-x",
+   "query": "which tool helps to rerank search results",
+   "gold_prefix": "llm_"
+  }
+ ],
+ "counts": {
+  "tools": 100,
+  "queries": 50
+ }
+}

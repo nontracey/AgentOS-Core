@@ -1,0 +1,69 @@
+# 依赖与产物
+node_modules/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+.turbo/
+
+# 本地环境与密钥（只提交 .env.example）
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+.credentials/
+
+# 本地数据与日志
+*.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+data/
+logs/
+*.log
+
+# 浏览器自动化工具产物
+.playwright-cli/
+
+# 本地过程资料；公开仓库维护当前设计、契约和验证摘要。
+/docs/history/
+/evidence/
+
+# Python 工具链
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 本地验证临时目录（验证后清理，不入库）
+.tmp-verify/
+
+# 编辑器与系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+scripts/__pycache__
+.import_linter_cache/
+
+# 本地部署配置（真实 IP/凭据，不入库）
+deploy/local.md
+deploy/runtime.json
+
+# Workflow React island: production files are generated with npm run build.
+frontend/workflow/node_modules/
+frontend/workflow-dist/
+
+# Component secrets are supplied locally; public recipes contain placeholders.
+deploy/components/private.env
+deploy/components/image-pin.txt
+deploy/components/compose.local.json
+
+.pytest-tmp/

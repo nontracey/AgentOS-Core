@@ -1,0 +1,104 @@
+{
+  "description": "按 kind/status 的判别约束：\n\n- choice: value=标签, probabilities=全分布(归一), confidence 必填\n- score:  value=加权分数, legend=有序等级, probabilities=分布\n- noul:   value=是概率(0-1)，不使用独立 confidence 字段\n- abstained: value/probabilities 为空，reason 必填",
+  "properties": {
+    "confidence": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Confidence"
+    },
+    "kind": {
+      "enum": [
+        "choice",
+        "score",
+        "noul"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "legend": {
+      "anyOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Legend"
+    },
+    "probabilities": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Probabilities"
+    },
+    "question_id": {
+      "title": "Question Id",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Reason"
+    },
+    "status": {
+      "enum": [
+        "answered",
+        "abstained"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "question_id",
+    "status",
+    "kind"
+  ],
+  "title": "DecisionResult",
+  "type": "object"
+}

@@ -1,0 +1,118 @@
+{
+  "fixture_version": "u4-k-1",
+  "frozen_at": "2026-09-30",
+  "tree": "cfa12be5aacf06900cf98aa666ce40cfcf217c5e",
+  "note": "合成数据。K 知识替换：同一 fixture 在内置后端与 WeKnora 后端分别跑；覆盖中文双字查询、重复文档、私有哨兵、删除失效。",
+  "corpus": [
+    {
+      "source_id": "src-brand-zh",
+      "acl": [
+        "default"
+      ],
+      "text": "合成品牌 A 春季徒步节定于 2026-04-12 在杭州举行，预算 8 万元，主办方为户外俱乐部。"
+    },
+    {
+      "source_id": "src-brand-en",
+      "acl": [
+        "default"
+      ],
+      "text": "Synthetic brand A spring hiking festival: 2026-04-12, Hangzhou, budget 80k CNY."
+    },
+    {
+      "source_id": "src-brand-dup",
+      "acl": [
+        "default"
+      ],
+      "text": "合成品牌 A 春季徒步节定于 2026-04-12 在杭州举行，预算 8 万元，主办方为户外俱乐部。",
+      "duplicate_of": "src-brand-zh"
+    },
+    {
+      "source_id": "src-sentinel-private",
+      "acl": [
+        "private-sentinel-only"
+      ],
+      "text": "权限哨兵：私有内容 PRIVATE-SENTINEL-42，任何游客或非授权主体均不可返回。"
+    }
+  ],
+  "queries": [
+    {
+      "query": "春季徒步节",
+      "expect_hit_source": "src-brand-zh",
+      "expect_no_source": "src-sentinel-private",
+      "note": "中文长词（FTS 可召回）"
+    },
+    {
+      "query": "spring hiking",
+      "expect_hit_source": "src-brand-en",
+      "expect_no_source": "src-sentinel-private",
+      "note": "英文查询"
+    },
+    {
+      "query": "徒步",
+      "expect": "needs-vector-embedder",
+      "note": "双字词是 FTS trigram 已知短板（见 test_knw_hybrid_recall），需向量侧；本阶段无 embedder 时如实为空"
+    },
+    {
+      "query": "权限哨兵",
+      "expect": "denied-or-empty",
+      "note": "哨兵在任何路径都不得返回，包括缓存命中"
+    }
+  ],
+  "expectations": [
+    {
+      "id": "K01",
+      "case": "ingest 内置后端：真实摄取并返回 source_version",
+      "expect": "pass"
+    },
+    {
+      "id": "K02",
+      "case": "重复文档二次摄取",
+      "expect": "去重，embedding 调用不重复计费（embedding_calls 不因重复文档增加）"
+    },
+    {
+      "id": "K03",
+      "case": "search 命中查询并带可回查 refs（中文长词/英文；双字词需向量侧，另测）",
+      "expect": "pass"
+    },
+    {
+      "id": "K04",
+      "case": "resolve_ref 回查原文定位",
+      "expect": "pass"
+    },
+    {
+      "id": "K05",
+      "case": "私有哨兵在 admin 检索与 guest 投影中均不返回",
+      "expect": "denied-or-empty"
+    },
+    {
+      "id": "K06",
+      "case": "delete 源后 search/resolve/新导出均不可返回",
+      "expect": "pass",
+      "assert": [
+        "tombstone",
+        "缓存失效",
+        "已有任务展示来源已失效"
+      ]
+    },
+    {
+      "id": "K07",
+      "case": "同 fixture 在 WeKnora 后端跑通 ingest/search/resolve/delete",
+      "expect": "U4-07 验证；不可用时该阶段 blocked"
+    },
+    {
+      "id": "K08",
+      "case": "混用 backend/source/chunk/version 的引用",
+      "expect": "denied",
+      "assert": [
+        "引用归属固定",
+        "双过滤"
+      ]
+    },
+    {
+      "id": "K09",
+      "case": "guest 实时 RAG 检索 / 引用跳全文",
+      "expect": "denied"
+    }
+  ],
+  "scope": "小型契约验收，不冒充全量召回指标；不承诺任意开源项目零适配接入"
+}

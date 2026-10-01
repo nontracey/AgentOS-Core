@@ -1,0 +1,54 @@
+{
+  "name": "tool_call_round",
+  "description": "Model Port 契约基准：scripted 与 openai_compat 两个 adapter 必须产出等价的规范化事件（FR-MDL-01 同 fixture）。",
+  "scripted_script": [
+    {
+      "tool_calls": [
+        { "id": "call_1", "name": "math.add", "arguments": { "a": 2, "b": 3 } }
+      ]
+    },
+    {
+      "content": "2 + 3 = 5，任务完成。"
+    }
+  ],
+  "openai_response_tool_turn": {
+    "id": "chatcmpl_fixture_1",
+    "object": "chat.completion",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "tool_calls",
+        "message": {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "call_1",
+              "type": "function",
+              "function": { "name": "math.add", "arguments": "{\"a\": 2, \"b\": 3}" }
+            }
+          ]
+        }
+      }
+    ],
+    "usage": { "prompt_tokens": 21, "completion_tokens": 14 }
+  },
+  "openai_response_final_turn": {
+    "id": "chatcmpl_fixture_2",
+    "object": "chat.completion",
+    "choices": [
+      {
+        "index": 0,
+        "finish_reason": "stop",
+        "message": { "role": "assistant", "content": "2 + 3 = 5，任务完成。" }
+      }
+    ],
+    "usage": { "prompt_tokens": 52, "completion_tokens": 12 }
+  },
+  "expect": {
+    "turn_0_tool_calls": [
+      { "id": "call_1", "name": "math.add", "arguments": { "a": 2, "b": 3 } }
+    ],
+    "turn_1_content": "2 + 3 = 5，任务完成。"
+  }
+}

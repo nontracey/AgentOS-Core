@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_checks": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Acceptance Checks",
+      "type": "array"
+    },
+    "assumptions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Assumptions",
+      "type": "array"
+    },
+    "budget_microusd": {
+      "minimum": 0,
+      "title": "Budget Microusd",
+      "type": "integer"
+    },
+    "deadline_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Deadline At"
+    },
+    "deliverables": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Deliverables",
+      "type": "array"
+    },
+    "goal_id": {
+      "title": "Goal Id",
+      "type": "string"
+    },
+    "input_asset_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Input Asset Ids",
+      "type": "array"
+    },
+    "original_request": {
+      "title": "Original Request",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "goal_id",
+    "version",
+    "original_request",
+    "deliverables",
+    "acceptance_checks",
+    "budget_microusd"
+  ],
+  "title": "GoalSpec",
+  "type": "object"
+}

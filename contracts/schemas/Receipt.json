@@ -1,0 +1,30 @@
+{
+  "additionalProperties": false,
+  "description": "入口受理回执（FR-ING-06）：相同幂等键重放返回同一回执。",
+  "properties": {
+    "accepted": {
+      "title": "Accepted",
+      "type": "boolean"
+    },
+    "job_id": {
+      "title": "Job Id",
+      "type": "string"
+    },
+    "replayed": {
+      "default": false,
+      "title": "Replayed",
+      "type": "boolean"
+    },
+    "run_id": {
+      "title": "Run Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "run_id",
+    "job_id",
+    "accepted"
+  ],
+  "title": "Receipt",
+  "type": "object"
+}

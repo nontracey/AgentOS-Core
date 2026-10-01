@@ -1,0 +1,1111 @@
+{
+ "kind": "decision_zh_frozen_v1",
+ "rules": {
+  "q000": {
+   "answer": "true",
+   "reason": "报销规则"
+  },
+  "q001": {
+   "answer": "false",
+   "reason": "采购规则"
+  },
+  "q002": {
+   "answer": "true",
+   "reason": "加班规则"
+  },
+  "q003": {
+   "answer": "false",
+   "reason": "出差规则"
+  },
+  "q004": {
+   "answer": "true",
+   "reason": "休假规则"
+  },
+  "q005": {
+   "answer": "false",
+   "reason": "招聘规则"
+  },
+  "q006": {
+   "answer": "true",
+   "reason": "合同规则"
+  },
+  "q007": {
+   "answer": "false",
+   "reason": "预算规则"
+  },
+  "q008": {
+   "answer": "true",
+   "reason": "会议规则"
+  },
+  "q009": {
+   "answer": "false",
+   "reason": "培训规则"
+  },
+  "q010": {
+   "answer": "true",
+   "reason": "运维规则"
+  },
+  "q011": {
+   "answer": "false",
+   "reason": "发布规则"
+  },
+  "q012": {
+   "answer": "true",
+   "reason": "告警规则"
+  },
+  "q013": {
+   "answer": "false",
+   "reason": "巡检规则"
+  },
+  "q014": {
+   "answer": "true",
+   "reason": "备份规则"
+  },
+  "q015": {
+   "answer": "false",
+   "reason": "权限规则"
+  },
+  "q016": {
+   "answer": "true",
+   "reason": "审计规则"
+  },
+  "q017": {
+   "answer": "false",
+   "reason": "考核规则"
+  },
+  "q018": {
+   "answer": "true",
+   "reason": "绩效规则"
+  },
+  "q019": {
+   "answer": "false",
+   "reason": "晋升规则"
+  },
+  "q020": {
+   "answer": "true",
+   "reason": "客服规则"
+  },
+  "q021": {
+   "answer": "false",
+   "reason": "投诉规则"
+  },
+  "q022": {
+   "answer": "true",
+   "reason": "退款规则"
+  },
+  "q023": {
+   "answer": "false",
+   "reason": "换货规则"
+  },
+  "q024": {
+   "answer": "true",
+   "reason": "物流规则"
+  },
+  "q025": {
+   "answer": "false",
+   "reason": "仓储规则"
+  },
+  "q026": {
+   "answer": "true",
+   "reason": "库存规则"
+  },
+  "q027": {
+   "answer": "false",
+   "reason": "盘点规则"
+  },
+  "q028": {
+   "answer": "true",
+   "reason": "质检规则"
+  },
+  "q029": {
+   "answer": "false",
+   "reason": "退货规则"
+  },
+  "q030": {
+   "answer": "true",
+   "reason": "报销规则"
+  },
+  "q031": {
+   "answer": "false",
+   "reason": "采购规则"
+  },
+  "q032": {
+   "answer": "true",
+   "reason": "加班规则"
+  },
+  "q033": {
+   "answer": "false",
+   "reason": "出差规则"
+  },
+  "q034": {
+   "answer": "true",
+   "reason": "休假规则"
+  },
+  "q035": {
+   "answer": "false",
+   "reason": "招聘规则"
+  },
+  "q036": {
+   "answer": "true",
+   "reason": "合同规则"
+  },
+  "q037": {
+   "answer": "false",
+   "reason": "预算规则"
+  },
+  "q038": {
+   "answer": "true",
+   "reason": "会议规则"
+  },
+  "q039": {
+   "answer": "false",
+   "reason": "培训规则"
+  },
+  "q040": {
+   "answer": "true",
+   "reason": "运维规则"
+  },
+  "q041": {
+   "answer": "false",
+   "reason": "发布规则"
+  },
+  "q042": {
+   "answer": "true",
+   "reason": "告警规则"
+  },
+  "q043": {
+   "answer": "false",
+   "reason": "巡检规则"
+  },
+  "q044": {
+   "answer": "true",
+   "reason": "备份规则"
+  },
+  "q045": {
+   "answer": "false",
+   "reason": "权限规则"
+  },
+  "q046": {
+   "answer": "true",
+   "reason": "审计规则"
+  },
+  "q047": {
+   "answer": "false",
+   "reason": "考核规则"
+  },
+  "q048": {
+   "answer": "true",
+   "reason": "绩效规则"
+  },
+  "q049": {
+   "answer": "false",
+   "reason": "晋升规则"
+  }
+ },
+ "samples": [
+  {
+   "qid": "x025",
+   "instructions": "报销类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q045",
+   "instructions": "权限类事项：是否需要部门负责人先行确认？（业务规则编号 R045，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x035",
+   "instructions": "加班类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x002",
+   "instructions": "休假类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x046",
+   "instructions": "质检类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x009",
+   "instructions": "投诉类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q028",
+   "instructions": "质检类事项：可否发起部门负责人先行确认？（业务规则编号 R028，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x019",
+   "instructions": "退款类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q005",
+   "instructions": "招聘类事项：是否需要部门负责人先行确认？（业务规则编号 R005，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x036",
+   "instructions": "招聘类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x008",
+   "instructions": "备份类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x001",
+   "instructions": "投诉类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q025",
+   "instructions": "仓储类事项：是否需要部门负责人先行确认？（业务规则编号 R025，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q040",
+   "instructions": "运维类事项：是否需要部门负责人先行确认？（业务规则编号 R040，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x014",
+   "instructions": "会议类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q006",
+   "instructions": "合同类事项：能否申请部门负责人先行确认？（业务规则编号 R006，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q039",
+   "instructions": "培训类事项：是否批准部门负责人先行确认？（业务规则编号 R039，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q043",
+   "instructions": "巡检类事项：可否发起部门负责人先行确认？（业务规则编号 R043，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x026",
+   "instructions": "会议类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q022",
+   "instructions": "退款类事项：是否允许部门负责人先行确认？（业务规则编号 R022，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x039",
+   "instructions": "招聘类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q021",
+   "instructions": "投诉类事项：能否申请部门负责人先行确认？（业务规则编号 R021，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q038",
+   "instructions": "会议类事项：可否发起部门负责人先行确认？（业务规则编号 R038，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x044",
+   "instructions": "出差类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q014",
+   "instructions": "备份类事项：是否批准部门负责人先行确认？（业务规则编号 R014，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q029",
+   "instructions": "退货类事项：是否批准部门负责人先行确认？（业务规则编号 R029，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x027",
+   "instructions": "运维类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q002",
+   "instructions": "加班类事项：是否允许部门负责人先行确认？（业务规则编号 R002，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q024",
+   "instructions": "物流类事项：是否批准部门负责人先行确认？（业务规则编号 R024，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x030",
+   "instructions": "合同类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x032",
+   "instructions": "休假类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q012",
+   "instructions": "告警类事项：是否允许部门负责人先行确认？（业务规则编号 R012，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x033",
+   "instructions": "加班类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q042",
+   "instructions": "告警类事项：是否允许部门负责人先行确认？（业务规则编号 R042，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x007",
+   "instructions": "质检类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q004",
+   "instructions": "休假类事项：是否批准部门负责人先行确认？（业务规则编号 R004，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q049",
+   "instructions": "晋升类事项：是否批准部门负责人先行确认？（业务规则编号 R049，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q046",
+   "instructions": "审计类事项：能否申请部门负责人先行确认？（业务规则编号 R046，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q047",
+   "instructions": "考核类事项：是否允许部门负责人先行确认？（业务规则编号 R047，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x006",
+   "instructions": "培训类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x000",
+   "instructions": "告警类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x024",
+   "instructions": "绩效类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x016",
+   "instructions": "库存类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x015",
+   "instructions": "权限类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x028",
+   "instructions": "换货类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x023",
+   "instructions": "投诉类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q037",
+   "instructions": "预算类事项：是否允许部门负责人先行确认？（业务规则编号 R037，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q035",
+   "instructions": "招聘类事项：是否需要部门负责人先行确认？（业务规则编号 R035，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x010",
+   "instructions": "退货类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x005",
+   "instructions": "审计类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q023",
+   "instructions": "换货类事项：可否发起部门负责人先行确认？（业务规则编号 R023，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q026",
+   "instructions": "库存类事项：能否申请部门负责人先行确认？（业务规则编号 R026，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q000",
+   "instructions": "报销类事项：是否需要部门负责人先行确认？（业务规则编号 R000，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q001",
+   "instructions": "采购类事项：能否申请部门负责人先行确认？（业务规则编号 R001，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x013",
+   "instructions": "休假类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x029",
+   "instructions": "退款类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q020",
+   "instructions": "客服类事项：是否需要部门负责人先行确认？（业务规则编号 R020，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x022",
+   "instructions": "备份类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x049",
+   "instructions": "绩效类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q048",
+   "instructions": "绩效类事项：可否发起部门负责人先行确认？（业务规则编号 R048，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q013",
+   "instructions": "巡检类事项：可否发起部门负责人先行确认？（业务规则编号 R013，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x043",
+   "instructions": "晋升类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q027",
+   "instructions": "盘点类事项：是否允许部门负责人先行确认？（业务规则编号 R027，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x045",
+   "instructions": "质检类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x021",
+   "instructions": "合同类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q018",
+   "instructions": "绩效类事项：可否发起部门负责人先行确认？（业务规则编号 R018，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x041",
+   "instructions": "审计类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q036",
+   "instructions": "合同类事项：能否申请部门负责人先行确认？（业务规则编号 R036，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q044",
+   "instructions": "备份类事项：是否批准部门负责人先行确认？（业务规则编号 R044，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q008",
+   "instructions": "会议类事项：可否发起部门负责人先行确认？（业务规则编号 R008，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x004",
+   "instructions": "权限类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x020",
+   "instructions": "换货类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x031",
+   "instructions": "招聘类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x037",
+   "instructions": "运维类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x018",
+   "instructions": "库存类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q031",
+   "instructions": "采购类事项：能否申请部门负责人先行确认？（业务规则编号 R031，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q003",
+   "instructions": "出差类事项：可否发起部门负责人先行确认？（业务规则编号 R003，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x047",
+   "instructions": "质检类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q011",
+   "instructions": "发布类事项：能否申请部门负责人先行确认？（业务规则编号 R011，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q010",
+   "instructions": "运维类事项：是否需要部门负责人先行确认？（业务规则编号 R010，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x038",
+   "instructions": "客服类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q009",
+   "instructions": "培训类事项：是否批准部门负责人先行确认？（业务规则编号 R009，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x012",
+   "instructions": "权限类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q017",
+   "instructions": "考核类事项：是否允许部门负责人先行确认？（业务规则编号 R017，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q041",
+   "instructions": "发布类事项：能否申请部门负责人先行确认？（业务规则编号 R041，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q016",
+   "instructions": "审计类事项：能否申请部门负责人先行确认？（业务规则编号 R016，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q032",
+   "instructions": "加班类事项：是否允许部门负责人先行确认？（业务规则编号 R032，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x034",
+   "instructions": "晋升类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x003",
+   "instructions": "预算类非常规请求：超期流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x042",
+   "instructions": "库存类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q033",
+   "instructions": "出差类事项：可否发起部门负责人先行确认？（业务规则编号 R033，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x011",
+   "instructions": "退货类非常规请求：跨境流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "x040",
+   "instructions": "培训类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q015",
+   "instructions": "权限类事项：是否需要部门负责人先行确认？（业务规则编号 R015，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "q030",
+   "instructions": "报销类事项：是否需要部门负责人先行确认？（业务规则编号 R030，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "x017",
+   "instructions": "休假类非常规请求：特殊渠道流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q034",
+   "instructions": "休假类事项：是否批准部门负责人先行确认？（业务规则编号 R034，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "true"
+  },
+  {
+   "qid": "q007",
+   "instructions": "预算类事项：是否允许部门负责人先行确认？（业务规则编号 R007，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  },
+  {
+   "qid": "x048",
+   "instructions": "物流类非常规请求：跨部门流程是否可以直接执行？（无对应规则，应弃权）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "abstain"
+  },
+  {
+   "qid": "q019",
+   "instructions": "晋升类事项：是否批准部门负责人先行确认？（业务规则编号 R019，中文业务样本）",
+   "criteria": {
+    "true": "是",
+    "false": "否"
+   },
+   "expect": "false"
+  }
+ ],
+ "counts": {
+  "rules": 50,
+  "samples": 100
+ }
+}

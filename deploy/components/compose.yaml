@@ -1,0 +1,19 @@
+# Private component host; image variables MUST be immutable digests.
+services:
+  litellm:
+    image: ${LITELLM_IMAGE:?set inspected target-platform digest}
+    command: [--config, /app/config.yaml, --port, '4000']
+    env_file: [private.env]
+    volumes: [./litellm.yaml:/app/config.yaml:ro]
+    ports: ['4001:4000']
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+  temporal:
+    image: ${TEMPORAL_IMAGE:?set verified image digest}
+    command: [server, start-dev, --ip, 0.0.0.0, --db-filename, /data/temporal.db]
+    volumes: [temporal-data:/data]
+    ports: ['7233:7233', '8233:8233']
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+volumes:
+  temporal-data: {}

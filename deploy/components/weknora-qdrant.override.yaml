@@ -1,0 +1,33 @@
+# Overlay on inspected official v0.8.2 Compose; confirm the existing app service name first.
+# Do not run against existing PostgreSQL data without a reviewed migration/backup.
+services:
+  app:
+    environment:
+      DB_DRIVER: sqlite
+      DB_PATH: /data/files/agentos-weknora-lite.db
+      RETRIEVE_DRIVER: qdrant
+      QDRANT_HOST: agentos-weknora-qdrant
+      QDRANT_PORT: '6334'
+      QDRANT_REST_PORT: '6333'
+      QDRANT_COLLECTION: agentos_weknora
+      QDRANT_API_KEY: ${QDRANT_API_KEY:?private service credential required}
+      LOG_LEVEL: warn
+      WEKNORA_REDIS_OP_TIMEOUT_MS: '5000'
+      WEKNORA_ASYNQ_CORE_CONCURRENCY: '1'
+      WEKNORA_ASYNQ_POSTPROCESS_CONCURRENCY: '1'
+      WEKNORA_ASYNQ_ENRICHMENT_CONCURRENCY: '1'
+      WEKNORA_ASYNQ_MAINTENANCE_CONCURRENCY: '1'
+      WEKNORA_ASYNQ_SHARED_CONCURRENCY: '1'
+      WEKNORA_WIKI_ASYNQ_CONCURRENCY: '1'
+      WEKNORA_MODEL_MAX_CONCURRENCY: '1'
+  qdrant:
+    image: qdrant/qdrant@sha256:0425e3e03e7fd9b3dc95c4214546afe19de2eb2e28ca621441a56663ac6e1f46
+    container_name: agentos-weknora-qdrant
+    environment:
+      QDRANT__SERVICE__API_KEY: ${QDRANT_API_KEY:?private service credential required}
+    volumes: [agentos-weknora-qdrant:/qdrant/storage]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    # Internal Compose network only. No public ports.
+volumes:
+  agentos-weknora-qdrant: {}

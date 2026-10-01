@@ -1,0 +1,23 @@
+# AgentOS 个人默认形态（NFR-DEP：单机、少组件；Kubernetes/Helm 为企业形态）
+services:
+  gateway:
+    build: .
+    image: agentos:local
+    ports:
+      - "127.0.0.1:8000:8000"   # 默认仅回环（FR-NODE-04 零公网入站）
+    environment:
+      AGENTOS_DATA_DIR: /data
+      # AGENTOS_MODEL_PROVIDER: openai_compat
+      # AGENTOS_MODEL_BASE_URL: https://your-endpoint/v1
+      # AGENTOS_MODEL_API_KEY: （用 `docker compose run gateway env` 注入或 secrets，勿入库）
+    volumes:
+      - agentos-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  agentos-data:

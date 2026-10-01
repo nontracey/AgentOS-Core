@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentOS 控制台（旧版）</title>
+<link rel="manifest" href="/ui/manifest.webmanifest">
+<link rel="icon" href="/ui/icon-192.png">
+<link rel="stylesheet" href="/ui/console.css">
+</head>
+<body>
+<header>
+  <h1>AgentOS 控制台</h1>
+  <span id="conn" class="conn">未连接</span>
+  <span id="modelTag" class="conn" title="模型链：主用 + 降级兜底">模型: —</span>
+  <input id="token" type="password" placeholder="粘贴 owner 令牌（identity.json）">
+  <button onclick="saveToken()">连接</button>
+  <button id="logout" title="清除本页令牌">退出</button>
+</header>
+
+<nav>
+  <button data-tab="overview" class="active">概览</button>
+  <button data-tab="tasks">任务</button>
+  <button data-tab="approvals">审批 <span id="apCount" class="badge"></span></button>
+  <button data-tab="nodes">节点</button>
+  <button data-tab="assets">资产</button>
+  <button data-tab="workflows">工作流</button>
+  <button data-tab="hubs">技能 / MCP</button>
+</nav>
+
+<main>
+  <section id="tab-overview" class="tab active">
+    <div class="cards" id="cards"></div>
+    <p class="muted small">提交目标后可离开；服务端继续执行，回来查看进度与成果。</p>
+  </section>
+
+  <section id="tab-tasks" class="tab">
+    <form id="submitForm" class="panel">
+      <h3>提交目标（自然语言，无需填写计划）</h3>
+      <input id="goal" placeholder="例如：在 Windows 节点生成一张西湖雪景插画" required>
+      <textarea id="planJson" placeholder='高级（可选）：手填计划 JSON {"plan_id":..,"tasks":[...]}'></textarea>
+      <button>提交（202 受理）</button>
+      <p class="muted small">真实模型自动拆解计划；写操作进入审批队列；模型降级在任务时间线可见。</p>
+    </form>
+    <div class="split">
+      <ul id="runList" class="list"></ul>
+      <div id="runDetail" class="panel detail"></div>
+    </div>
+  </section>
+
+  <section id="tab-approvals" class="tab">
+    <div id="approvals" class="list"></div>
+  </section>
+
+  <section id="tab-nodes" class="tab">
+    <div id="nodes" class="list"></div>
+  </section>
+
+  <section id="tab-assets" class="tab">
+    <div id="assets" class="list"></div>
+  </section>
+
+  <section id="tab-workflows" class="tab">
+    <form id="wfForm" class="panel">
+      <h3>发布工作流</h3>
+      <input id="wfId" placeholder="workflow-id" required>
+      <input id="wfName" placeholder="名称">
+      <textarea id="wfTasks" placeholder='[{"task_id":"t1","role_id":"worker","depends_on":[],"acceptance_checks":["exists:out/x.txt"]}]' required></textarea>
+      <button>发布</button>
+    </form>
+    <form id="wfStart" class="panel">
+      <h3>启动</h3>
+      <input id="wfStartId" placeholder="workflow-id" required>
+      <input id="wfVersion" type="number" min="1" value="1">
+      <button>启动（202）</button>
+    </form>
+    <div id="wfResult" class="panel"></div>
+  </section>
+
+  <section id="tab-hubs" class="tab">
+    <div class="split">
+      <div id="skills" class="panel"></div>
+      <div id="mcp" class="panel"></div>
+    </div>
+  </section>
+</main>
+
+<script src="/ui/safe.js"></script>
+<script>navigator.serviceWorker?.register("/ui/sw.js").catch(()=>{});</script>
+<script src="/ui/app.js"></script>
+</body>
+</html>

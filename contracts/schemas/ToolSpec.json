@@ -1,0 +1,74 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "default": "",
+      "title": "Description",
+      "type": "string"
+    },
+    "input_schema": {
+      "additionalProperties": true,
+      "title": "Input Schema",
+      "type": "object"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "output_schema": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Output Schema"
+    },
+    "recovery": {
+      "default": "manual",
+      "enum": [
+        "pure",
+        "idempotency_key",
+        "query",
+        "manual"
+      ],
+      "title": "Recovery",
+      "type": "string"
+    },
+    "risks": {
+      "items": {
+        "enum": [
+          "read",
+          "write",
+          "delete",
+          "exec",
+          "egress"
+        ],
+        "type": "string"
+      },
+      "title": "Risks",
+      "type": "array"
+    },
+    "timeout_ms": {
+      "exclusiveMinimum": 0,
+      "title": "Timeout Ms",
+      "type": "integer"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "input_schema",
+    "timeout_ms"
+  ],
+  "title": "ToolSpec",
+  "type": "object"
+}

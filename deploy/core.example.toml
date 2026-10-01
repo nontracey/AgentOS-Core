@@ -1,0 +1,19 @@
+# Minimal real-AI core: UI/API/MCP, Codex, local ledger and an existing model endpoint.
+# Copy into a protected AGENTOS_DATA_DIR as agentos.toml; supply secrets through env.
+agent_runtime = "codex"
+codex_binary = "codex"
+codex_version = "0.159.2"
+runtime_gateway_url = "http://127.0.0.1:8800"
+model_egress = "local"
+# No temporal_address: ordinary tasks do not require a workflow service.
+# External knowledge and enterprise identity are not required. Builtin knowledge is
+# currently still assembled; an explicit disabled mode is a planned feature.
+
+[model]
+model_provider = "openai_compat"
+model_base_url = "http://models.example/v1"
+model_name = "agentos-model"
+
+[runtime]
+max_steps = 24
+token_budget = 128000

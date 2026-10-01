@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+uv run python scripts/check_documents.py
+uv run python scripts/check_privacy.py
+git diff --cached --check

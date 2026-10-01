@@ -1,0 +1,1212 @@
+{
+ "kind": "knw_frozen_eval_v1",
+ "corpus": [
+  {
+   "source_id": "t01-zh",
+   "lang": "zh",
+   "text": "内核采用写前日志方式落盘，进程意外退出后重启可以从检查点继续，已完成的工作不会丢失。"
+  },
+  {
+   "source_id": "t01-en",
+   "lang": "en",
+   "text": "The kernel uses write-ahead logging so that after an abrupt process exit it can resume from a checkpoint and finished work is never lost."
+  },
+  {
+   "source_id": "t02-zh",
+   "lang": "zh",
+   "text": "每个动作都有唯一编号记录在步骤账本里，同一个编号重复提交只会生效一次。"
+  },
+  {
+   "source_id": "t02-en",
+   "lang": "en",
+   "text": "Every action gets a unique id in the step ledger; submitting the same id twice takes effect exactly once."
+  },
+  {
+   "source_id": "t03-zh",
+   "lang": "zh",
+   "text": "高危操作必须先经过人工批准，批准凭据只能被消费一次，用过即作废。"
+  },
+  {
+   "source_id": "t03-en",
+   "lang": "en",
+   "text": "Risky operations require prior human approval; an approval grant is single-use and invalidated after consumption."
+  },
+  {
+   "source_id": "t04-zh",
+   "lang": "zh",
+   "text": "审计记录按顺序串联指纹，任何一条被篡改都会导致链条校验失败。"
+  },
+  {
+   "source_id": "t04-en",
+   "lang": "en",
+   "text": "Audit records are chained by fingerprints; tampering with any entry breaks chain verification."
+  },
+  {
+   "source_id": "t05-zh",
+   "lang": "zh",
+   "text": "面对诱导文本的输入，系统只执行白名单内的动作，未登记的指令一律拒绝。"
+  },
+  {
+   "source_id": "t05-en",
+   "lang": "en",
+   "text": "Against prompt-injection text the system only performs allow-listed actions and rejects unregistered instructions."
+  },
+  {
+   "source_id": "t06-zh",
+   "lang": "zh",
+   "text": "每个任务都有花销上限，超过额度后新调用会被熔断，避免失控消耗。"
+  },
+  {
+   "source_id": "t06-en",
+   "lang": "en",
+   "text": "Each task has a spending cap; once exceeded further calls are circuit-broken to prevent runaway cost."
+  },
+  {
+   "source_id": "t07-zh",
+   "lang": "zh",
+   "text": "工具同时支持本地子进程与远程超文本两种接入方式，注册后统一编排。"
+  },
+  {
+   "source_id": "t07-en",
+   "lang": "en",
+   "text": "Tools can attach via local subprocess or remote HTTP transport, unified after registration."
+  },
+  {
+   "source_id": "t08-zh",
+   "lang": "zh",
+   "text": "技能包按需加载：先读简介，需要时才展开正文，减少上下文占用。"
+  },
+  {
+   "source_id": "t08-en",
+   "lang": "en",
+   "text": "Skill packages load progressively: metadata first, body only when needed, saving context."
+  },
+  {
+   "source_id": "t09-zh",
+   "lang": "zh",
+   "text": "流程定义带版本发布，启动时锁定某一版，之后改动不影响在跑实例。"
+  },
+  {
+   "source_id": "t09-en",
+   "lang": "en",
+   "text": "Workflow definitions are versioned on publish; a start pins one version immune to later edits."
+  },
+  {
+   "source_id": "t10-zh",
+   "lang": "zh",
+   "text": "知识条目带访问名单，检索前先按名单过滤，越权内容不可见。"
+  },
+  {
+   "source_id": "t10-en",
+   "lang": "en",
+   "text": "Knowledge entries carry an access list; search filters by it before returning, unauthorized content stays invisible."
+  },
+  {
+   "source_id": "t11-zh",
+   "lang": "zh",
+   "text": "遗忘一条记忆会同时抹掉内容并留下墓碑记录，防止备份恢复时复活。"
+  },
+  {
+   "source_id": "t11-en",
+   "lang": "en",
+   "text": "Forgetting a memory erases content and leaves a tombstone so backups cannot resurrect it."
+  },
+  {
+   "source_id": "t12-zh",
+   "lang": "zh",
+   "text": "通知先走网络回调，失败时自动落回站内收件箱，消息不会丢。"
+  },
+  {
+   "source_id": "t12-en",
+   "lang": "en",
+   "text": "Notifications go via webhook first, falling back to an inbox on failure so messages are not lost."
+  },
+  {
+   "source_id": "t13-zh",
+   "lang": "zh",
+   "text": "外部回调必须携带签名，验签不通过的请求直接拒绝并留痕。"
+  },
+  {
+   "source_id": "t13-en",
+   "lang": "en",
+   "text": "External callbacks must carry a signature; requests failing verification are rejected and logged."
+  },
+  {
+   "source_id": "t14-zh",
+   "lang": "zh",
+   "text": "语音转写在本地模型上完成，断网环境依然可用，结果带引擎标识。"
+  },
+  {
+   "source_id": "t14-en",
+   "lang": "en",
+   "text": "Speech transcription runs on a local model, works offline, and results carry an engine tag."
+  },
+  {
+   "source_id": "t15-zh",
+   "lang": "zh",
+   "text": "主模型不可用时按链路顺序切到备用模型，切换过程会记录事件。"
+  },
+  {
+   "source_id": "t15-en",
+   "lang": "en",
+   "text": "When the primary model fails the chain switches to a fallback in order, and the switch is recorded."
+  },
+  {
+   "source_id": "t16-zh",
+   "lang": "zh",
+   "text": "标记为敏感的数据只允许送往本地推理，绝不外发。"
+  },
+  {
+   "source_id": "t16-en",
+   "lang": "en",
+   "text": "Data marked sensitive is routed only to local inference and never leaves the machine."
+  },
+  {
+   "source_id": "t17-zh",
+   "lang": "zh",
+   "text": "并发请求超过队列容量时直接拒绝并提示稍后重试，而不是无限堆积。"
+  },
+  {
+   "source_id": "t17-en",
+   "lang": "en",
+   "text": "Requests beyond queue capacity are rejected with a retry hint instead of piling up unbounded."
+  },
+  {
+   "source_id": "t18-zh",
+   "lang": "zh",
+   "text": "单机编排文件一键启动全部服务，数据落在命名卷里。"
+  },
+  {
+   "source_id": "t18-en",
+   "lang": "en",
+   "text": "A single compose file boots all services with data kept in named volumes."
+  },
+  {
+   "source_id": "t19-zh",
+   "lang": "zh",
+   "text": "轻量集群上验证过Pod就绪、存储绑定与探针健康。"
+  },
+  {
+   "source_id": "t19-en",
+   "lang": "en",
+   "text": "A lightweight cluster was verified for pod readiness, volume binding and health probes."
+  },
+  {
+   "source_id": "t20-zh",
+   "lang": "zh",
+   "text": "定期备份数据目录，恢复演练验证记录完整、服务可继续。"
+  },
+  {
+   "source_id": "t20-en",
+   "lang": "en",
+   "text": "The data directory is backed up on schedule; restore drills verify records survive and service resumes."
+  },
+  {
+   "source_id": "t21-zh",
+   "lang": "zh",
+   "text": "中文按连续三字切分建立倒排，双字词查询也能命中。"
+  },
+  {
+   "source_id": "t21-en",
+   "lang": "en",
+   "text": "Chinese text is indexed by overlapping trigrams so two-character queries still match."
+  },
+  {
+   "source_id": "t22-zh",
+   "lang": "zh",
+   "text": "文本转成向量后用近邻索引召回，与关键词检索融合排序。"
+  },
+  {
+   "source_id": "t22-en",
+   "lang": "en",
+   "text": "Text is embedded and recalled via nearest-neighbor index, fused with keyword retrieval ranking."
+  },
+  {
+   "source_id": "t23-zh",
+   "lang": "zh",
+   "text": "计算节点先配对再派发，未配对或被撤销的节点会拒绝任务。"
+  },
+  {
+   "source_id": "t23-en",
+   "lang": "en",
+   "text": "Compute nodes must pair before dispatch; unpaired or revoked nodes are refused work."
+  },
+  {
+   "source_id": "t24-zh",
+   "lang": "zh",
+   "text": "产物以引用形式登记，下载时校验指纹，两端一致才交付。"
+  },
+  {
+   "source_id": "t24-en",
+   "lang": "en",
+   "text": "Artifacts are registered as references; downloads verify fingerprints on both ends before delivery."
+  },
+  {
+   "source_id": "t25-zh",
+   "lang": "zh",
+   "text": "连接中断时任务转入不确定态等待对账，恢复后补传结果而不盲目重做。"
+  },
+  {
+   "source_id": "t25-en",
+   "lang": "en",
+   "text": "On disconnect the task goes uncertain pending reconciliation; after recovery results are reconciled instead of blindly redone."
+  },
+  {
+   "source_id": "t26-zh",
+   "lang": "zh",
+   "text": "执行者持有带期限的租约，到期未续约时其他实例可以接管。"
+  },
+  {
+   "source_id": "t26-en",
+   "lang": "en",
+   "text": "An executor holds a leased mandate; if it expires unrenewed another instance may take over."
+  },
+  {
+   "source_id": "t27-zh",
+   "lang": "zh",
+   "text": "取消请求与执行并发时，已确认的写动作不会二次执行。"
+  },
+  {
+   "source_id": "t27-en",
+   "lang": "en",
+   "text": "When cancellation races execution, already-confirmed writes are never performed twice."
+  },
+  {
+   "source_id": "t28-zh",
+   "lang": "zh",
+   "text": "轻量决策先用规则回答，规则没覆盖的问题选择弃权而不是瞎猜。"
+  },
+  {
+   "source_id": "t28-en",
+   "lang": "en",
+   "text": "Lightweight decisions answer by rules first; uncovered questions abstain rather than guess."
+  },
+  {
+   "source_id": "t29-zh",
+   "lang": "zh",
+   "text": "未完成校准前决策只记录不执行，避免未验证的策略进入关键路径。"
+  },
+  {
+   "source_id": "t29-en",
+   "lang": "en",
+   "text": "Before calibration completes decisions are shadow-only, keeping unproven policies off the critical path."
+  },
+  {
+   "source_id": "t30-zh",
+   "lang": "zh",
+   "text": "效率对照以同批任务的人工耗时为基线，用实测而不是估计。"
+  },
+  {
+   "source_id": "t30-en",
+   "lang": "en",
+   "text": "Efficiency comparison baselines on human time for the same batch, measured not estimated."
+  }
+ ],
+ "queries": [
+  {
+   "qid": "t01-zh0",
+   "lang": "zh",
+   "query": "内核崩溃后还能恢复吗",
+   "gold": "t01"
+  },
+  {
+   "qid": "t01-zh1",
+   "lang": "zh",
+   "query": "写前日志如何保证不丢工作",
+   "gold": "t01"
+  },
+  {
+   "qid": "t01-en0",
+   "lang": "en",
+   "query": "can the kernel recover after a crash",
+   "gold": "t01"
+  },
+  {
+   "qid": "t01-en1",
+   "lang": "en",
+   "query": "how is finished work preserved",
+   "gold": "t01"
+  },
+  {
+   "qid": "t01-zh2c",
+   "lang": "zh",
+   "query": "恢复",
+   "gold": "t01"
+  },
+  {
+   "qid": "t02-zh0",
+   "lang": "zh",
+   "query": "步骤账本怎么防止重复执行",
+   "gold": "t02"
+  },
+  {
+   "qid": "t02-zh1",
+   "lang": "zh",
+   "query": "幂等提交的实现",
+   "gold": "t02"
+  },
+  {
+   "qid": "t02-en0",
+   "lang": "en",
+   "query": "how does the ledger prevent duplicate effects",
+   "gold": "t02"
+  },
+  {
+   "qid": "t02-en1",
+   "lang": "en",
+   "query": "idempotent submission design",
+   "gold": "t02"
+  },
+  {
+   "qid": "t02-zh2c",
+   "lang": "zh",
+   "query": "账本",
+   "gold": "t02"
+  },
+  {
+   "qid": "t03-zh0",
+   "lang": "zh",
+   "query": "审批凭据可以重复使用吗",
+   "gold": "t03"
+  },
+  {
+   "qid": "t03-zh1",
+   "lang": "zh",
+   "query": "一次批准能执行几次",
+   "gold": "t03"
+  },
+  {
+   "qid": "t03-en0",
+   "lang": "en",
+   "query": "can an approval be reused",
+   "gold": "t03"
+  },
+  {
+   "qid": "t03-en1",
+   "lang": "en",
+   "query": "how many times can one grant be spent",
+   "gold": "t03"
+  },
+  {
+   "qid": "t03-zh2c",
+   "lang": "zh",
+   "query": "审批",
+   "gold": "t03"
+  },
+  {
+   "qid": "t04-zh0",
+   "lang": "zh",
+   "query": "审计日志被改了能发现吗",
+   "gold": "t04"
+  },
+  {
+   "qid": "t04-zh1",
+   "lang": "zh",
+   "query": "防篡改的链条机制",
+   "gold": "t04"
+  },
+  {
+   "qid": "t04-en0",
+   "lang": "en",
+   "query": "can tampered audit logs be detected",
+   "gold": "t04"
+  },
+  {
+   "qid": "t04-en1",
+   "lang": "en",
+   "query": "tamper-evident chain mechanism",
+   "gold": "t04"
+  },
+  {
+   "qid": "t04-zh2c",
+   "lang": "zh",
+   "query": "审计",
+   "gold": "t04"
+  },
+  {
+   "qid": "t05-zh0",
+   "lang": "zh",
+   "query": "注入攻击会被拦截吗",
+   "gold": "t05"
+  },
+  {
+   "qid": "t05-zh1",
+   "lang": "zh",
+   "query": "未登记的指令怎么处理",
+   "gold": "t05"
+  },
+  {
+   "qid": "t05-en0",
+   "lang": "en",
+   "query": "are injection attacks blocked",
+   "gold": "t05"
+  },
+  {
+   "qid": "t05-en1",
+   "lang": "en",
+   "query": "what happens to unregistered instructions",
+   "gold": "t05"
+  },
+  {
+   "qid": "t05-zh2c",
+   "lang": "zh",
+   "query": "注入",
+   "gold": "t05"
+  },
+  {
+   "qid": "t06-zh0",
+   "lang": "zh",
+   "query": "预算超了会怎样",
+   "gold": "t06"
+  },
+  {
+   "qid": "t06-zh1",
+   "lang": "zh",
+   "query": "怎么防止花销失控",
+   "gold": "t06"
+  },
+  {
+   "qid": "t06-en0",
+   "lang": "en",
+   "query": "what happens when budget is exceeded",
+   "gold": "t06"
+  },
+  {
+   "qid": "t06-en1",
+   "lang": "en",
+   "query": "how is runaway spending prevented",
+   "gold": "t06"
+  },
+  {
+   "qid": "t06-zh2c",
+   "lang": "zh",
+   "query": "预算",
+   "gold": "t06"
+  },
+  {
+   "qid": "t07-zh0",
+   "lang": "zh",
+   "query": "工具有哪几种接入方式",
+   "gold": "t07"
+  },
+  {
+   "qid": "t07-zh1",
+   "lang": "zh",
+   "query": "远程工具怎么接进来",
+   "gold": "t07"
+  },
+  {
+   "qid": "t07-en0",
+   "lang": "en",
+   "query": "which transports can tools use",
+   "gold": "t07"
+  },
+  {
+   "qid": "t07-en1",
+   "lang": "en",
+   "query": "how are remote tools attached",
+   "gold": "t07"
+  },
+  {
+   "qid": "t07-zh2c",
+   "lang": "zh",
+   "query": "工具",
+   "gold": "t07"
+  },
+  {
+   "qid": "t08-zh0",
+   "lang": "zh",
+   "query": "技能正文什么时候加载",
+   "gold": "t08"
+  },
+  {
+   "qid": "t08-zh1",
+   "lang": "zh",
+   "query": "怎么减少上下文占用",
+   "gold": "t08"
+  },
+  {
+   "qid": "t08-en0",
+   "lang": "en",
+   "query": "when is a skill body loaded",
+   "gold": "t08"
+  },
+  {
+   "qid": "t08-en1",
+   "lang": "en",
+   "query": "how is context usage reduced",
+   "gold": "t08"
+  },
+  {
+   "qid": "t08-zh2c",
+   "lang": "zh",
+   "query": "技能",
+   "gold": "t08"
+  },
+  {
+   "qid": "t09-zh0",
+   "lang": "zh",
+   "query": "流程改动会影响在跑任务吗",
+   "gold": "t09"
+  },
+  {
+   "qid": "t09-zh1",
+   "lang": "zh",
+   "query": "版本锁定的含义",
+   "gold": "t09"
+  },
+  {
+   "qid": "t09-en0",
+   "lang": "en",
+   "query": "do workflow edits affect running instances",
+   "gold": "t09"
+  },
+  {
+   "qid": "t09-en1",
+   "lang": "en",
+   "query": "meaning of version pinning",
+   "gold": "t09"
+  },
+  {
+   "qid": "t09-zh2c",
+   "lang": "zh",
+   "query": "流程",
+   "gold": "t09"
+  },
+  {
+   "qid": "t10-zh0",
+   "lang": "zh",
+   "query": "越权的人能搜到机密条目吗",
+   "gold": "t10"
+  },
+  {
+   "qid": "t10-zh1",
+   "lang": "zh",
+   "query": "检索的权限过滤在哪做",
+   "gold": "t10"
+  },
+  {
+   "qid": "t10-en0",
+   "lang": "en",
+   "query": "can unauthorized users see restricted entries",
+   "gold": "t10"
+  },
+  {
+   "qid": "t10-en1",
+   "lang": "en",
+   "query": "where is access filtering applied",
+   "gold": "t10"
+  },
+  {
+   "qid": "t10-zh2c",
+   "lang": "zh",
+   "query": "检索",
+   "gold": "t10"
+  },
+  {
+   "qid": "t11-zh0",
+   "lang": "zh",
+   "query": "被遗忘的记忆会复活吗",
+   "gold": "t11"
+  },
+  {
+   "qid": "t11-zh1",
+   "lang": "zh",
+   "query": "墓碑记录的作用",
+   "gold": "t11"
+  },
+  {
+   "qid": "t11-en0",
+   "lang": "en",
+   "query": "can a forgotten memory come back",
+   "gold": "t11"
+  },
+  {
+   "qid": "t11-en1",
+   "lang": "en",
+   "query": "purpose of tombstone records",
+   "gold": "t11"
+  },
+  {
+   "qid": "t11-zh2c",
+   "lang": "zh",
+   "query": "记忆",
+   "gold": "t11"
+  },
+  {
+   "qid": "t12-zh0",
+   "lang": "zh",
+   "query": "通知发不出去怎么办",
+   "gold": "t12"
+  },
+  {
+   "qid": "t12-zh1",
+   "lang": "zh",
+   "query": "备用通道是什么",
+   "gold": "t12"
+  },
+  {
+   "qid": "t12-en0",
+   "lang": "en",
+   "query": "what if notification delivery fails",
+   "gold": "t12"
+  },
+  {
+   "qid": "t12-en1",
+   "lang": "en",
+   "query": "what is the fallback channel",
+   "gold": "t12"
+  },
+  {
+   "qid": "t12-zh2c",
+   "lang": "zh",
+   "query": "通知",
+   "gold": "t12"
+  },
+  {
+   "qid": "t13-zh0",
+   "lang": "zh",
+   "query": "回调验签失败会怎样",
+   "gold": "t13"
+  },
+  {
+   "qid": "t13-zh1",
+   "lang": "zh",
+   "query": "签名校验的位置",
+   "gold": "t13"
+  },
+  {
+   "qid": "t13-en0",
+   "lang": "en",
+   "query": "what happens on signature mismatch",
+   "gold": "t13"
+  },
+  {
+   "qid": "t13-en1",
+   "lang": "en",
+   "query": "where is signature verified",
+   "gold": "t13"
+  },
+  {
+   "qid": "t13-zh2c",
+   "lang": "zh",
+   "query": "验签",
+   "gold": "t13"
+  },
+  {
+   "qid": "t14-zh0",
+   "lang": "zh",
+   "query": "断网还能转写语音吗",
+   "gold": "t14"
+  },
+  {
+   "qid": "t14-zh1",
+   "lang": "zh",
+   "query": "转写结果怎么知道用了哪个模型",
+   "gold": "t14"
+  },
+  {
+   "qid": "t14-en0",
+   "lang": "en",
+   "query": "does transcription work offline",
+   "gold": "t14"
+  },
+  {
+   "qid": "t14-en1",
+   "lang": "en",
+   "query": "how is the engine identified",
+   "gold": "t14"
+  },
+  {
+   "qid": "t14-zh2c",
+   "lang": "zh",
+   "query": "语音",
+   "gold": "t14"
+  },
+  {
+   "qid": "t15-zh0",
+   "lang": "zh",
+   "query": "主模型挂了怎么办",
+   "gold": "t15"
+  },
+  {
+   "qid": "t15-zh1",
+   "lang": "zh",
+   "query": "降级事件在哪里能看到",
+   "gold": "t15"
+  },
+  {
+   "qid": "t15-en0",
+   "lang": "en",
+   "query": "what if the primary model is down",
+   "gold": "t15"
+  },
+  {
+   "qid": "t15-en1",
+   "lang": "en",
+   "query": "where are fallback events recorded",
+   "gold": "t15"
+  },
+  {
+   "qid": "t15-zh2c",
+   "lang": "zh",
+   "query": "降级",
+   "gold": "t15"
+  },
+  {
+   "qid": "t16-zh0",
+   "lang": "zh",
+   "query": "敏感数据的去向限制",
+   "gold": "t16"
+  },
+  {
+   "qid": "t16-zh1",
+   "lang": "zh",
+   "query": "本地推理的路由规则",
+   "gold": "t16"
+  },
+  {
+   "qid": "t16-en0",
+   "lang": "en",
+   "query": "where can sensitive data be sent",
+   "gold": "t16"
+  },
+  {
+   "qid": "t16-en1",
+   "lang": "en",
+   "query": "routing rule for local inference",
+   "gold": "t16"
+  },
+  {
+   "qid": "t16-zh2c",
+   "lang": "zh",
+   "query": "隐私",
+   "gold": "t16"
+  },
+  {
+   "qid": "t17-zh0",
+   "lang": "zh",
+   "query": "队列满了会拒单吗",
+   "gold": "t17"
+  },
+  {
+   "qid": "t17-zh1",
+   "lang": "zh",
+   "query": "背压是怎么做的",
+   "gold": "t17"
+  },
+  {
+   "qid": "t17-en0",
+   "lang": "en",
+   "query": "are requests rejected when queue is full",
+   "gold": "t17"
+  },
+  {
+   "qid": "t17-en1",
+   "lang": "en",
+   "query": "how is backpressure applied",
+   "gold": "t17"
+  },
+  {
+   "qid": "t17-zh2c",
+   "lang": "zh",
+   "query": "背压",
+   "gold": "t17"
+  },
+  {
+   "qid": "t18-zh0",
+   "lang": "zh",
+   "query": "单机怎么一键起服务",
+   "gold": "t18"
+  },
+  {
+   "qid": "t18-zh1",
+   "lang": "zh",
+   "query": "数据放在哪里",
+   "gold": "t18"
+  },
+  {
+   "qid": "t18-en0",
+   "lang": "en",
+   "query": "how to boot services on one host",
+   "gold": "t18"
+  },
+  {
+   "qid": "t18-en1",
+   "lang": "en",
+   "query": "where is the data kept",
+   "gold": "t18"
+  },
+  {
+   "qid": "t18-zh2c",
+   "lang": "zh",
+   "query": "部署",
+   "gold": "t18"
+  },
+  {
+   "qid": "t19-zh0",
+   "lang": "zh",
+   "query": "集群上验证过哪些项",
+   "gold": "t19"
+  },
+  {
+   "qid": "t19-zh1",
+   "lang": "zh",
+   "query": "探针检查包含什么",
+   "gold": "t19"
+  },
+  {
+   "qid": "t19-en0",
+   "lang": "en",
+   "query": "what was verified on the cluster",
+   "gold": "t19"
+  },
+  {
+   "qid": "t19-en1",
+   "lang": "en",
+   "query": "what do the probes cover",
+   "gold": "t19"
+  },
+  {
+   "qid": "t19-zh2c",
+   "lang": "zh",
+   "query": "探针",
+   "gold": "t19"
+  },
+  {
+   "qid": "t20-zh0",
+   "lang": "zh",
+   "query": "数据丢了怎么找回",
+   "gold": "t20"
+  },
+  {
+   "qid": "t20-zh1",
+   "lang": "zh",
+   "query": "恢复演练验证了什么",
+   "gold": "t20"
+  },
+  {
+   "qid": "t20-en0",
+   "lang": "en",
+   "query": "how is lost data recovered",
+   "gold": "t20"
+  },
+  {
+   "qid": "t20-en1",
+   "lang": "en",
+   "query": "what does a restore drill verify",
+   "gold": "t20"
+  },
+  {
+   "qid": "t20-zh2c",
+   "lang": "zh",
+   "query": "备份",
+   "gold": "t20"
+  },
+  {
+   "qid": "t21-zh0",
+   "lang": "zh",
+   "query": "中文分词用的是什么方案",
+   "gold": "t21"
+  },
+  {
+   "qid": "t21-zh1",
+   "lang": "zh",
+   "query": "双字词能搜到吗",
+   "gold": "t21"
+  },
+  {
+   "qid": "t21-en0",
+   "lang": "en",
+   "query": "what tokenizer is used for chinese",
+   "gold": "t21"
+  },
+  {
+   "qid": "t21-en1",
+   "lang": "en",
+   "query": "do two-character queries match",
+   "gold": "t21"
+  },
+  {
+   "qid": "t21-zh2c",
+   "lang": "zh",
+   "query": "分词",
+   "gold": "t21"
+  },
+  {
+   "qid": "t22-zh0",
+   "lang": "zh",
+   "query": "向量召回怎么融合",
+   "gold": "t22"
+  },
+  {
+   "qid": "t22-zh1",
+   "lang": "zh",
+   "query": "近邻索引用在哪",
+   "gold": "t22"
+  },
+  {
+   "qid": "t22-en0",
+   "lang": "en",
+   "query": "how are vector results fused",
+   "gold": "t22"
+  },
+  {
+   "qid": "t22-en1",
+   "lang": "en",
+   "query": "where is a knn index used",
+   "gold": "t22"
+  },
+  {
+   "qid": "t22-zh2c",
+   "lang": "zh",
+   "query": "向量",
+   "gold": "t22"
+  },
+  {
+   "qid": "t23-zh0",
+   "lang": "zh",
+   "query": "节点没配对能接任务吗",
+   "gold": "t23"
+  },
+  {
+   "qid": "t23-zh1",
+   "lang": "zh",
+   "query": "撤销配对后的效果",
+   "gold": "t23"
+  },
+  {
+   "qid": "t23-en0",
+   "lang": "en",
+   "query": "can unpaired nodes take jobs",
+   "gold": "t23"
+  },
+  {
+   "qid": "t23-en1",
+   "lang": "en",
+   "query": "effect of revoking a node",
+   "gold": "t23"
+  },
+  {
+   "qid": "t23-zh2c",
+   "lang": "zh",
+   "query": "配对",
+   "gold": "t23"
+  },
+  {
+   "qid": "t24-zh0",
+   "lang": "zh",
+   "query": "产物传输怎么保证完整",
+   "gold": "t24"
+  },
+  {
+   "qid": "t24-zh1",
+   "lang": "zh",
+   "query": "指纹校验在哪一步",
+   "gold": "t24"
+  },
+  {
+   "qid": "t24-en0",
+   "lang": "en",
+   "query": "how is artifact transfer integrity ensured",
+   "gold": "t24"
+  },
+  {
+   "qid": "t24-en1",
+   "lang": "en",
+   "query": "when is the checksum verified",
+   "gold": "t24"
+  },
+  {
+   "qid": "t24-zh2c",
+   "lang": "zh",
+   "query": "指纹",
+   "gold": "t24"
+  },
+  {
+   "qid": "t25-zh0",
+   "lang": "zh",
+   "query": "断连后任务会重做吗",
+   "gold": "t25"
+  },
+  {
+   "qid": "t25-zh1",
+   "lang": "zh",
+   "query": "对账的触发时机",
+   "gold": "t25"
+  },
+  {
+   "qid": "t25-en0",
+   "lang": "en",
+   "query": "does a disconnected task redo work",
+   "gold": "t25"
+  },
+  {
+   "qid": "t25-en1",
+   "lang": "en",
+   "query": "when does reconciliation trigger",
+   "gold": "t25"
+  },
+  {
+   "qid": "t25-zh2c",
+   "lang": "zh",
+   "query": "断连",
+   "gold": "t25"
+  },
+  {
+   "qid": "t26-zh0",
+   "lang": "zh",
+   "query": "租约过期后会怎样",
+   "gold": "t26"
+  },
+  {
+   "qid": "t26-zh1",
+   "lang": "zh",
+   "query": "谁可以接管任务",
+   "gold": "t26"
+  },
+  {
+   "qid": "t26-en0",
+   "lang": "en",
+   "query": "what happens when a lease expires",
+   "gold": "t26"
+  },
+  {
+   "qid": "t26-en1",
+   "lang": "en",
+   "query": "who may take over a task",
+   "gold": "t26"
+  },
+  {
+   "qid": "t26-zh2c",
+   "lang": "zh",
+   "query": "租约",
+   "gold": "t26"
+  },
+  {
+   "qid": "t27-zh0",
+   "lang": "zh",
+   "query": "取消时会不会重复写",
+   "gold": "t27"
+  },
+  {
+   "qid": "t27-zh1",
+   "lang": "zh",
+   "query": "竞态下的一致性保证",
+   "gold": "t27"
+  },
+  {
+   "qid": "t27-en0",
+   "lang": "en",
+   "query": "can cancellation cause duplicate writes",
+   "gold": "t27"
+  },
+  {
+   "qid": "t27-en1",
+   "lang": "en",
+   "query": "consistency guarantee under races",
+   "gold": "t27"
+  },
+  {
+   "qid": "t27-zh2c",
+   "lang": "zh",
+   "query": "取消",
+   "gold": "t27"
+  },
+  {
+   "qid": "t28-zh0",
+   "lang": "zh",
+   "query": "规则没覆盖的问题怎么办",
+   "gold": "t28"
+  },
+  {
+   "qid": "t28-zh1",
+   "lang": "zh",
+   "query": "弃权的含义",
+   "gold": "t28"
+  },
+  {
+   "qid": "t28-en0",
+   "lang": "en",
+   "query": "what about questions rules miss",
+   "gold": "t28"
+  },
+  {
+   "qid": "t28-en1",
+   "lang": "en",
+   "query": "what does abstain mean",
+   "gold": "t28"
+  },
+  {
+   "qid": "t28-zh2c",
+   "lang": "zh",
+   "query": "弃权",
+   "gold": "t28"
+  },
+  {
+   "qid": "t29-zh0",
+   "lang": "zh",
+   "query": "影子模式是什么",
+   "gold": "t29"
+  },
+  {
+   "qid": "t29-zh1",
+   "lang": "zh",
+   "query": "未校准能生效吗",
+   "gold": "t29"
+  },
+  {
+   "qid": "t29-en0",
+   "lang": "en",
+   "query": "what is shadow mode",
+   "gold": "t29"
+  },
+  {
+   "qid": "t29-en1",
+   "lang": "en",
+   "query": "can uncalibrated rules take effect",
+   "gold": "t29"
+  },
+  {
+   "qid": "t29-zh2c",
+   "lang": "zh",
+   "query": "影子",
+   "gold": "t29"
+  },
+  {
+   "qid": "t30-zh0",
+   "lang": "zh",
+   "query": "效率提升怎么证明",
+   "gold": "t30"
+  },
+  {
+   "qid": "t30-zh1",
+   "lang": "zh",
+   "query": "基线用什么数据",
+   "gold": "t30"
+  },
+  {
+   "qid": "t30-en0",
+   "lang": "en",
+   "query": "how is efficiency gain proven",
+   "gold": "t30"
+  },
+  {
+   "qid": "t30-en1",
+   "lang": "en",
+   "query": "what data forms the baseline",
+   "gold": "t30"
+  },
+  {
+   "qid": "t30-zh2c",
+   "lang": "zh",
+   "query": "基线",
+   "gold": "t30"
+  }
+ ],
+ "counts": {
+  "corpus": 60,
+  "zh_queries": 90,
+  "en_queries": 60
+ }
+}

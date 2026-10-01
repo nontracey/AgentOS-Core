@@ -1,0 +1,36 @@
+# Put the configured copy in a protected data directory as agentos.toml.
+agent_runtime = "codex"
+codex_binary = "codex"
+codex_version = "0.159.2"
+runtime_gateway_url = "http://127.0.0.1:8800"
+model_egress = "local"
+temporal_address = "components.example:7233"
+temporal_namespace = "default"
+temporal_queue = "agentos"
+
+[model]
+model_provider = "openai_compat"
+model_base_url = "http://components.example:4001/v1"
+model_name = "agentos-model"
+# Model key is supplied through AGENTOS_MODEL_API_KEY, never in a workflow.
+microusd_per_1k_input = 0
+microusd_per_1k_output = 0
+
+[runtime]
+max_steps = 24
+token_budget = 128000
+
+[[identity.lanes]]
+id = "enterprise"
+kind = "oidc"
+issuer = "https://sso.example"
+audience = "agentos-api"
+client_id = "agentos-web"
+client_secret_env = "ENTERPRISE_OIDC_CLIENT_SECRET"
+login_scope = "openid profile agentos-api"
+tenant_claim = "org"
+tenant_map = {"organization-a" = "org-a"}
+roles_claim = "role"
+scope_map = {"operator" = ["read", "write", "approve"], "administrator" = ["read", "write", "approve"]}
+role_map = {"administrator" = ["admin"]}
+# Company identity fields must match its real issued access token, not UI guesses.

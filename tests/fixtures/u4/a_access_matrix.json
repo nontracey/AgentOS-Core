@@ -1,0 +1,47 @@
+{
+  "fixture_version": "u4-a-1",
+  "frozen_at": "2026-09-30",
+  "tree": "cfa12be5aacf06900cf98aa666ce40cfcf217c5e",
+  "note": "合成数据。A 权限基准：两种访问角色 + 逐资源隔离。客户端自报 role/subject/run/asset 一律无效。",
+  "subjects": [
+    {"subject": "owner", "role": "admin", "tenant_id": "default", "scopes": ["read", "write", "approve", "exec", "egress"]},
+    {"subject": "guest-a", "role": "guest", "tenant_id": "default", "scopes": ["read"], "grant": "grant-a"},
+    {"subject": "guest-b", "role": "guest", "tenant_id": "default", "scopes": ["read"], "grant": "grant-b"},
+    {"subject": "peer", "role": "member", "tenant_id": "default", "scopes": ["read"]},
+    {"subject": "other-tenant", "role": "admin", "tenant_id": "tenant-x", "scopes": ["read", "write"]}
+  ],
+  "tasks": [
+    {"run_id": "T1", "subject": "owner", "tenant_id": "default", "goal": "合成：读取授权材料并生成摘要报告", "state": "completed"},
+    {"run_id": "T2", "subject": "owner", "tenant_id": "default", "goal": "合成：读取授权材料并生成摘要报告（第二份）", "state": "completed"},
+    {"run_id": "T3", "subject": "owner", "tenant_id": "default", "goal": "合成：私有任务，不向任何游客发布", "state": "completed"}
+  ],
+  "assets": [
+    {"asset_id": "F1-v1", "run_id": "T1", "version": 1, "parent_asset_id": null, "publishable": true, "download_default": false, "mime": "text/markdown"},
+    {"asset_id": "F1-v2", "run_id": "T1", "version": 2, "parent_asset_id": "F1-v1", "publishable": false, "download_default": false, "mime": "text/markdown"},
+    {"asset_id": "S2", "run_id": "T1", "version": 1, "parent_asset_id": null, "publishable": false, "download_default": false, "mime": "text/plain", "kind": "material"},
+    {"asset_id": "F3", "run_id": "T3", "version": 1, "parent_asset_id": null, "publishable": false, "download_default": false, "mime": "text/markdown"}
+  ],
+  "relations": [
+    {"kind": "parent_run", "from": "T1", "to": "T3", "note": "T1 的 lineage 指向未发布的 T3；授权不得沿关系扩散"},
+    {"kind": "citation", "from": "T1", "to": "S2", "note": "T1 成果引用私有素材 S2；游客只读显式发布的引用片段"}
+  ],
+  "grants": [
+    {"grant_id": "grant-a", "subject": "guest-a", "manifest_revision": 1, "runs": ["T1"], "assets": [{"asset_id": "F1-v1", "version": 1, "download": false}], "status": "active"},
+    {"grant_id": "grant-b", "subject": "guest-b", "manifest_revision": 1, "runs": ["T2"], "assets": [], "status": "active"}
+  ],
+  "expectations": [
+    {"id": "A01", "case": "admin 读取 T1/T2/T3 与本租户全部自有资源", "expect": "allowed", "assert": ["有数据", "含 steps/plan/approvals", "审计有 task.read"]},
+    {"id": "A02", "case": "guest-a 读取 T1 已发布投影", "expect": "allowed", "assert": ["只含白名单字段", "不含内部 path/系统提示词/隐私参数", "不含 T3/S2 正文"]},
+    {"id": "A03", "case": "guest-a 读取 T2/T3（换任务）", "expect": "denied", "code": 404, "assert": ["无任务标题/计数/正文", "无新 job", "审计有 demo.denied"]},
+    {"id": "A04", "case": "guest-b 使用 guest-a 的 manifest/资源", "expect": "denied", "code": 404, "assert": ["不跨 guest 复用", "无资源元数据"]},
+    {"id": "A05", "case": "other-tenant 标识读取 T1", "expect": "denied", "code": 404, "assert": ["tenant 隔离成立"]},
+    {"id": "A06", "case": "列表/计数/分页猜测资源（guest 越权 run_id 枚举）", "expect": "denied", "assert": ["列表与计数均过滤", "不泄露存在性"]},
+    {"id": "A07", "case": "guest-a 请求 F1-v2 / S2 / F3 / 缩略图 / 媒体 range / 引用全文", "expect": "denied", "code": 404, "assert": ["每个读入口独立核权", "range 不能绕过"]},
+    {"id": "A08", "case": "guest-a 下载 F1-v1（默认关闭下载）", "expect": "denied", "code": 403, "assert": ["可预览≠可下载", "无字节返回"]},
+    {"id": "A09", "case": "admin 显式开启 F1-v1 下载后 guest-a 下载", "expect": "allowed", "assert": ["逐资源开关", "在线核权", "返回字节且 sha256 与发布版本一致"]},
+    {"id": "A10", "case": "guest 提交任务/voice/webhook/workflow start/approval/cancel/reconcile/upload/Hub 管理", "expect": "denied", "assert": ["无入队", "无副作用", "审计记录", "不只靠隐藏 UI"]},
+    {"id": "A11", "case": "guest refresh / 他人 refresh / 重用兑换码 / 伪造 role header", "expect": "denied", "assert": ["不签 owner", "不提升权限", "兑换只成功一次"]},
+    {"id": "A12", "case": "撤销 grant-a 后旧 access/refresh/直链/下载/已开流/重连", "expect": "denied", "assert": ["后续读立即拒绝", "流在发送前复核并关闭", "私有缓存不返回数据"]},
+    {"id": "A13", "case": "peer（非 admin 非 guest）读 admin 的 T1", "expect": "denied", "assert": ["同租户第二主体仍按归属拒绝"]}
+  ]
+}

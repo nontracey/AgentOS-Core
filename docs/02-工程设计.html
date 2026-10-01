@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgentOS 工程设计</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#16202e; --ink2:#4a5766; --muted:#7a8798;
+  --line:#e3e7ec; --accent:#2b5cff; --accent2:#0aa06e; --warn:#b45309; --danger:#c02626;
+  --code:#f2f4f7; --chip:#eef2ff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+ font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+ font-size:15px;line-height:1.75;}
+.wrap{max-width:1080px;margin:0 auto;padding:32px 22px 90px}
+.hero{background:linear-gradient(135deg,#16202e 0%,#24406b 55%,#2b5cff 100%);color:#fff;
+ border-radius:16px;padding:30px 28px;box-shadow:0 10px 30px rgba(20,40,80,.18)}
+.hero h1{margin:0 0 8px;font-size:27px;letter-spacing:.5px}
+.hero p{margin:6px 0;color:#dce6f7;font-size:14.5px}
+h2{margin:38px 0 12px;font-size:21px;border-left:5px solid var(--accent);padding-left:11px;line-height:1.35}
+h3{margin:24px 0 8px;font-size:17px;color:#1d3557}
+h4{margin:16px 0 6px;font-size:15px;color:#26364d}
+p{margin:8px 0}
+ul,ol{margin:8px 0 8px 22px;padding:0}
+li{margin:4px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0;
+ box-shadow:0 1px 3px rgba(16,32,64,.04)}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:13.6px;background:#fff}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:#eef1f6;font-weight:600;color:#25384f}
+pre{background:var(--code);border:1px solid var(--line);border-left:4px solid var(--accent);
+ border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:13px;line-height:1.6;margin:10px 0}
+code{font-family:"JetBrains Mono",Consolas,"Courier New",monospace;font-size:13px}
+p code,li code,td code{background:var(--code);padding:1px 5px;border-radius:4px}
+.box{border-radius:10px;padding:12px 15px;margin:12px 0;border:1px solid}
+.idea{background:#f1f4ff;border-color:#c9d4ff;color:#23376e}
+.ok{background:#eefaf4;border-color:#b7e6cf;color:#10603f}
+.warn{background:#fff8ec;border-color:#f2d9a7;color:#7c4a08}
+.toc{columns:2;column-gap:26px;font-size:14px}
+.toc a{color:#2c4a86;text-decoration:none;display:block;padding:2px 0}
+.toc a:hover{text-decoration:underline}
+blockquote{margin:10px 0;padding:8px 14px;border-left:4px solid var(--accent);
+ background:#f7f9ff;color:#2b3d5c;border-radius:0 8px 8px 0}
+hr{border:0;border-top:1px solid var(--line);margin:26px 0}
+.foot{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+img{display:block;max-width:100%;height:auto;margin:16px auto}
+@media(max-width:720px){
+ .wrap{padding:20px 12px 48px}.hero{padding:20px 18px}.hero h1{font-size:23px}
+ .toc{columns:1}table{display:block;overflow-x:auto}th,td{min-width:110px}
+}
+</style></head>
+<body><div class="wrap">
+<div class="hero"><h1>AgentOS 工程设计</h1><p>版本：2.5</p><p>更新日期：2026-10-01</p><p>文档性质：实现与验证参考</p><p>适用范围：当前 Python 后端、ES 模块 / React Flow 前端和固定验收样本</p><p>阅读入口：<a href="README.md">文档目录</a></p></div>
+<div class="card toc"><a href="#1-技术基线">1. 技术基线</a><a href="#2-实现定位">2. 实现定位</a><a href="#3-状态与并发">3. 状态与并发</a><a href="#4-输入-上下文与成果">4. 输入、上下文与成果</a><a href="#5-执行策略">5. 执行策略</a><a href="#6-模型-技能与知识">6. 模型、技能与知识</a><a href="#7-访问授权与演示发布">7. 访问授权与演示发布</a><a href="#8-api-入口索引">8. API 入口索引</a><a href="#9-前端与恢复">9. 前端与恢复</a><a href="#10-验证与交付">10. 验证与交付</a></div>
+<h2 id="1-技术基线">1. 技术基线</h2>
+<table>
+<thead><tr>
+<th>项目</th>
+<th>当前选择</th>
+<th>维护依据</th>
+</tr></thead><tbody>
+<tr><td>后端</td><td>Python 3.13、FastAPI、Pydantic、asyncio</td><td><code>pyproject.toml</code> 与 <code>uv.lock</code></td></tr>
+<tr><td>运行形态</td><td>模块化单体，网关装配运行时</td><td><code>apps/composition.py</code></td></tr>
+<tr><td>持久化</td><td>SQLite 账本与文件成果</td><td>存储和成果 Adapter</td></tr>
+<tr><td>前端</td><td>JavaScript ES 模块 + React Flow/TypeScript 工作流岛</td><td><code>/ui/</code> 同源，不引入第二套后端</td></tr>
+<tr><td>接口</td><td>HTTP API、受鉴权 SSE、官方 MCP、内部 Protocol</td><td>网关、DTO 和生成契约</td></tr>
+</tbody></table>
+<p>代码中的实际接口与配置是实现依据。本文描述业务约束和定位入口；公开契约以 <code>contracts/</code> 为准。长期目标与实现字段分别管理，不依赖私下历史蓝图；当前契约以代码和 contracts 为准。</p>
+<h2 id="2-实现定位">2. 实现定位</h2>
+<p>下表后端路径相对于 <code>src/agentos/</code>，<code>frontend/</code> 路径相对于仓库根目录。</p>
+<table>
+<thead><tr>
+<th>业务</th>
+<th>主要实现</th>
+</tr></thead><tbody>
+<tr><td>配置与装配</td><td><code>apps/config.py</code>、<code>apps/composition.py</code></td></tr>
+<tr><td>网关与静态 UI</td><td><code>apps/gateway.py</code></td></tr>
+<tr><td>受理、补充与修改</td><td><code>services/ingress.py</code></td></tr>
+<tr><td>简单报告</td><td><code>services/template_runner.py</code></td></tr>
+<tr><td>有界活动协作</td><td><code>services/collaboration.py</code></td></tr>
+<tr><td>受限通用计划</td><td><code>services/planning.py</code></td></tr>
+<tr><td>模型路由</td><td><code>services/model_router.py</code>、<code>adapters/model/</code></td></tr>
+<tr><td>权限、会话与发布</td><td><code>services/access.py</code>、<code>auth_session.py</code>、<code>demo.py</code></td></tr>
+<tr><td>审批与副作用</td><td><code>services/approvals.py</code>、<code>runtime/executor.py</code></td></tr>
+<tr><td>素材、成果与节点</td><td><code>services/assets.py</code>、<code>nodes.py</code></td></tr>
+<tr><td>Codex 与调用前预算</td><td><code>adapters/runtime/codex.py</code>、<code>runtime/agent_driver.py</code>、<code>services/model_gate.py</code></td></tr>
+<tr><td>企业身份与浏览器登录</td><td><code>adapters/identity/federation.py</code>、<code>apps/federated_login.py</code></td></tr>
+<tr><td>Temporal 图与节点</td><td><code>kernel/workflow_graph.py</code>、<code>adapters/workflow/temporal.py</code>、<code>runtime/workflow_driver.py</code></td></tr>
+<tr><td>技能与知识</td><td><code>services/skills.py</code>、<code>knowledge.py</code>、<code>knowledge_backends.py</code></td></tr>
+<tr><td>状态、租约和恢复</td><td><code>kernel/states.py</code>、<code>kernel/store.py</code>、<code>adapters/store/sqlite.py</code>、<code>runtime/</code></td></tr>
+<tr><td>前端输入与任务视图</td><td><code>frontend/js/composer.js</code>、<code>live.js</code>、<code>views/thread.js</code></td></tr>
+<tr><td>前端鉴权与预览</td><td><code>frontend/js/api.js</code>、<code>preview.js</code></td></tr>
+</tbody></table>
+<h2 id="3-状态与并发">3. 状态与并发</h2>
+<h3 id="3-1-任务状态">3.1 任务状态</h3>
+<table>
+<thead><tr>
+<th>状态</th>
+<th>含义</th>
+</tr></thead><tbody>
+<tr><td><code>created</code></td><td>请求已受理</td></tr>
+<tr><td><code>planning</code></td><td>正在形成执行计划</td></tr>
+<tr><td><code>awaiting_input</code></td><td>等待用户补充</td></tr>
+<tr><td><code>awaiting_resources</code></td><td>等待执行资源</td></tr>
+<tr><td><code>running</code></td><td>正在执行</td></tr>
+<tr><td><code>awaiting_approval</code></td><td>等待已绑定调用的审批</td></tr>
+<tr><td><code>awaiting_review</code></td><td>等待评审</td></tr>
+<tr><td><code>paused</code></td><td>暂停，按实际恢复条件继续</td></tr>
+<tr><td><code>cancel_requested</code></td><td>已请求取消，尚未确认停止</td></tr>
+<tr><td><code>succeeded</code> / <code>failed</code> / <code>cancelled</code></td><td>已完成 / 失败 / 已取消的终态</td></tr>
+</tbody></table>
+<p>合法迁移由 <code>kernel/states.py</code> 裁定，前端不能自行设置状态。步骤还区分 <code>prepared</code>、<code>dispatched</code>、<code>pending_external</code> 和 <code>uncertain</code>；结果未知是对账状态，不得当成可直接重放的失败。</p>
+<h3 id="3-2-租约与原子恢复">3.2 租约与原子恢复</h3>
+<p>Worker 领取任务后维持心跳。<code>lease_fence</code> 独立于业务版本号，提交效果时核对 fence、所有者和有效期。失去租约取消当前驱动，其他任务仍可继续。</p>
+<p><code>StoreProtocol.resume_with_checkpoint</code> 用预期状态与版本做条件更新，在同一事务内保存检查点、恢复状态、返修事件和后续 Job。并发或重复补充不得生成重复恢复动作。网络 I/O 不在持久化事务内执行。</p>
+<p>Codex 限流暂停使用 <code>StoreProtocol.resume_runtime</code> 原子检查状态、清除错误并唤醒原任务。恢复入口要求本人资源权限与 write scope；未决效果、待审批、重复请求和终态均拒绝。已确认副作用复用原 step/attempt，不重新执行。</p>
+<h2 id="4-输入-上下文与成果">4. 输入、上下文与成果</h2>
+<table>
+<thead><tr>
+<th>对象</th>
+<th>实现约束</th>
+</tr></thead><tbody>
+<tr><td>文本材料</td><td>UTF-8 <code>.txt</code> / <code>.md</code>；最多 3 份，单份 64 KiB，合计 128 KiB；服务端校验</td></tr>
+<tr><td>材料 ID</td><td>稳定上传幂等，绑定主体和任务；客户端字段不能证明归属</td></tr>
+<tr><td>上下文</td><td>服务端读取授权前序任务、材料与成果，过滤伪造的上下文或后端绑定</td></tr>
+<tr><td>报告</td><td>必备章节、授权引用、字数、日期与人民币金额检查先于保存审批</td></tr>
+<tr><td>修改</td><td>关联新任务和新成果版本，保存父成果关系，旧版字节不变</td></tr>
+<tr><td>来源</td><td>固定材料 / 知识源、后端、版本及行范围，允许授权回查</td></tr>
+<tr><td>下载</td><td>受鉴权请求，核对动作权限；响应不暴露内部文件路径</td></tr>
+</tbody></table>
+<p>字数、日期、金额与引用检查是确定性规则，不能扩展解释为完整语义真实性保证。没有依据的字段须保留为待确认。Markdown 预览禁用原始 HTML，限制链接协议，动态内容安全渲染。</p>
+<h2 id="5-执行策略">5. 执行策略</h2>
+<h3 id="5-1-简单报告">5.1 简单报告</h3>
+<p>固定 <code>material-report</code> Skill 和版本，依次读取授权材料、调用模型生成、检查、经审批保存、登记不可变成果。模型上下文与累计 token 受护栏约束；长度修正调用有上限。检查失败不得登记合格报告。</p>
+<h3 id="5-2-有界活动协作">5.2 有界活动协作</h3>
+<p>计划 v1 为研究和设计、汇总、评审、交付的合法 DAG。来源不足时等待补充；同一任务形成计划 v2，仅重做受影响的研究与汇总，复用视觉成果。最多两轮补充，超限停止。</p>
+<p>视觉步骤固定真实节点、工具和版本，参数先保存再审批，派发使用稳定步骤键。生成完成后校验回传 SHA-256。回传失败时保留已生成状态，只允许补传相同成果。</p>
+<h3 id="5-3-通用计划">5.3 通用计划</h3>
+<p>仅执行受限计划，角色只可读取直接依赖的输出，空工具白名单拒绝调用。审批前持久化待执行参数与上下文，恢复使用原调用。模型调用轮次、工具步骤和 token 均有边界。</p>
+<h3 id="5-4-集成工作流与新真实运行时">5.4 集成工作流与新真实运行时</h3>
+<p>工作流公开节点为 AI、工具、条件、等待、自定义；业务模板节点由正规任务入口生成。图发布后版本不可变；输入按 schema 校验，引用只能读取已声明依赖的输出，custom 只能调用服务端注册实现。Temporal 拥有 DAG/计时/信号/重试；AgentOS 的稳定步骤键、审批指纹和未知结果对账决定副作用。首版单 worker 的工具提交串行，逻辑分支与等待可并行，不承诺同一 run 并行写检查点。</p>
+<p>Codex 每个 agent 节点绑定一个 thread，turn 内可有多次模型和工具调用。恢复先执行原已批准参数，再交回引擎。原始 model body 不进入公共事件，usage 缺失保守估算；压缩与普通请求共用 run/身份/预算/数据出域闸门。提供方协议差异由现有网关处理，不新写模型转换协议。压缩或推理遇到结构化 429 时保留阶段并暂停，由明确操作恢复原任务；成功效果回执持久化，恢复仅补有界确认元数据，不重放材料和 Skill 正文。</p>
+<p>下图为工作流 Agent 节点产生副作用时的治理关系；每次推理及压缩都经过相同 ModelGate。单 Agent 任务可直接进入驱动，不要求额外工作流。</p>
+<p>组件调用与单次动作时序见 <a href="modules/execution.md">执行模块</a>，总体分层见 <a href="01-总体架构.md">总体架构</a>。</p>
+<p>企业 JWT 或浏览器身份到期后停止执行，原授权不会因刷新而延长；支持配置内省与持久撤权。现阶段浏览器会话需重新登录，暂不代管 offline refresh token。企业长任务服务身份和委托续期需按实际 IdP 另验。</p>
+<h3 id="5-5-能力发现与自主任务">5.5 能力发现与自主任务</h3>
+<p>MCP 注册时发现工具并缓存参数 schema；工作流目录当前只暴露名称和描述，编辑器需要刷新。普通 Codex 任务可自主选择已有工具，不要求先定义图。知识完全关闭、统一能力目录、schema 参数表单、外部 Agent/已有流程自主选择和接入管理 MCP 尚需补齐，见 <a href="modules/capabilities.md">能力接入模块</a>。</p>
+<h2 id="6-模型-技能与知识">6. 模型、技能与知识</h2>
+<p>真实推理由 Codex 经调用前治理闸门进入企业网关或 LiteLLM；Responses→Chat 等协议转换复用网关实现。模型端点由部署方配置，云端仅在显式选择与出域策略允许时使用；当前主线遇到限流暂停，不自动换 key 或模型。旧 ModelRouter 的轮换/降级仍保留兼容与确定性测试，不作为当前 Codex 主线承诺。已有输出不能混入第二模型；SSE 缺少结束标记或工具参数损坏视为错误。</p>
+<p>Skill 安装登记元数据，任务按需读取实际正文和资源，固定版本与摘要。禁用影响后续调用，不覆盖运行中的不可变版本。</p>
+<p>知识检索固定所选后端版本，切换只影响新任务。WeKnora 持久来源→租户/主体/ACL/文档/KB/内容版本映射；请求前发送允许的 knowledge_ids，响应再核对文档与 KB。回查同时验证父文档和引用；删除先撤销本地授权，再对账远端异步删除。没有回执的摄取保持 uncertain，禁止盲目重传。上游 SQLite 缺失 FTS5 的镜像不能作为可用检索后端，本次集成使用其官方支持的 Qdrant。</p>
+<h2 id="7-访问授权与演示发布">7. 访问授权与演示发布</h2>
+<table>
+<thead><tr>
+<th>请求</th>
+<th>管理员</th>
+<th>游客</th>
+</tr></thead><tbody>
+<tr><td>任务、成果与来源读取</td><td>所属租户的业务授权范围</td><td>发布清单中的确切资源与版本</td></tr>
+<tr><td>预览 / 下载</td><td>分别核权</td><td>动作必须显式开放</td></tr>
+<tr><td>创建、修改、取消、审批、管理能力</td><td>按策略和预算执行</td><td>拒绝</td></tr>
+<tr><td>全库检索、长期记忆与原始审计</td><td>按对应授权</td><td>拒绝</td></tr>
+<tr><td>会话刷新和退出</td><td>本人会话</td><td>仅本人游客会话</td></tr>
+</tbody></table>
+<p>游客会话只存当前标签页；撤权后不能使用管理员 refresh 凭据。发布 revision 不可变，新成果默认不自动公开。源权限收紧或来源失效时撤下关联发布资源，不改写原始不可变文件。</p>
+<p>每次读取和每批流事件发送前复核授权。失效会话返回 401；有效身份禁止功能返回 403；游客不可读或不存在的资源统一返回 404。恢复备份须防止已撤销会话复活。</p>
+<h2 id="8-api-入口索引">8. API 入口索引</h2>
+<table>
+<thead><tr>
+<th>业务</th>
+<th>入口</th>
+</tr></thead><tbody>
+<tr><td>材料上传</td><td><code>POST /v1/materials</code></td></tr>
+<tr><td>受理 / 查询</td><td><code>POST /v1/tasks</code>、<code>GET /v1/tasks/{run_id}</code></td></tr>
+<tr><td>协作补充 / 成果修改</td><td><code>POST /v1/tasks/{run_id}/inputs</code>、<code>POST /v1/tasks/{run_id}/followups</code></td></tr>
+<tr><td>事件 / 正文流</td><td><code>GET /v1/tasks/{run_id}/events</code>、<code>GET /v1/tasks/{run_id}/stream</code></td></tr>
+<tr><td>引用回查</td><td><code>POST /v1/tasks/{run_id}/references/resolve</code></td></tr>
+<tr><td>审批 / 取消 / 对账</td><td><code>/v1/approvals/{approval_id}/decision</code>、<code>/v1/tasks/{run_id}/cancel</code>、<code>/reconcile</code></td></tr>
+<tr><td>限流暂停恢复</td><td><code>POST /v1/tasks/{run_id}/resume</code>；恢复原任务，权限及未决状态由服务端裁定</td></tr>
+<tr><td>成果与下载</td><td><code>/v1/assets</code>、<code>/v1/assets/{asset_id}/download</code></td></tr>
+<tr><td>能力管理</td><td><code>/v1/mcp/servers</code>、<code>/v1/skills</code>、<code>/v1/knowledge/*</code>、<code>/v1/nodes</code></td></tr>
+<tr><td>身份与发布</td><td><code>/v1/auth/*</code>、<code>/v1/demo/*</code></td></tr>
+</tbody></table>
+<p>本表用于定位，字段和完整路由以网关 OpenAPI、DTO 和契约为准。客户端、CLI 和其他入口不得绕过同一授权服务。</p>
+<h2 id="9-前端与恢复">9. 前端与恢复</h2>
+<p>前端通过同源 <code>/ui/</code> 提供，使用哈希路由和共用 API、鉴权、错误、主题与预览模块。事件流从持久游标续接，快照和增量去重。刷新与重连查询原任务，不重新提交目标。</p>
+<p>草稿、材料 ID、展开详情与阅读位置应保留；退出或 401 清除敏感视图、请求和 Blob。Service Worker 仅缓存静态外壳，不缓存 API 或私有素材。升级须检查旧缓存、详情直开与静态资源一致性。</p>
+<h2 id="10-验证与交付">10. 验证与交付</h2>
+<h3 id="10-1-固定样本">10.1 固定样本</h3>
+<table>
+<thead><tr>
+<th>样本</th>
+<th>内容</th>
+<th>判据</th>
+</tr></thead><tbody>
+<tr><td>A</td><td>主体、租户、任务和成果权限</td><td>越权拒绝，无正文泄露和副作用</td></tr>
+<tr><td>S</td><td>日期地点预算、冲突、信息缺失</td><td>真实材料消费、引用、弃答、修改版本与 hash</td></tr>
+<tr><td>K</td><td>重复文档、权限哨兵、删除来源</td><td>摄取、检索、引用、隔离、删除与切回</td></tr>
+<tr><td>C</td><td>活动方案与视觉，缺来源后补充</td><td>同任务计划升级、定向返修、视觉只生成一次</td></tr>
+<tr><td>F</td><td>审批、未知结果、断流、预算、缓存</td><td>原任务恢复、稳定幂等与失败状态</td></tr>
+</tbody></table>
+<p>冻结 JSON 位于 <a href="../tests/fixtures/u4/README.md">固定样本目录</a>。保持样本、需求 ID 和预期，不能随实现结果放宽断言。</p>
+<h3 id="10-2-负向矩阵">10.2 负向矩阵</h3>
+<p>所有拒绝同时检查“无数据正文泄露、无新 job/副作用、资源归属未变、必要审计存在”，不能只断言状态码。测试直接 HTTP/服务调用，绕过 UI。</p>
+<table>
+<thead><tr>
+<th>编号</th>
+<th>攻击/故障输入</th>
+<th>独立预期</th>
+</tr></thead><tbody>
+<tr><td>R01</td><td>guest-A 换T2/T3、guest-B manifest、另一tenant标识；列表计数/分页猜资源</td><td>不返回任务/标题/计数/正文/资源元数据</td></tr>
+<tr><td>R02</td><td>T1 路由带 F3、共享asset挂到别run、parent/child/旧版跳转</td><td>按实际关系及 manifest 校验，不扩大范围</td></tr>
+<tr><td>R03</td><td>可预览F1-v1但下载关闭；请求v2/缩略图/媒体range/附件/引用全文</td><td>每种读入口独立核权，range不能绕过，未发布资源拒绝</td></tr>
+<tr><td>R04</td><td>通过 trace/events/stream/错误/导出读 owner 参数、系统指令、path、endpoint、秘密或S2哨兵</td><td>白名单投影无这些字段和内容；日志不带兑换码/令牌</td></tr>
+<tr><td>R05</td><td>guest直接提交任务/voice/webhook、workflow start/publish、approval、cancel/reconcile、upload/push/fetch/Hub管理</td><td>拒绝且无执行；登录/刷新/退出只能作用本人会话</td></tr>
+<tr><td>R06</td><td>伪造role/header主体；guest refresh；他人refresh；重用兑换码</td><td>不提升权限、不签owner、不跨主体，兑换只成功一次；过期不延长</td></tr>
+<tr><td>R07</td><td>撤销后旧token/refresh/签名/直开/download/已开流/重连/旧SW缓存</td><td>后续读取立即拒绝；流发送前复核并关闭；页面清理；私有缓存不返回数据</td></tr>
+<tr><td>R08</td><td>恢复撤销前备份、数据库迁移旧无主资源</td><td>不复活guestgrant；未知归属不默认分享；admin原业务恢复</td></tr>
+<tr><td>R09</td><td>Agent/Skill/MCP返回诱导越权读取/写入；子角色要求全库/记忆/另run资源</td><td>按受限委托权限拒绝并记录，模型没有授权效力</td></tr>
+<tr><td>R10</td><td>两知识Adapter检索/resolve混用backend/source/chunk/version、删除后resolve、缓存命中私有哨兵</td><td>引用归属固定、双过滤、删除失效；不能把owner平台凭据当权限</td></tr>
+<tr><td>R11</td><td>计划有环/缺依赖/预算矛盾、审批参数变更、已批准调用重启</td><td>派发拒绝或重新裁定；原调用参数固定；无二次已确认效果</td></tr>
+<tr><td>R12</td><td>回执丢失、结果未知、节点断连、生成成功回传失败、无限评审</td><td>stable key与对账；只补传；预算内停止；终态/未决项真实</td></tr>
+<tr><td>R13</td><td>token增量乱序/重复、快照与事件竞态、断网后刷新/重启</td><td>消息/事件不丢不重复，不重新提交目标；原run可续接</td></tr>
+</tbody></table>
+<h3 id="10-3-工程检查">10.3 工程检查</h3>
+<pre><code>uv run ruff check .
+uv run mypy src/agentos
+uv run lint-imports
+uv run pytest
+uv run python scripts/export_contracts.py --check
+uv run python scripts/check_dependencies.py</code></pre>
+<p>CI 以 <a href="../.github/workflows/ci.yml">.github/workflows/ci.yml</a> 为准。工作台 ES 模块执行语法和行为检查；React Flow 工作流岛已有 Vite/TypeScript 构建链，在 <code>frontend/workflow</code> 执行 <code>npm ci</code>、<code>npm run typecheck</code>、<code>npm run build</code>，产物由 <code>/ui/workflow/</code> 同源提供。</p>
+<p>纯文档改动检查链接、格式、生成阅读版、一致性与脱敏；纯样式改动做视觉和交互验证。授权、状态、API 与恢复改动运行相应行为、契约、安全和恢复测试，发布前运行完整门禁。</p>
+<h3 id="10-4-证据要求">10.4 证据要求</h3>
+<p>记录代码树、固定样本版本、依赖与环境类别、实际命令、结果和未测项。真实模型、真实节点、合成服务和物理手机证据分别标注。公开检查与边界见 <a href="validation.md">验证说明</a>，原始记录仅本地保存，旧证据不自动证明当前版本。</p>
+<p>备份、配置和部署操作见 <a href="05-部署与运维.md">部署与运维</a>，界面规范见 <a href="06-界面与交互.md">界面与交互</a>。</p>
+<div class="foot">由 scripts/md2html.py 从 Markdown 自动生成，请勿手改此文件；改源文件后重跑脚本。</div>
+</div></body></html>

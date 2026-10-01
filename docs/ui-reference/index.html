@@ -1,0 +1,2370 @@
+<!doctype html>
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>AgentOS UI reference</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe id="codex-visualization" sandbox="allow-scripts" referrerpolicy="no-referrer" title="AgentOS UI reference" data-srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot; data-visualize-standalone&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;AgentOS UI reference&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --blue: light-dark(rgb(51 156 255), rgb(51 156 255));
+  --orange: light-dark(rgb(226 85 7), rgb(251 106 34));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --red: light-dark(rgb(224 46 42), rgb(255 103 100));
+  --purple: light-dark(rgb(146 79 247), rgb(173 123 249));
+  --yellow: light-dark(rgb(255 195 0), rgb(255 210 64));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --icon-size: 16px;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --corner-shape: round;
+  --radius: var(--border-radius-lg, 10px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: var(--visualize-paint-gutter, 0px);
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+.cursor-interaction {
+  cursor: var(--cursor-interaction, pointer);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: var(--cursor-interaction, pointer);
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: var(--corner-shape);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+.widget {
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  box-shadow: 0 0 0 0.5px var(--border-strong, var(--border));
+  color: var(--foreground);
+  background: var(--background);
+}
+
+#widget &gt; :not(.card, .widget, .progress) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+hr {
+  width: 100%;
+  height: 1px;
+  margin-block: 6px;
+  border: 0;
+  background: var(--border);
+}
+
+.nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress {
+  display: flex;
+  height: 8px;
+  margin-block: calc((var(--line-height-normal, 1.5em) - 8px) / 2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+}
+
+.progress-bar:only-child {
+  border-radius: var(--radius-full);
+}
+
+.progress-bar {
+  height: 100%;
+  flex-shrink: 0;
+  border: 0;
+  background: var(--viz-series-1);
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.nav-link,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn,
+.nav-link {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: var(--cursor-interaction, pointer);
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover,
+.nav-link:not(:disabled):not([aria-disabled=&quot;true&quot;]):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.nav-pills .nav-link {
+  min-width: 0;
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.nav-justified .nav-link {
+  flex: 1 1 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.nav-pills .nav-link.active {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+/* Shared preview chrome; product styles stay inside each variant. */
+.viz-dotted-background {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 0.8px,
+    transparent 0.8px
+  );
+  background-position: center;
+  background-size: 16px 16px;
+}
+
+.viz-carousel {
+  position: relative;
+  min-width: 0;
+}
+
+.viz-carousel:has(&gt; .viz-carousel-controls) {
+  min-height: calc(60px + var(--viz-carousel-picker-height, 0px));
+  padding-bottom: 60px;
+}
+
+.viz-carousel &gt; [data-variant][hidden] {
+  display: none !important;
+}
+
+.viz-carousel &gt; [data-variant] {
+  isolation: isolate;
+}
+
+.viz-carousel-controls {
+  --viz-carousel-hover: light-dark(
+    color-mix(in srgb, var(--foreground) 5.4%, transparent),
+    color-mix(in srgb, var(--foreground) 7.8%, transparent)
+  );
+  position: absolute;
+  z-index: 2;
+  bottom: 8px;
+  left: 50%;
+  display: flex;
+  width: max-content;
+  /* Leave room for the host&#x27;s design-controls launcher at the trailing edge. */
+  max-width: calc(100% - 96px);
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+  /* Match the settings dropdown chrome independently of the content font size. */
+  font-size: 13px;
+  font-weight: var(--font-weight-normal);
+  line-height: 18px;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+.viz-carousel-controls button,
+.viz-carousel-picker &gt; summary {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+  -webkit-app-region: no-drag;
+  border: 0;
+  border-radius: 14px;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.viz-carousel-controls &gt; button,
+.viz-carousel-picker &gt; summary {
+  position: relative;
+  isolation: isolate;
+}
+
+.viz-carousel-controls &gt; button {
+  --icon-size: 16px;
+  width: 30px;
+  padding: 0;
+}
+
+.viz-carousel-picker &gt; summary {
+  padding-inline: 12px;
+}
+
+.viz-carousel-controls .viz-carousel-caret {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin: 0;
+  color: inherit;
+  transform: rotate(180deg);
+}
+
+.viz-carousel-controls &gt; button &gt; svg,
+.viz-carousel-controls .viz-carousel-caret,
+.viz-carousel-count {
+  opacity: 0.5;
+}
+
+.viz-carousel-controls &gt; button::before,
+.viz-carousel-picker &gt; summary::before {
+  position: absolute;
+  z-index: -1;
+  inset: 3px;
+  border-radius: 12px;
+  content: &quot;&quot;;
+  pointer-events: none;
+}
+
+.viz-carousel-controls &gt; button:hover::before,
+.viz-carousel-picker &gt; summary:hover::before {
+  background: var(--viz-carousel-hover);
+}
+
+.viz-carousel-controls &gt; button,
+.viz-carousel-controls [data-lucide],
+.viz-carousel-controls .lucide {
+  flex-shrink: 0;
+}
+
+.viz-carousel-picker {
+  min-width: 0;
+}
+
+.viz-carousel-picker &gt; summary {
+  min-width: 0;
+  list-style: none;
+}
+
+.viz-carousel-picker &gt; summary::-webkit-details-marker {
+  display: none;
+}
+
+.viz-carousel-count {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.viz-carousel-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viz-carousel-options {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  max-height: 240px;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  box-shadow: 0 4px 12px light-dark(rgb(0 0 0 / 6%), rgb(0 0 0 / 25%));
+}
+
+.viz-carousel-options &gt; button {
+  width: 100%;
+  min-height: 28px;
+  justify-content: flex-start;
+  padding: 4px 8px;
+  font-size: var(--font-size-small);
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.viz-carousel-options &gt; [aria-current=&quot;true&quot;],
+.viz-carousel-options &gt; button:hover {
+  background: var(--viz-carousel-hover);
+}
+
+.btn:disabled,
+.nav-link:disabled,
+.nav-link[aria-disabled=&quot;true&quot;] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: var(--corner-shape);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+  [aria-pressed=&quot;true&quot;],
+  [aria-selected=&quot;true&quot;],
+  .is-selected
+) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible,
+.viz-carousel-controls :is(button, summary):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .viz-carousel:has(&gt; .viz-carousel-controls) {
+    min-height: calc(76px + var(--viz-carousel-picker-height, 0px));
+    padding-bottom: 76px;
+  }
+
+  .btn,
+  .nav-link,
+  .viz-carousel-controls button,
+  .viz-carousel-picker &gt; summary,
+  .form-control,
+  .form-select {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Keep small-screen WebKit from zooming when a text field receives focus. */
+  .form-control,
+  .form-select {
+    font-size: max(16px, var(--font-size-normal));
+  }
+
+  .form-control[type=&quot;file&quot;]::file-selector-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .form-control-color[type=&quot;color&quot;] {
+    width: 44px;
+    height: 44px;
+  }
+
+  .form-control:is(
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;week&quot;]
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    padding-block: 8px;
+  }
+
+  .form-check {
+    min-height: 44px;
+    padding-inline: 15px;
+  }
+
+  .form-check-input {
+    position: relative;
+  }
+
+  .form-check-input::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    content: &quot;&quot;;
+    transform: translate(-50%, -50%);
+  }
+
+  .form-check-label {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .form-range {
+    height: 44px;
+    touch-action: pan-y;
+  }
+
+  .form-range::-webkit-slider-runnable-track {
+    height: 44px;
+  }
+
+  .form-range::-moz-range-track {
+    height: 44px;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    margin-top: 12px;
+  }
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;script type=&quot;application/json&quot; id=&quot;codex-visualization-widget-state&quot;&gt;__CODEX_VISUALIZATION_WIDGET_STATE__&lt;/script&gt;
+&lt;script&gt;(() =&gt; {
+  const root = document.documentElement;
+  const mediaQuery = globalThis.matchMedia(&quot;(prefers-color-scheme: dark)&quot;);
+  const apply = Reflect.apply;
+  const isArray = Array.isArray;
+  const hasOwn = Object.hasOwn;
+  const parentWindow = globalThis.parent;
+  const stringify = JSON.stringify;
+  const parse = JSON.parse;
+  const encode = TextEncoder.prototype.encode.bind(new TextEncoder());
+  const initialStateElement = document.getElementById(
+    &quot;codex-visualization-widget-state&quot;,
+  );
+  const initialGlobals = parse(initialStateElement?.textContent ?? &quot;{}&quot;);
+  initialStateElement?.remove();
+  /** @type {Record&lt;string, unknown&gt; | null} */
+  let state = initialGlobals.widgetState ?? null;
+  const statePersistence = initialGlobals.statePersistence ?? &quot;none&quot;;
+  let nextStateRequestId = 0;
+  /** @type {Map&lt;number, { resolve: () =&gt; void; reject: (error: Error) =&gt; void; timeout: ReturnType&lt;typeof globalThis.setTimeout&gt;; serializedState: string }&gt;} */
+  const pendingStateWrites = new Map();
+  const persistenceError = () =&gt;
+    Object.assign(
+      new Error(&quot;The host could not persist the widget state update&quot;),
+      {
+        code: -32000,
+        data: { code: &quot;widget_state_persistence_failed&quot;, retryable: false },
+      },
+    );
+  /**
+   * @param {object} prototype
+   * @param {string} property
+   */
+  const getPrototypeGetter = (prototype, property) =&gt; {
+    // oxlint-disable-next-line typescript/unbound-method -- invoked through captured Reflect.apply
+    const getter = Object.getOwnPropertyDescriptor(prototype, property)?.get;
+    if (getter == null) {
+      throw new Error(`Missing ${property} getter`);
+    }
+    return getter;
+  };
+  const getMessageData = getPrototypeGetter(MessageEvent.prototype, &quot;data&quot;);
+  const getMessagePorts = getPrototypeGetter(MessageEvent.prototype, &quot;ports&quot;);
+  const getMessageSource = getPrototypeGetter(MessageEvent.prototype, &quot;source&quot;);
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const addHostMessageListener = MessagePort.prototype.addEventListener;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const postHostMessage = MessagePort.prototype.postMessage;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const startHostPort = MessagePort.prototype.start;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const stopMessagePropagation = Event.prototype.stopImmediatePropagation;
+  /** @type {MessagePort | null} */
+  let hostPort = null;
+  const postToHost = (type, payload) =&gt; {
+    if (hostPort != null) {
+      apply(postHostMessage, hostPort, [{ type, ...payload }]);
+    }
+  };
+  const openExternal = ({ href }) =&gt; {
+    if (globalThis.navigator.userActivation?.isActive === true) {
+      postToHost(&quot;open-external&quot;, { href });
+    }
+  };
+  const sendFollowUpMessage = ({ context, prompt, title }) =&gt; {
+    if (globalThis.navigator.userActivation?.isActive === true) {
+      postToHost(&quot;follow-up&quot;, { context, prompt, title });
+    }
+    return Promise.resolve();
+  };
+  /**
+   * @param {Record&lt;string, unknown&gt; | ((previous: Record&lt;string, unknown&gt; | null) =&gt; Record&lt;string, unknown&gt;)} next
+   * @returns {Promise&lt;void&gt;}
+   */
+  const setWidgetState = async (next) =&gt; {
+    const nextState = typeof next === &quot;function&quot; ? next(state) : next;
+    if (
+      nextState == null ||
+      typeof nextState !== &quot;object&quot; ||
+      isArray(nextState)
+    ) {
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+    }
+    const inputState = stringify(
+      nextState,
+      (_key, /** @type {unknown} */ value) =&gt; {
+        if (
+          typeof value === &quot;undefined&quot; ||
+          typeof value === &quot;function&quot; ||
+          typeof value === &quot;symbol&quot; ||
+          (typeof value === &quot;number&quot; &amp;&amp; !Number.isFinite(value))
+        ) {
+          throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+        }
+        return value;
+      },
+    );
+    const parsedState = parse(inputState);
+    if (
+      parsedState == null ||
+      typeof parsedState !== &quot;object&quot; ||
+      isArray(parsedState)
+    ) {
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+    }
+    const storedState = {
+      modelContent: null,
+      privateContent: null,
+      ...parsedState,
+    };
+    const serializedState = stringify(storedState);
+    if (encode(serializedState).length &gt; 16 * 1024) {
+      throw new TypeError(
+        &quot;Widget state must be a JSON object of at most 16 KiB&quot;,
+      );
+    }
+    if (
+      hasOwn(storedState, &quot;imageIds&quot;) &amp;&amp;
+      (!isArray(storedState.imageIds) ||
+        storedState.imageIds.some(
+          (/** @type {unknown} */ id) =&gt; typeof id !== &quot;string&quot;,
+        ))
+    ) {
+      throw new TypeError(&quot;Widget state imageIds must be an array of strings&quot;);
+    }
+    if (storedState.imageIds?.length &gt; 0) {
+      throw Object.assign(
+        new TypeError(&quot;Visualization state does not support image attachments&quot;),
+        { code: -32602, data: { code: &quot;images_unsupported&quot; } },
+      );
+    }
+    state = storedState;
+    globalThis.openai.widgetState = state;
+    globalThis.dispatchEvent(
+      new CustomEvent(&quot;openai:set_globals&quot;, {
+        detail: { globals: { widgetState: state } },
+      }),
+    );
+    if (statePersistence === &quot;none&quot;) {
+      throw persistenceError();
+    }
+    const id = ++nextStateRequestId;
+    return new Promise((resolve, reject) =&gt; {
+      const timeout = globalThis.setTimeout(() =&gt; {
+        pendingStateWrites.delete(id);
+        reject(persistenceError());
+      }, 30_000);
+      pendingStateWrites.set(id, { resolve, reject, timeout, serializedState });
+      postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
+    });
+  };
+  const syncTheme = () =&gt; {
+    const theme = mediaQuery.matches ? &quot;dark&quot; : &quot;light&quot;;
+    root.dataset.theme = theme;
+    globalThis.openai = {
+      ...globalThis.openai,
+      openExternal,
+      sendFollowUpMessage,
+      setWidgetState,
+      theme,
+      visualizationStyleVariables: {},
+      visualizationTheme: theme,
+      widgetState: state,
+      statePersistence,
+      stateModelContext: &quot;none&quot;,
+    };
+    globalThis.dispatchEvent(
+      new CustomEvent(&quot;openai:set_globals&quot;, {
+        detail: { globals: globalThis.openai },
+      }),
+    );
+  };
+  const sendHeight = () =&gt; {
+    postToHost(&quot;height&quot;, {
+      height: Math.ceil(
+        Math.max(
+          document.body.scrollHeight,
+          document.body.getBoundingClientRect().height,
+        ),
+      ),
+    });
+  };
+
+  globalThis.addEventListener(
+    &quot;message&quot;,
+    (event) =&gt; {
+      const data = apply(getMessageData, event, []);
+      const ports = apply(getMessagePorts, event, []);
+      const source = apply(getMessageSource, event, []);
+      if (
+        hostPort != null ||
+        source !== parentWindow ||
+        typeof data !== &quot;object&quot; ||
+        data?.type !== &quot;codex-visualization-initialize&quot; ||
+        !isArray(ports) ||
+        ports.length !== 1
+      ) {
+        return;
+      }
+      apply(stopMessagePropagation, event, []);
+      const nextHostPort = ports[0];
+      try {
+        apply(addHostMessageListener, nextHostPort, [
+          &quot;message&quot;,
+          (event) =&gt; {
+            const data = apply(getMessageData, event, []);
+            if (typeof data === &quot;object&quot; &amp;&amp; data?.type === &quot;measure&quot;) {
+              sendHeight();
+            } else if (
+              typeof data === &quot;object&quot; &amp;&amp;
+              data?.type === &quot;widget-state-result&quot;
+            ) {
+              /** @type {unknown} */
+              const id = data.id;
+              if (typeof id !== &quot;number&quot;) {
+                return;
+              }
+              const pending = pendingStateWrites.get(id);
+              if (pending != null) {
+                pendingStateWrites.delete(id);
+                globalThis.clearTimeout(pending.timeout);
+                if (data.ok === true) {
+                  pending.resolve();
+                } else {
+                  pending.reject(persistenceError());
+                }
+              }
+            }
+          },
+        ]);
+        apply(startHostPort, nextHostPort, []);
+      } catch {
+        return;
+      }
+      hostPort = nextHostPort;
+      for (const [id, { serializedState }] of pendingStateWrites) {
+        postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
+      }
+      sendHeight();
+    },
+    { capture: true },
+  );
+  document.currentScript?.remove();
+  mediaQuery.addEventListener(&quot;change&quot;, syncTheme);
+  globalThis.addEventListener(&quot;click&quot;, (event) =&gt; {
+    if (event.defaultPrevented) {
+      return;
+    }
+    let element = null;
+    if (event.target instanceof globalThis.Element) {
+      element = event.target;
+    } else if (event.target instanceof globalThis.Node) {
+      element = event.target.parentElement;
+    }
+    const link = element?.closest(&quot;a[href]&quot;);
+    const href = link?.getAttribute(&quot;href&quot;);
+    if (href == null) {
+      return;
+    }
+    if (href.startsWith(&quot;#&quot;)) {
+      let id;
+      try {
+        id = decodeURIComponent(href.slice(1));
+      } catch {
+        return;
+      }
+      const target = id.length === 0 ? root : document.getElementById(id);
+      if (
+        target == null ||
+        globalThis.navigator.userActivation?.isActive !== true
+      ) {
+        return;
+      }
+      event.preventDefault();
+      postToHost(&quot;scroll-to&quot;, {
+        top: target.getBoundingClientRect().top + globalThis.scrollY,
+      });
+      return;
+    }
+    event.preventDefault();
+    openExternal({ href });
+  });
+  new ResizeObserver(sendHeight).observe(document.body);
+  syncTheme();
+})();
+&lt;/script&gt;
+&lt;div id=&quot;agentos-concept&quot; aria-label=&quot;AgentOS 对话与协作工作区设计&quot;&gt;
+  &lt;div class=&quot;os-demo&quot;&gt;&lt;span&gt;&lt;i data-lucide=&quot;flask-conical&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt; 交互设计样板 · 全部为合成示例&lt;/span&gt;&lt;button data-action=&quot;guide&quot;&gt;浏览说明 &lt;i data-lucide=&quot;arrow-up-right&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+  &lt;div class=&quot;os-shell&quot;&gt;
+    &lt;aside class=&quot;os-sidebar&quot; aria-label=&quot;主导航&quot;&gt;
+      &lt;button class=&quot;os-brand&quot; data-view=&quot;home&quot;&gt;&lt;span class=&quot;os-logomark&quot;&gt;&lt;i data-lucide=&quot;orbit&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/span&gt;AgentOS&lt;span class=&quot;os-beta&quot;&gt;探索版&lt;/span&gt;&lt;/button&gt;
+      &lt;button class=&quot;os-new&quot; data-view=&quot;home&quot;&gt;&lt;i data-lucide=&quot;plus&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt; 新任务 &lt;span&gt;⌘ K&lt;/span&gt;&lt;/button&gt;
+      &lt;nav class=&quot;os-nav&quot;&gt;
+        &lt;button data-view=&quot;tasks&quot;&gt;&lt;i data-lucide=&quot;layers-2&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;任务空间&lt;/button&gt;
+        &lt;button data-view=&quot;library&quot;&gt;&lt;i data-lucide=&quot;files&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;成果库&lt;/button&gt;
+        &lt;button data-view=&quot;hub&quot;&gt;&lt;i data-lucide=&quot;blocks&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;能力中心&lt;span class=&quot;os-nav-dot&quot;&gt;&lt;/span&gt;&lt;/button&gt;
+      &lt;/nav&gt;
+      &lt;div class=&quot;os-recents&quot;&gt;&lt;div class=&quot;os-section-label&quot;&gt;最近任务 &lt;button data-view=&quot;tasks&quot; aria-label=&quot;查看全部任务&quot;&gt;&lt;i data-lucide=&quot;ellipsis&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;
+        &lt;button data-scenario=&quot;complex&quot;&gt;&lt;span class=&quot;os-tiny-dot&quot;&gt;&lt;/span&gt;&lt;span&gt;春季活动方案与视觉素材&lt;/span&gt;&lt;/button&gt;
+        &lt;button data-scenario=&quot;simple&quot;&gt;&lt;i data-lucide=&quot;check&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;整理项目本周进展&lt;/span&gt;&lt;/button&gt;
+        &lt;button data-scenario=&quot;approval&quot;&gt;&lt;i data-lucide=&quot;circle-pause&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span&gt;西湖主题宣传素材&lt;/span&gt;&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;os-sidebar-bottom&quot;&gt;&lt;button data-view=&quot;settings&quot;&gt;&lt;i data-lucide=&quot;settings-2&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;偏好设置&lt;/button&gt;&lt;div class=&quot;os-profile&quot;&gt;&lt;span class=&quot;os-avatar&quot;&gt;Y&lt;/span&gt;&lt;span&gt;我的工作空间&lt;small&gt;个人版 · 本地优先&lt;/small&gt;&lt;/span&gt;&lt;button data-action=&quot;guide&quot; aria-label=&quot;工作空间说明&quot;&gt;&lt;i data-lucide=&quot;chevrons-up-down&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;/aside&gt;
+    &lt;main class=&quot;os-main&quot;&gt;
+      &lt;header class=&quot;os-topbar&quot;&gt;&lt;div class=&quot;os-top-left&quot;&gt;&lt;button class=&quot;os-menu&quot; data-action=&quot;menu&quot; aria-label=&quot;打开导航&quot;&gt;&lt;i data-lucide=&quot;panel-left&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;span id=&quot;os-breadcrumb&quot;&gt;我的工作空间&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;os-top-actions&quot;&gt;&lt;span class=&quot;os-example-label&quot;&gt;设计预览&lt;/span&gt;&lt;button data-action=&quot;inbox&quot; aria-label=&quot;通知与需要确认的操作&quot;&gt;&lt;i data-lucide=&quot;bell&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;span class=&quot;os-notification-dot&quot;&gt;&lt;/span&gt;&lt;/button&gt;&lt;button data-action=&quot;guide&quot; aria-label=&quot;查看设计说明&quot;&gt;&lt;i data-lucide=&quot;info&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;&lt;/div&gt;&lt;/header&gt;
+      &lt;div id=&quot;os-content&quot;&gt;&lt;/div&gt;
+    &lt;/main&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;os-overlay&quot;&gt;&lt;/div&gt;&lt;div id=&quot;os-toast&quot; role=&quot;status&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;
+&lt;/div&gt;
+&lt;style&gt;
+#agentos-concept{color-scheme:light dark;--os-bg:light-dark(#ffffff,#191a1c);--os-side:light-dark(#f6f6f4,#202123);--os-panel:light-dark(#fafaf8,#222326);--os-text:light-dark(#25272b,#e9eaed);--os-muted:light-dark(#686d76,#a8acb6);--os-line:light-dark(#e9e9e5,#37383e);--os-accent:light-dark(#4e5cc8,#a1adff);--os-soft:light-dark(#eff1fc,#2b3050);--os-good:light-dark(#287358,#88c7ac);--os-warn:light-dark(#986327,#d7b170);--os-warm:light-dark(#fbf5e9,#393024);--os-shadow:light-dark(#24272b18,#00000040);font:400 14px/1.65 -apple-system,BlinkMacSystemFont,&quot;Segoe UI&quot;,&quot;PingFang SC&quot;,&quot;Microsoft YaHei&quot;,sans-serif;color:var(--os-text);background:var(--os-bg);width:100%;min-width:0;border:1px solid var(--os-line);border-radius:14px;position:relative;overflow:clip;text-align:left}
+#agentos-concept *{box-sizing:border-box}#agentos-concept button,#agentos-concept input,#agentos-concept textarea,#agentos-concept select{font:inherit;color:inherit}#agentos-concept button{background:none;border:0;text-align:inherit;cursor:inherit;display:inline-flex;align-items:center;justify-content:center;gap:8px}#agentos-concept button:focus-visible,#agentos-concept textarea:focus-visible,#agentos-concept select:focus-visible{outline:2px solid var(--os-accent);outline-offset:3px}#agentos-concept button:disabled{opacity:.55}#agentos-concept svg[data-lucide],#agentos-concept .lucide{width:17px;height:17px;flex-shrink:0}#agentos-concept h1,#agentos-concept h2,#agentos-concept h3,#agentos-concept h4,#agentos-concept p{margin:0}#agentos-concept h1{font-size:30px;line-height:1.35;font-weight:500;letter-spacing:-.9px}#agentos-concept h2{font-size:21px;line-height:1.4;font-weight:500;letter-spacing:-.4px}#agentos-concept h3{font-size:15px;font-weight:500}#agentos-concept b,#agentos-concept strong{font-weight:500}#agentos-concept small{font-size:12px}#agentos-concept .os-muted{color:var(--os-muted)}#agentos-concept .os-demo{display:flex;justify-content:space-between;align-items:center;background:var(--os-panel);border-bottom:1px solid var(--os-line);padding:6px 16px;font-size:12px;color:var(--os-muted);gap:10px}#agentos-concept .os-demo&gt;span{display:flex;align-items:center;gap:7px}#agentos-concept .os-demo svg{width:13px;height:13px}#agentos-concept .os-demo button{padding:0;white-space:nowrap}#agentos-concept .os-shell{display:grid;grid-template-columns:204px minmax(0,1fr);min-height:740px}#agentos-concept .os-sidebar{display:flex;flex-direction:column;background:var(--os-side);padding:23px 14px 12px;border-right:1px solid var(--os-line);min-width:0}#agentos-concept .os-brand{justify-content:flex-start;width:100%;padding:0 5px 24px;font-size:19px;font-weight:500;letter-spacing:-.7px}#agentos-concept .os-logomark{color:var(--os-accent);display:flex}#agentos-concept .os-logomark svg{width:24px;height:24px}#agentos-concept .os-beta{margin-left:auto;letter-spacing:0;font-size:11px;color:var(--os-muted);padding:1px 5px;border:1px solid var(--os-line);border-radius:4px}#agentos-concept .os-new{width:100%;border:1px solid var(--os-line);border-radius:8px;padding:10px;background:var(--os-bg);justify-content:flex-start;font-weight:500;box-shadow:0 1px 2px var(--os-shadow)}#agentos-concept .os-new&gt;span{margin-left:auto;font-size:11px;color:var(--os-muted)}#agentos-concept .os-nav{display:grid;gap:4px;margin:21px 0 25px}#agentos-concept .os-nav button,#agentos-concept .os-sidebar-bottom&gt;button{justify-content:flex-start;padding:10px;border-radius:7px;width:100%;color:var(--os-muted);min-height:42px}#agentos-concept .os-nav button:hover,#agentos-concept .os-recents&gt;button:hover,#agentos-concept .os-sidebar-bottom&gt;button:hover{background:var(--os-line);color:var(--os-text)}#agentos-concept .os-nav button.is-active{background:var(--os-line);color:var(--os-text)}#agentos-concept .os-nav-dot{width:5px;height:5px;border-radius:50%;background:var(--os-good);margin-left:auto}#agentos-concept .os-section-label{font-size:11px;color:var(--os-muted);padding:0 10px 10px;display:flex;justify-content:space-between;align-items:center}#agentos-concept .os-section-label button{padding:0}#agentos-concept .os-recents&gt;button{display:flex;justify-content:flex-start;width:100%;gap:8px;padding:9px 10px;border-radius:6px;color:var(--os-muted);font-size:12px;min-height:38px}#agentos-concept .os-recents&gt;button&gt;span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#agentos-concept .os-recents svg{width:12px;height:12px}#agentos-concept .os-tiny-dot{width:6px;height:6px;border-radius:50%;background:var(--os-accent);flex-shrink:0}#agentos-concept .os-sidebar-bottom{margin-top:auto;padding-top:40px}#agentos-concept .os-profile{display:flex;gap:9px;align-items:center;border-top:1px solid var(--os-line);padding:18px 4px 0;font-size:12px}#agentos-concept .os-profile small{display:block;font-size:11px;color:var(--os-muted)}#agentos-concept .os-profile&gt;button{margin-left:auto;padding:0}#agentos-concept .os-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--os-line);font-size:12px;color:var(--os-muted);flex-shrink:0}#agentos-concept .os-main{min-width:0;background:var(--os-bg)}#agentos-concept .os-topbar{padding:14px 23px;border-bottom:1px solid var(--os-line);height:58px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px}#agentos-concept .os-top-left,#agentos-concept .os-top-actions{display:flex;align-items:center;gap:14px;min-width:0}#agentos-concept #os-breadcrumb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#agentos-concept .os-top-actions button{position:relative;padding:5px}#agentos-concept .os-notification-dot{width:5px;height:5px;border-radius:50%;background:var(--os-warn);position:absolute;right:4px;top:4px}#agentos-concept .os-example-label{color:var(--os-muted);font-size:11px}#agentos-concept .os-menu{display:none;padding:4px}#agentos-concept #os-content{min-width:0}#agentos-concept .os-home{max-width:760px;padding:64px 38px 36px;margin:auto}#agentos-concept .os-greeting{display:flex;gap:8px;color:var(--os-muted);font-size:12px;margin-bottom:15px;align-items:center}#agentos-concept .os-greeting svg{color:var(--os-accent)}#agentos-concept .os-home&gt;p{color:var(--os-muted);margin-top:12px;font-size:14px}#agentos-concept .os-composer{border:1px solid var(--os-line);border-radius:16px;background:var(--os-bg);box-shadow:0 4px 18px var(--os-shadow);padding:16px;margin-top:25px}#agentos-concept .os-composer:focus-within{border-color:var(--os-accent)}#agentos-concept .os-composer textarea{border:0;background:transparent;width:100%;resize:none;min-height:72px;outline:none!important;padding:0;line-height:1.7;font-size:15px}#agentos-concept .os-composer textarea::placeholder{color:var(--os-muted)}#agentos-concept .os-compose-footer{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:9px}#agentos-concept .os-compose-tools{display:flex;gap:7px;align-items:center;min-width:0;flex-wrap:wrap}#agentos-concept .os-compose-tools button{font-size:11px;padding:4px 6px;color:var(--os-muted)}#agentos-concept .os-compose-tools select{font-size:11px;background:transparent;border:0;max-width:150px;color:var(--os-muted)}#agentos-concept .os-send{width:34px;height:34px;background:var(--os-text);color:var(--os-bg);border-radius:9px;flex-shrink:0}#agentos-concept button.os-send{background:var(--os-text);color:var(--os-bg)}#agentos-concept .os-context-line{font-size:11px;color:var(--os-muted);display:flex;justify-content:space-between;margin:11px 3px 28px;gap:8px;flex-wrap:wrap}#agentos-concept .os-context-line span{display:flex;align-items:center;gap:5px}#agentos-concept .os-context-line svg{width:12px;height:12px}#agentos-concept .os-example-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}#agentos-concept .os-example{padding:17px 13px;border:1px solid var(--os-line);border-radius:10px;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:7px;min-width:0}#agentos-concept .os-example:hover{border-color:var(--os-accent);background:var(--os-panel)}#agentos-concept .os-example&gt;svg{margin-bottom:4px;color:var(--os-accent)}#agentos-concept .os-example&gt;strong{font-size:13px}#agentos-concept .os-example&gt;span{font-size:11px;color:var(--os-muted);line-height:1.6}#agentos-concept .os-example&gt;small{margin-top:5px;font-size:11px;color:var(--os-muted)}#agentos-concept .os-recent-home{margin-top:31px}#agentos-concept .os-subhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px;gap:12px}#agentos-concept .os-subhead&gt;button{font-size:11px;color:var(--os-muted);padding:0}#agentos-concept .os-home-task{width:100%;justify-content:flex-start;padding:12px 0;border-top:1px solid var(--os-line);gap:10px}#agentos-concept .os-home-task&gt;span:nth-child(2){text-align:left;min-width:0;flex:1}#agentos-concept .os-home-task small{color:var(--os-muted);display:block;font-size:11px}#agentos-concept .os-home-task&gt;span:nth-child(2)&gt;b{font-size:12px}#agentos-concept .os-badge{padding:2px 7px;border-radius:5px;font-size:11px;white-space:nowrap;background:var(--os-panel);color:var(--os-muted);display:inline-flex;align-items:center;gap:4px}#agentos-concept .os-badge.good{color:var(--os-good);background:color-mix(in srgb,var(--os-good) 9%,var(--os-bg))}#agentos-concept .os-badge.active{color:var(--os-accent);background:var(--os-soft)}#agentos-concept .os-badge.wait{color:var(--os-warn);background:var(--os-warm)}#agentos-concept .os-page{padding:30px;max-width:1100px;margin:auto}#agentos-concept .os-page-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}#agentos-concept .os-page-heading p{color:var(--os-muted);font-size:12px;margin-top:7px}#agentos-concept .os-button{border:1px solid var(--os-line);border-radius:7px;padding:7px 11px;background:var(--os-bg);font-size:12px;white-space:nowrap}#agentos-concept button.os-primary{background:var(--os-text);color:var(--os-bg);border-color:var(--os-text)}#agentos-concept .os-text-button{font-size:12px;color:var(--os-accent);padding:3px 0}#agentos-concept .os-tabs{display:flex;gap:17px;border-bottom:1px solid var(--os-line);margin-bottom:24px;flex-wrap:wrap}#agentos-concept .os-tabs button{padding:8px 0 11px;color:var(--os-muted);font-size:12px;border-bottom:2px solid transparent}#agentos-concept .os-tabs button.is-active{color:var(--os-text);border-bottom-color:var(--os-text)}#agentos-concept .os-task-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:15px;border-bottom:1px solid var(--os-line);padding:18px 0;width:100%;text-align:left;justify-content:stretch}#agentos-concept .os-task-row strong{display:block;font-size:14px}#agentos-concept .os-task-row p{font-size:12px;color:var(--os-muted);margin:5px 0 8px}#agentos-concept .os-task-row small{color:var(--os-muted)}#agentos-concept .os-work-header{padding:19px 25px 0}#agentos-concept .os-work-title{display:flex;align-items:center;justify-content:space-between;gap:9px}#agentos-concept .os-work-title h2{font-size:18px}#agentos-concept .os-work-meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--os-muted);font-size:11px;margin-top:7px}#agentos-concept .os-work-header .os-tabs{margin-top:15px;margin-bottom:0;gap:21px}#agentos-concept .os-work-header .os-tabs button{font-size:12px}#agentos-concept .os-workspace{display:grid;grid-template-columns:minmax(0,1fr) 276px;min-height:580px}#agentos-concept .os-conversation{padding:23px 25px;min-width:0}#agentos-concept .os-user-msg{padding:12px 16px;background:var(--os-panel);border:1px solid var(--os-line);border-radius:13px 13px 3px 13px;margin-left:20px;font-size:12px}#agentos-concept .os-user-label{text-align:right;margin-bottom:7px;font-size:11px;color:var(--os-muted)}#agentos-concept .os-agent-label{display:flex;gap:8px;align-items:center;margin:22px 0 10px;font-size:12px;font-weight:500}#agentos-concept .os-agent-label .os-logomark svg{width:18px;height:18px}#agentos-concept .os-agent-label&gt;span:last-child{font-size:11px;color:var(--os-muted);font-weight:400;margin-left:auto}#agentos-concept .os-response{font-size:13px;line-height:1.85;white-space:pre-wrap;min-height:24px}#agentos-concept .os-tool-row{display:flex;align-items:flex-start;gap:9px;margin:9px 0;color:var(--os-muted);font-size:11px;width:100%;justify-content:flex-start;text-align:left;padding:8px 10px;background:var(--os-panel);border-radius:7px;min-height:38px}#agentos-concept .os-tool-row&gt;svg{width:14px;height:14px;margin-top:3px}#agentos-concept .os-tool-row&gt;span{flex:1;min-width:0}#agentos-concept .os-tool-row b{display:block;color:var(--os-text);font-size:12px}#agentos-concept .os-tool-row small{font-size:11px;color:var(--os-muted)}#agentos-concept .os-tool-row&gt;small{align-self:center;white-space:nowrap;color:var(--os-good)}#agentos-concept .os-execution-summary{border:1px solid var(--os-line);border-radius:10px;margin:15px 0;padding:12px 13px}#agentos-concept .os-summary-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12px;margin-bottom:9px}#agentos-concept .os-summary-top button{color:var(--os-accent);padding:0;font-size:11px}#agentos-concept .os-plan-mini{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:11px;color:var(--os-muted)}#agentos-concept .os-plan-mini&gt;span{background:var(--os-panel);padding:3px 6px;border-radius:4px}#agentos-concept .os-plan-mini svg{width:11px;height:11px}#agentos-concept .os-loop-note{border-left:2px solid var(--os-accent);padding:6px 10px;margin:12px 0;font-size:11px;color:var(--os-muted);background:var(--os-soft)}#agentos-concept .os-stream-caret{display:inline-block;width:3px;height:13px;background:var(--os-accent);vertical-align:middle;margin-left:4px}#agentos-concept .os-inline-artifact{width:100%;border:1px solid var(--os-line);border-radius:10px;padding:11px;display:flex;justify-content:flex-start;margin:14px 0;text-align:left}#agentos-concept .os-file-symbol{width:34px;height:40px;background:var(--os-soft);border-radius:5px;display:grid;place-items:center;color:var(--os-accent);flex-shrink:0}#agentos-concept .os-inline-artifact&gt;span:nth-child(2){flex:1;min-width:0}#agentos-concept .os-inline-artifact b{font-size:12px;display:block}#agentos-concept .os-inline-artifact small{color:var(--os-muted);font-size:11px}#agentos-concept .os-result-text{font-size:12px;margin-top:12px;line-height:1.9}#agentos-concept .os-result-text ul{padding-left:20px;margin:8px 0}#agentos-concept .os-sources{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}#agentos-concept .os-sources button{font-size:11px;background:var(--os-panel);border:1px solid var(--os-line);border-radius:5px;padding:3px 7px;color:var(--os-muted)}#agentos-concept .os-chat-actions{display:flex;justify-content:space-between;align-items:center;margin-top:20px;font-size:11px;color:var(--os-muted);gap:10px;flex-wrap:wrap}#agentos-concept .os-chat-actions&gt;div{display:flex;gap:7px;flex-wrap:wrap}#agentos-concept .os-chat-actions button{padding:3px 5px;font-size:11px}#agentos-concept .os-thread-composer{margin-top:23px;padding:12px;border:1px solid var(--os-line);border-radius:12px}#agentos-concept .os-thread-composer textarea{width:100%;border:0;background:transparent;resize:none;min-height:44px;font-size:12px;outline:none!important}#agentos-concept .os-thread-composer .os-send{height:30px;width:30px}#agentos-concept .os-thread-composer .os-compose-footer{margin:0}#agentos-concept .os-right-panel{border-left:1px solid var(--os-line);background:var(--os-panel);padding:18px 17px;min-width:0}#agentos-concept .os-panel-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:15px}#agentos-concept .os-panel-head button{padding:0}#agentos-concept .os-document{background:var(--os-bg);padding:21px 17px;border:1px solid var(--os-line);border-radius:4px;box-shadow:0 3px 8px var(--os-shadow);font-size:11px;line-height:1.9;min-height:315px}#agentos-concept .os-doc-eyebrow{font-size:11px;letter-spacing:1.5px;color:var(--os-muted);padding-bottom:12px;border-bottom:1px solid var(--os-line);margin-bottom:16px}#agentos-concept .os-document h3{font-size:17px;line-height:1.5;margin-bottom:7px}#agentos-concept .os-document h4{font-size:11px;font-weight:500;margin:16px 0 5px}#agentos-concept .os-document p{color:var(--os-muted);font-size:11px}#agentos-concept .os-doc-divider{border-top:1px solid var(--os-line);margin:14px 0}#agentos-concept .os-doc-quote{padding:8px;border-left:2px solid var(--os-accent);background:var(--os-panel);font-size:11px;color:var(--os-muted)}#agentos-concept .os-doc-actions{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}#agentos-concept .os-doc-actions button{flex:1;font-size:11px}#agentos-concept .os-panel-caption{font-size:11px;color:var(--os-muted);margin:13px 0}#agentos-concept .os-bound{border-top:1px solid var(--os-line);margin-top:21px;padding-top:15px}#agentos-concept .os-bound&gt;h3{font-size:11px;margin-bottom:10px}#agentos-concept .os-bound-row{display:flex;justify-content:space-between;font-size:11px;color:var(--os-muted);margin:7px 0;gap:12px}#agentos-concept .os-bound-row b{color:var(--os-text);text-align:right}#agentos-concept .os-artifact-extra{display:flex;gap:8px;border:1px solid var(--os-line);background:var(--os-bg);border-radius:6px;padding:10px;margin-top:9px;font-size:11px}#agentos-concept .os-artifact-extra svg{color:var(--os-accent)}#agentos-concept .os-artifact-extra small{display:block;color:var(--os-muted);font-size:11px}#agentos-concept .os-approval{margin:16px 0;background:var(--os-warm);border:1px solid color-mix(in srgb,var(--os-warn) 25%,var(--os-line));border-radius:10px;padding:14px;font-size:12px}#agentos-concept .os-approval h3{display:flex;align-items:center;gap:7px;color:var(--os-warn);font-size:13px}#agentos-concept .os-approval p{margin:8px 0;font-size:11px}#agentos-concept .os-approval dl{display:grid;grid-template-columns:65px minmax(0,1fr);gap:5px 8px;font-size:11px;margin:12px 0}#agentos-concept .os-approval dt{color:var(--os-muted)}#agentos-concept .os-approval dd{margin:0}#agentos-concept .os-approval-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}#agentos-concept .os-flow-page{padding:23px 25px}#agentos-concept .os-flow-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;font-size:11px;flex-wrap:wrap}#agentos-concept .os-flow-toolbar&gt;span{color:var(--os-muted)}#agentos-concept .os-graph{position:relative;padding:12px 24px 22px;min-width:0}#agentos-concept .os-graph-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}#agentos-concept .os-graph-grid{display:grid;grid-template-columns:1fr 1fr;gap:29px 23px;position:relative}#agentos-concept .os-graph-node{background:var(--os-bg);border:1px solid var(--os-line);border-radius:9px;padding:11px 12px;display:flex;align-items:flex-start;gap:9px;text-align:left;justify-content:flex-start;min-width:0;position:relative;box-shadow:0 2px 4px var(--os-shadow);font-size:11px}#agentos-concept .os-graph-node.center{grid-column:1 / -1;width:68%;justify-self:center}#agentos-concept .os-graph-node.is-selected{border-color:var(--os-accent);box-shadow:0 0 0 2px var(--os-soft)}#agentos-concept .os-graph-node&gt;svg{color:var(--os-accent);width:16px;height:16px;margin-top:2px}#agentos-concept .os-graph-node&gt;span{min-width:0;flex:1}#agentos-concept .os-graph-node b{display:block;font-size:12px}#agentos-concept .os-graph-node small{display:block;color:var(--os-muted);font-size:11px;margin-top:2px}#agentos-concept .os-graph-node .os-badge{font-size:11px;margin-top:7px}#agentos-concept .os-node-check{color:var(--os-good);font-size:11px}#agentos-concept .os-graph-loop{position:absolute;left:0;top:43%;writing-mode:vertical-rl;font-size:11px;background:var(--os-bg);padding:6px 1px;color:var(--os-accent);z-index:2}#agentos-concept .os-flow-legend{font-size:11px;color:var(--os-muted);padding:11px 0;border-top:1px solid var(--os-line);display:flex;gap:13px;flex-wrap:wrap}#agentos-concept .os-node-details h3{margin-bottom:8px;font-size:16px}#agentos-concept .os-node-details&gt;p{font-size:11px;color:var(--os-muted)}#agentos-concept .os-detail-section{margin-top:22px}#agentos-concept .os-detail-section h4{font-size:11px;margin-bottom:8px;font-weight:500}#agentos-concept .os-detail-section p{font-size:11px;color:var(--os-muted);margin:6px 0}#agentos-concept .os-hub-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}#agentos-concept .os-capability{border:1px solid var(--os-line);border-radius:11px;padding:18px;background:var(--os-bg);min-width:0}#agentos-concept .os-cap-top{display:flex;align-items:center;gap:10px;margin-bottom:13px}#agentos-concept .os-cap-icon{width:34px;height:34px;background:var(--os-panel);border:1px solid var(--os-line);border-radius:8px;display:grid;place-items:center;color:var(--os-accent)}#agentos-concept .os-cap-top .os-badge{margin-left:auto}#agentos-concept .os-capability p{font-size:12px;color:var(--os-muted);min-height:38px}#agentos-concept .os-cap-foot{border-top:1px solid var(--os-line);padding-top:13px;margin-top:15px;display:flex;justify-content:space-between;font-size:11px;color:var(--os-muted);align-items:center;gap:6px}#agentos-concept .os-cap-foot button{font-size:11px;color:var(--os-accent);padding:0}#agentos-concept .os-hub-note{font-size:11px;color:var(--os-muted);margin-top:20px;display:flex;gap:6px;align-items:flex-start}#agentos-concept .os-hub-note svg{width:14px;height:14px;margin-top:2px;flex-shrink:0}#agentos-concept .os-library-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}#agentos-concept .os-library-card{border:1px solid var(--os-line);border-radius:10px;padding:17px;min-width:0}#agentos-concept .os-library-card .os-file-preview{background:var(--os-panel);padding:19px;border-radius:6px;min-height:150px;margin-bottom:14px}#agentos-concept .os-file-preview h3{font-size:17px}#agentos-concept .os-file-preview p{color:var(--os-muted);font-size:11px;margin-top:10px}#agentos-concept .os-library-card&gt;p{font-size:11px;color:var(--os-muted);margin:5px 0 12px}#agentos-concept .os-library-actions{display:flex;gap:8px}#agentos-concept .os-library-actions button{font-size:11px}#agentos-concept .os-settings-row{display:flex;justify-content:space-between;align-items:center;padding:19px 0;border-bottom:1px solid var(--os-line);gap:18px;font-size:13px}#agentos-concept .os-settings-row small{display:block;color:var(--os-muted);font-size:11px;margin-top:4px}#agentos-concept .os-settings-row select{padding:6px;border:1px solid var(--os-line);border-radius:6px;background:var(--os-bg);max-width:180px;font-size:12px}#agentos-concept .os-overlay-mask{position:absolute;inset:0;background:var(--os-shadow);z-index:20;display:flex;align-items:flex-start;justify-content:center;padding:70px 20px 30px;backdrop-filter:blur(3px)}#agentos-concept .os-dialog{width:480px;max-width:100%;background:var(--os-bg);border:1px solid var(--os-line);border-radius:14px;padding:24px;box-shadow:0 16px 55px var(--os-shadow)}#agentos-concept .os-dialog-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}#agentos-concept .os-dialog-head button{padding:4px}#agentos-concept .os-dialog p{font-size:12px;line-height:1.9;color:var(--os-muted);margin:9px 0}#agentos-concept .os-dialog ul{padding-left:19px;font-size:12px;color:var(--os-muted)}#agentos-concept .os-dialog label{display:block;font-size:12px;margin:13px 0 7px}#agentos-concept .os-dialog textarea,#agentos-concept .os-dialog input{display:block;width:100%;padding:10px;border:1px solid var(--os-line);border-radius:7px;background:var(--os-panel);font-size:12px}#agentos-concept .os-dialog textarea{min-height:110px;resize:vertical}#agentos-concept .os-dialog .os-button{margin-top:12px}#agentos-concept .os-status-list{display:grid;gap:10px;margin:17px 0}#agentos-concept .os-status-list&gt;div{padding:10px;background:var(--os-panel);border-radius:7px;font-size:12px}#agentos-concept #os-toast{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);max-width:90%;background:var(--os-text);color:var(--os-bg);padding:9px 14px;border-radius:8px;font-size:12px;z-index:30;display:none}#agentos-concept .os-design-toggle{display:flex;gap:8px;flex-wrap:wrap}#agentos-concept .os-live-row{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--os-muted);margin-top:13px}#agentos-concept .os-mobile-open{display:none}#agentos-concept .os-split-off .os-workspace{grid-template-columns:1fr}#agentos-concept .os-split-off .os-right-panel{display:none}#agentos-concept .os-failure{padding:12px;border:1px solid color-mix(in srgb,var(--os-warn) 25%,var(--os-line));background:var(--os-warm);border-radius:8px;font-size:11px;margin:12px 0}#agentos-concept .os-failure b{font-size:12px;display:block}#agentos-concept .os-failure p{margin:6px 0;color:var(--os-muted)}
+@media(max-width:1050px){#agentos-concept .os-shell{grid-template-columns:182px minmax(0,1fr)}#agentos-concept .os-sidebar{padding-left:10px;padding-right:10px}#agentos-concept .os-workspace{grid-template-columns:minmax(0,1fr) 235px}#agentos-concept .os-conversation{padding:22px 20px}#agentos-concept .os-right-panel{padding:17px 12px}#agentos-concept .os-work-header{padding:18px 20px 0}#agentos-concept .os-home{padding:56px 28px 35px}}
+@media(max-width:850px){#agentos-concept .os-shell{grid-template-columns:156px minmax(0,1fr)}#agentos-concept .os-beta{display:none}#agentos-concept .os-new&gt;span{display:none}#agentos-concept .os-workspace{grid-template-columns:1fr}#agentos-concept .os-right-panel{border-left:0;border-top:1px solid var(--os-line);display:none}#agentos-concept .os-right-panel.mobile-visible{display:block}#agentos-concept .os-mobile-open{display:inline-flex}#agentos-concept .os-home{padding:40px 23px 28px}#agentos-concept .os-hub-grid,#agentos-concept .os-library-grid{grid-template-columns:1fr}#agentos-concept .os-example-grid{gap:8px}#agentos-concept .os-example{padding:13px 10px}#agentos-concept .os-example&gt;small{display:none}}
+@media(max-width:620px){#agentos-concept{border-radius:9px}#agentos-concept .os-shell{display:block;min-height:720px}#agentos-concept .os-sidebar{display:none}#agentos-concept .os-sidebar.is-open{display:flex;position:absolute;top:31px;bottom:0;width:220px;z-index:15;box-shadow:12px 0 35px var(--os-shadow)}#agentos-concept .os-menu{display:inline-flex}#agentos-concept .os-topbar{padding:10px 13px;height:54px}#agentos-concept .os-top-left,#agentos-concept .os-top-actions{gap:8px}#agentos-concept .os-example-label{display:none}#agentos-concept .os-home{padding:40px 19px 25px}#agentos-concept h1{font-size:27px}#agentos-concept .os-home&gt;p{font-size:13px}#agentos-concept .os-composer{margin-top:24px;padding:13px}#agentos-concept .os-composer textarea{font-size:16px;min-height:85px}#agentos-concept .os-example-grid{grid-template-columns:1fr}#agentos-concept .os-example{display:grid;grid-template-columns:22px minmax(0,1fr);gap:2px 10px;padding:12px}#agentos-concept .os-example&gt;svg{grid-row:1 / 3;margin:3px 0 0}#agentos-concept .os-example&gt;span{grid-column:2}#agentos-concept .os-home-task&gt;span:nth-child(2)&gt;b{font-size:12px}#agentos-concept .os-page{padding:24px 19px}#agentos-concept .os-page-heading{align-items:flex-start}#agentos-concept .os-page-heading h2{font-size:20px}#agentos-concept .os-page-heading&gt;.os-button{font-size:11px;padding:7px}#agentos-concept .os-work-header{padding:17px 16px 0}#agentos-concept .os-work-title{align-items:flex-start}#agentos-concept .os-work-title h2{font-size:16px;line-height:1.5}#agentos-concept .os-work-title .os-badge{margin-top:3px}#agentos-concept .os-conversation{padding:20px 16px}#agentos-concept .os-user-msg{margin-left:8px;font-size:12px}#agentos-concept .os-work-header .os-tabs{gap:17px}#agentos-concept .os-thread-composer textarea{font-size:16px}#agentos-concept .os-flow-page{padding:19px 11px}#agentos-concept .os-graph{padding:10px 16px 20px}#agentos-concept .os-graph-grid{gap:26px 10px}#agentos-concept .os-graph-node{padding:10px 8px;gap:5px}#agentos-concept .os-graph-node&gt;svg{display:none}#agentos-concept .os-graph-node b{font-size:11px}#agentos-concept .os-graph-node small{font-size:11px}#agentos-concept .os-graph-node.center{width:75%}#agentos-concept .os-graph-loop{font-size:11px;left:-3px}#agentos-concept .os-demo{padding:6px 9px;font-size:11px}#agentos-concept .os-demo button{font-size:11px}#agentos-concept .os-right-panel{padding:22px 18px}#agentos-concept .os-profile small{font-size:11px}#agentos-concept .os-task-row{gap:8px}#agentos-concept .os-approval dl{grid-template-columns:57px minmax(0,1fr)}#agentos-concept .os-overlay-mask{padding:54px 13px 20px}#agentos-concept .os-dialog{padding:18px}#agentos-concept .os-compose-tools button,#agentos-concept .os-compose-tools select{font-size:11px}#agentos-concept .os-send{min-height:38px;min-width:38px}#agentos-concept button{min-height:36px}#agentos-concept .os-top-actions button,#agentos-concept .os-menu{min-width:36px;min-height:36px}#agentos-concept .os-compose-footer{gap:3px}#agentos-concept .os-compose-tools{gap:2px}}
+@media(pointer:coarse){#agentos-concept button{min-height:44px}#agentos-concept textarea{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#agentos-concept *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+&lt;/style&gt;
+&lt;script&gt;
+(()=&gt;{
+const root=document.getElementById(&#x27;agentos-concept&#x27;);
+const body=root.querySelector(&#x27;#os-content&#x27;);
+const overlay=root.querySelector(&#x27;#os-overlay&#x27;);
+const state={view:&#x27;home&#x27;,scenario:&#x27;complex&#x27;,tab:&#x27;chat&#x27;,stage:&#x27;complete&#x27;,step:0,hub:&#x27;all&#x27;,backend:&#x27;weknora&#x27;,boundBackend:&#x27;weknora&#x27;,node:&#x27;review&#x27;,running:false,paused:false,characters:0,attached:false,filter:&#x27;all&#x27;,revision:1,reason:&#x27;&#x27;,failure:false,refused:false,userGoal:&#x27;&#x27;,reply:&#x27;&#x27;,notification:true};
+const design={split:true,accent:&#x27;#4e5cc8&#x27;,layout:&#x27;对话优先&#x27;};
+let streamTimer=null,toastTimer=null,graphObserver=null,focusRestore=null;
+const i=n=&gt;`&lt;i data-lucide=&quot;${n}&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;`;
+const e=s=&gt;String(s).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g,c=&gt;({&#x27;&amp;&#x27;:&#x27;&amp;amp;&#x27;,&#x27;&lt;&#x27;:&#x27;&amp;lt;&#x27;,&#x27;&gt;&#x27;:&#x27;&amp;gt;&#x27;,&#x27;&quot;&#x27;:&#x27;&amp;quot;&#x27;,&quot;&#x27;&quot;:&#x27;&amp;#39;&#x27;}[c]));
+const badge=(text,type=&#x27;&#x27;)=&gt;`&lt;span class=&quot;os-badge ${type}&quot;&gt;${text}&lt;/span&gt;`;
+function streamText(t,stage){return (state.running||state.paused)&amp;&amp;state.step===stage?e(t.slice(0,state.characters))+(state.running?&#x27;&lt;span class=&quot;os-stream-caret&quot; aria-hidden=&quot;true&quot;&gt;&lt;/span&gt;&#x27;:&#x27;&#x27;):e(t);}
+const backend=()=&gt;state.boundBackend===&#x27;weknora&#x27;?&#x27;WeKnora&#x27;:&#x27;内置检索&#x27;;
+const title=()=&gt;state.scenario===&#x27;simple&#x27;?&#x27;项目进展周报&#x27;:state.scenario===&#x27;approval&#x27;?&#x27;西湖主题宣传素材&#x27;:&#x27;春季活动方案与视觉素材&#x27;;
+const goal=()=&gt;state.userGoal||(state.scenario===&#x27;simple&#x27;?&#x27;根据这份项目记录，整理本周进展、阻塞和下一步，生成一份有来源的周报。&#x27;:state.scenario===&#x27;approval&#x27;?&#x27;生成一张西湖晨光主题的宣传图，使用 Windows 的图像工具，生成一次即可。&#x27;:&#x27;结合知识库里的品牌规范，做一份春季活动方案，生成宣传视觉，并检查文案和引用。最终交付方案与素材。&#x27;);
+const icons=()=&gt;{root.querySelectorAll(&#x27;button&#x27;).forEach(b=&gt;b.classList.add(&#x27;cursor-interaction&#x27;));if(globalThis.lucide)lucide.createIcons({attrs:{width:16,height:16}});};
+function save(){if(globalThis.openai?.setWidgetState)globalThis.openai.setWidgetState({modelContent:{screen:state.view,scenario:state.scenario,tab:state.tab,knowledgeBackend:state.backend,layout:design.layout},privateContent:{split:design.split}}).catch(()=&gt;{});}
+function stopStream(){if(streamTimer)clearTimeout(streamTimer);streamTimer=null;state.running=false;}
+function toast(t){root.querySelector(&#x27;#os-toast&#x27;).textContent=t;root.querySelector(&#x27;#os-toast&#x27;).style.display=&#x27;block&#x27;;clearTimeout(toastTimer);toastTimer=setTimeout(()=&gt;root.querySelector(&#x27;#os-toast&#x27;).style.display=&#x27;none&#x27;,3200);}
+function navigate(v){stopStream();overlay.innerHTML=&#x27;&#x27;;state.view=v;root.querySelector(&#x27;.os-sidebar&#x27;).classList.remove(&#x27;is-open&#x27;);render();save();}
+function openScenario(s,play=false){stopStream();overlay.innerHTML=&#x27;&#x27;;root.querySelector(&#x27;.os-sidebar&#x27;).classList.remove(&#x27;is-open&#x27;);state.scenario=s;state.view=&#x27;thread&#x27;;state.tab=design.layout===&#x27;协作优先&#x27;&amp;&amp;s===&#x27;complex&#x27;?&#x27;flow&#x27;:&#x27;chat&#x27;;state.stage=s===&#x27;approval&#x27;?&#x27;approval&#x27;:&#x27;complete&#x27;;state.boundBackend=state.backend;state.failure=false;state.refused=false;state.paused=false;state.revision=s===&#x27;complex&#x27;?2:1;state.reason=&#x27;&#x27;;state.reply=&#x27;&#x27;;state.userGoal=&#x27;&#x27;;state.step=play?0:6;render();if(play)startReplay();save();}
+function home(){return `&lt;section class=&quot;os-home&quot;&gt;&lt;div class=&quot;os-greeting&quot;&gt;${i(&#x27;sparkles&#x27;)} 你的想法，从这里开始&lt;/div&gt;&lt;h1&gt;今天，我们完成什么？&lt;/h1&gt;&lt;p&gt;交给我一个目标。简单的直接做，复杂的协作完成。&lt;/p&gt;&lt;form class=&quot;os-composer&quot; id=&quot;os-start-form&quot;&gt;&lt;label for=&quot;os-goal&quot; style=&quot;position:absolute;width:1px;height:1px;overflow:hidden&quot;&gt;任务目标&lt;/label&gt;&lt;textarea id=&quot;os-goal&quot; placeholder=&quot;描述你想完成的事，也可以添加资料…&quot;&gt;&lt;/textarea&gt;&lt;div class=&quot;os-compose-footer&quot;&gt;&lt;div class=&quot;os-compose-tools&quot;&gt;&lt;button type=&quot;button&quot; data-action=&quot;attach&quot;&gt;${i(&#x27;paperclip&#x27;)} ${state.attached?&#x27;项目记录.md&#x27;:&#x27;添加资料&#x27;}&lt;/button&gt;&lt;select aria-label=&quot;执行方式&quot; id=&quot;os-mode&quot;&gt;&lt;option value=&quot;auto&quot;&gt;自动选择执行方式&lt;/option&gt;&lt;option value=&quot;simple&quot;&gt;直接处理&lt;/option&gt;&lt;option value=&quot;complex&quot;&gt;协作处理&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;button class=&quot;os-send&quot; type=&quot;submit&quot; aria-label=&quot;开始任务&quot;&gt;${i(&#x27;arrow-up&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;/form&gt;&lt;div class=&quot;os-context-line&quot;&gt;&lt;span&gt;${i(&#x27;shield-check&#x27;)} 重要操作执行前由你确认&lt;/span&gt;&lt;span&gt;${i(&#x27;database&#x27;)} ${state.backend===&#x27;weknora&#x27;?&#x27;WeKnora&#x27;:&#x27;内置检索&#x27;} · 示例配置&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;os-example-grid&quot;&gt;&lt;button class=&quot;os-example&quot; data-scenario=&quot;simple&quot;&gt;${i(&#x27;file-text&#x27;)}&lt;strong&gt;整理一份项目周报&lt;/strong&gt;&lt;span&gt;读取资料 → 整理 → 引用检查&lt;/span&gt;&lt;small&gt;简单任务 · 直接交付&lt;/small&gt;&lt;/button&gt;&lt;button class=&quot;os-example&quot; data-scenario=&quot;complex&quot;&gt;${i(&#x27;workflow&#x27;)}&lt;strong&gt;完成活动方案与素材&lt;/strong&gt;&lt;span&gt;研究、设计与评审协作完成&lt;/span&gt;&lt;small&gt;复杂任务 · 接力与返修&lt;/small&gt;&lt;/button&gt;&lt;button class=&quot;os-example&quot; data-scenario=&quot;approval&quot;&gt;${i(&#x27;image&#x27;)}&lt;strong&gt;生成一张宣传视觉&lt;/strong&gt;&lt;span&gt;确认生成参数，交给执行设备&lt;/span&gt;&lt;small&gt;工具任务 · 人工确认&lt;/small&gt;&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-recent-home&quot;&gt;&lt;div class=&quot;os-subhead&quot;&gt;&lt;h3&gt;继续上次的工作&lt;/h3&gt;&lt;button data-view=&quot;tasks&quot;&gt;全部任务 ${i(&#x27;arrow-right&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;button class=&quot;os-home-task&quot; data-scenario=&quot;complex&quot;&gt;${i(&#x27;folder-open&#x27;)}&lt;span&gt;&lt;b&gt;春季活动方案与视觉素材&lt;/b&gt;&lt;small&gt;方案与视觉稿 · 含一轮评审返修&lt;/small&gt;&lt;/span&gt;${badge(&#x27;已交付&#x27;,&#x27;good&#x27;)}&lt;/button&gt;&lt;button class=&quot;os-home-task&quot; data-scenario=&quot;approval&quot;&gt;${i(&#x27;image&#x27;)}&lt;span&gt;&lt;b&gt;西湖主题宣传素材&lt;/b&gt;&lt;small&gt;执行前需要确认生成参数&lt;/small&gt;&lt;/span&gt;${badge(&#x27;需要你确认&#x27;,&#x27;wait&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;/section&gt;`;}
+function tasks(){const rows=[[&#x27;complex&#x27;,&#x27;春季活动方案与视觉素材&#x27;,&#x27;品牌知识检索、设计执行、评审返修后交付&#x27;,&#x27;4 个角色 · 2 个设备 · 方案与视觉稿&#x27;,&#x27;已交付&#x27;,&#x27;good&#x27;],[&#x27;simple&#x27;,&#x27;整理项目本周进展&#x27;,&#x27;项目记录已整理为带来源的周报&#x27;,&#x27;1 个角色 · 1 个设备 · 周报 v1&#x27;,&#x27;已交付&#x27;,&#x27;good&#x27;],[&#x27;approval&#x27;,&#x27;西湖主题宣传素材&#x27;,&#x27;等待确认本次图像生成的内容与参数&#x27;,&#x27;1 个角色 · Windows 执行设备&#x27;,&#x27;需要你确认&#x27;,&#x27;wait&#x27;]].filter(r=&gt;state.filter!==&#x27;attention&#x27;||r[0]===&#x27;approval&#x27;);return `&lt;section class=&quot;os-page&quot;&gt;&lt;div class=&quot;os-page-heading&quot;&gt;&lt;div&gt;&lt;h2&gt;任务空间&lt;/h2&gt;&lt;p&gt;任务会持续保存，随时回来继续。&lt;/p&gt;&lt;/div&gt;&lt;button class=&quot;os-button os-primary&quot; data-view=&quot;home&quot;&gt;${i(&#x27;plus&#x27;)}新任务&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-tabs&quot; aria-label=&quot;任务筛选&quot;&gt;${[[&#x27;all&#x27;,&#x27;全部任务&#x27;],[&#x27;attention&#x27;,&#x27;需要我处理&#x27;]].map(([k,t])=&gt;`&lt;button data-filter=&quot;${k}&quot; class=&quot;${state.filter===k?&#x27;is-active&#x27;:&#x27;&#x27;}&quot;&gt;${t}${k===&#x27;attention&#x27;?&#x27; · 1&#x27;:&#x27;&#x27;}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;${rows.map(r=&gt;`&lt;button class=&quot;os-task-row&quot; data-scenario=&quot;${r[0]}&quot;&gt;&lt;span&gt;&lt;strong&gt;${r[1]}&lt;/strong&gt;&lt;p&gt;${r[2]}&lt;/p&gt;&lt;small&gt;${r[3]}&lt;/small&gt;&lt;/span&gt;&lt;span&gt;${badge(r[4],r[5])}&lt;/span&gt;&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/section&gt;`;}
+const tool=(icon,name,desc,status=&#x27;完成&#x27;)=&gt;`&lt;button class=&quot;os-tool-row&quot; data-action=&quot;tool-detail&quot;&gt;${i(icon)}&lt;span&gt;&lt;b&gt;${name}&lt;/b&gt;&lt;small&gt;${desc}&lt;/small&gt;&lt;/span&gt;&lt;small&gt;${status}&lt;/small&gt;&lt;/button&gt;`;
+function artifactInline(){return `&lt;button class=&quot;os-inline-artifact&quot; data-action=&quot;open-artifact&quot;&gt;&lt;span class=&quot;os-file-symbol&quot;&gt;${i(&#x27;file-text&#x27;)}&lt;/span&gt;&lt;span&gt;&lt;b&gt;${state.scenario===&#x27;simple&#x27;?&#x27;项目进展周报&#x27;:state.scenario===&#x27;approval&#x27;?&#x27;宣传视觉（占位）&#x27;:&#x27;春季活动方案&#x27;} · v${state.revision}&lt;/b&gt;&lt;small&gt;Markdown · 来源可回查 · 点击预览&lt;/small&gt;&lt;/span&gt;${i(&#x27;arrow-up-right&#x27;)}&lt;/button&gt;`;}
+function approval(){return `&lt;section class=&quot;os-approval&quot;&gt;&lt;h3&gt;${i(&#x27;shield-check&#x27;)}这一步需要你确认&lt;/h3&gt;&lt;p&gt;将在 Windows 执行设备生成一张宣传图。批准后只执行本次调用。&lt;/p&gt;&lt;dl&gt;&lt;dt&gt;生成内容&lt;/dt&gt;&lt;dd&gt;西湖晨光主题宣传视觉&lt;/dd&gt;&lt;dt&gt;执行工具&lt;/dt&gt;&lt;dd&gt;ComfyUI · 图像生成&lt;/dd&gt;&lt;dt&gt;关键参数&lt;/dt&gt;&lt;dd&gt;1024 × 768 · 生成 1 张&lt;/dd&gt;&lt;dt&gt;影响范围&lt;/dt&gt;&lt;dd&gt;使用本地 GPU，保存本任务成果&lt;/dd&gt;&lt;dt&gt;确认原因&lt;/dt&gt;&lt;dd&gt;服务端策略要求外部生成前确认&lt;/dd&gt;&lt;/dl&gt;&lt;div class=&quot;os-approval-actions&quot;&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;approve&quot;&gt;${i(&#x27;check&#x27;)}允许本次执行&lt;/button&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;reject&quot;&gt;拒绝&lt;/button&gt;&lt;/div&gt;&lt;/section&gt;`;}
+function messageContent(){if(state.refused)return `&lt;div class=&quot;os-response&quot;&gt;已拒绝这次生成，任务已停止。你可以修改目标后创建新的任务。&lt;/div&gt;`;if(state.stage===&#x27;approval&#x27;)return `&lt;div class=&quot;os-response&quot;&gt;生成内容和执行设备已确定，等待你确认这次操作。&lt;/div&gt;${tool(&#x27;cpu&#x27;,&#x27;执行设备已匹配&#x27;,&#x27;Windows · ComfyUI · 图像生成&#x27;,&#x27;待确认&#x27;)}${approval()}`;const simple=state.scenario===&#x27;simple&#x27;,complex=state.scenario===&#x27;complex&#x27;;const n=state.running||state.paused?state.step:7;return `${n&gt;=1?`&lt;div class=&quot;os-response&quot;&gt;${streamText(simple?&#x27;我会整理材料中的进展、阻塞与建议，并保留事实来源。&#x27;:complex?&#x27;这项任务包含品牌研究、方案与视觉设计、质量检查。我会按依赖安排协作，交付前核对来源和成果。&#x27;:&#x27;参数已确认，开始执行这次图像生成。&#x27;,1)}&lt;/div&gt;`:&#x27;&#x27;}${complex&amp;&amp;n&gt;=1?`&lt;div class=&quot;os-execution-summary&quot;&gt;&lt;div class=&quot;os-summary-top&quot;&gt;&lt;b&gt;协作计划 · v2&lt;/b&gt;&lt;button data-tab=&quot;flow&quot;&gt;查看执行图 ${i(&#x27;arrow-up-right&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-plan-mini&quot;&gt;&lt;span&gt;品牌研究&lt;/span&gt;${i(&#x27;arrow-right&#x27;)}&lt;span&gt;方案与设计&lt;/span&gt;${i(&#x27;arrow-right&#x27;)}&lt;span&gt;评审&lt;/span&gt;${i(&#x27;arrow-right&#x27;)}&lt;span&gt;交付&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;`:&#x27;&#x27;}${n&gt;=2?tool(simple?&#x27;file-search&#x27;:&#x27;database&#x27;,simple?&#x27;读取授权材料&#x27;:`检索品牌知识 · ${backend()}`,simple?&#x27;项目记录.md · 已加载报告整理 Skill&#x27;:&#x27;研究 Agent · 检索 3 个来源片段&#x27;):&#x27;&#x27;}${n&gt;=3?tool(&#x27;file-pen-line&#x27;,simple?&#x27;整理进展与下一步&#x27;:&#x27;方案与视觉并行处理&#x27;,simple?&#x27;执行 Agent · 本地设备&#x27;:&#x27;研究 Agent 整理方案 · 设计 Agent 调用 Windows 工具&#x27;):&#x27;&#x27;}${complex&amp;&amp;n&gt;=4?`&lt;div class=&quot;os-loop-note&quot;&gt;&lt;b&gt;评审 → 研究 Agent · 第 1 次返修&lt;/b&gt;&lt;br&gt;活动日期的引用缺少依据。仅补充来源与修改文案，已生成的视觉稿继续复用。&lt;/div&gt;`:&#x27;&#x27;}${n&gt;=5?tool(&#x27;shield-check&#x27;,simple?&#x27;引用与结构检查通过&#x27;:&#x27;完成检查与汇总&#x27;,simple?&#x27;事实有来源，建议单独标注&#x27;:&#x27;评审 Agent · 已回查引用，收到视觉成果&#x27;):&#x27;&#x27;}${n&gt;=6?`&lt;div class=&quot;os-result-text&quot;&gt;${streamText(simple?&#x27;周报已整理完成。3 个任务中 2 个已完成，1 个因输入缺失阻塞。下一步建议已与材料事实分开标注。&#x27;:complex?&#x27;方案与视觉稿已整理完成。日期信息保持待确认，文案引用已补齐，视觉稿复用了先前生成的版本。&#x27;:&#x27;宣传图已完成，等待你检查内容与下载。&#x27;,6)}&lt;/div&gt;${artifactInline()}&lt;div class=&quot;os-sources&quot;&gt;&lt;button data-action=&quot;source&quot;&gt;${i(&#x27;quote&#x27;)} ${simple?&#x27;项目记录 §2&#x27;:&#x27;品牌规范 §3&#x27;}&lt;/button&gt;${complex?&#x27;&lt;button data-action=&quot;source&quot;&gt;活动简报 §1&lt;/button&gt;&#x27;:&#x27;&#x27;}&lt;/div&gt;`:&#x27;&#x27;}${state.running?`&lt;div class=&quot;os-live-row&quot;&gt;&lt;span class=&quot;os-tiny-dot&quot;&gt;&lt;/span&gt;示例事件流正在更新 · ${[&#x27;准备任务&#x27;,&#x27;安排执行&#x27;,&#x27;读取来源&#x27;,&#x27;执行与交接&#x27;,&#x27;评审返修&#x27;,&#x27;检查成果&#x27;,&#x27;汇总交付&#x27;][Math.min(state.step,6)]}&lt;/div&gt;`:`&lt;div class=&quot;os-chat-actions&quot;&gt;&lt;span&gt;示例运行 · 用量与费用未记录&lt;/span&gt;&lt;div&gt;&lt;button data-action=&quot;replay&quot;&gt;${i(&#x27;play&#x27;)}重放过程&lt;/button&gt;&lt;button data-action=&quot;revise&quot;&gt;${i(&#x27;message-square-plus&#x27;)}提出修改&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;`}${state.reason?`&lt;div class=&quot;os-loop-note&quot;&gt;修改理由：${e(state.reason)}&lt;br&gt;新版本 v${state.revision} 已关联原成果，原版本保留。&lt;/div&gt;`:&#x27;&#x27;}${state.reply?`&lt;div class=&quot;os-response&quot; style=&quot;margin-top:12px&quot;&gt;${e(state.reply)}&lt;/div&gt;`:&#x27;&#x27;}${state.failure?`&lt;section class=&quot;os-failure&quot;&gt;&lt;b&gt;成果已生成，回传未完成&lt;/b&gt;&lt;p&gt;生成结果已确认。补传将使用原文件，不重新执行生成。&lt;/p&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;deliver&quot;&gt;${i(&#x27;upload&#x27;)}补传已有成果&lt;/button&gt;&lt;/section&gt;`:&#x27;&#x27;}`;}
+function thread(){const status=state.refused?&#x27;已停止&#x27;:state.failure?&#x27;等待补传&#x27;:state.stage===&#x27;approval&#x27;?&#x27;需要你确认&#x27;:state.paused?&#x27;回放已暂停&#x27;:state.running?&#x27;执行中&#x27;:&#x27;已交付&#x27;;return `&lt;section class=&quot;os-work-header&quot;&gt;&lt;div class=&quot;os-work-title&quot;&gt;&lt;h2&gt;${title()}&lt;/h2&gt;${badge(status,state.stage===&#x27;approval&#x27;||state.failure?&#x27;wait&#x27;:state.running?&#x27;active&#x27;:&#x27;good&#x27;)}&lt;/div&gt;&lt;div class=&quot;os-work-meta&quot;&gt;&lt;span&gt;${state.scenario===&#x27;complex&#x27;?&#x27;协作任务 · 4 个角色&#x27;:&#x27;直接任务 · 1 个角色&#x27;}&lt;/span&gt;&lt;span&gt;·&lt;/span&gt;&lt;span&gt;${state.scenario===&#x27;complex&#x27;?&#x27;2 个执行设备&#x27;:&#x27;1 个执行设备&#x27;}&lt;/span&gt;&lt;span&gt;·&lt;/span&gt;&lt;span&gt;示例数据&lt;/span&gt;&lt;/div&gt;&lt;div class=&quot;os-tabs&quot; aria-label=&quot;任务视图&quot;&gt;${[[&#x27;chat&#x27;,&#x27;对话&#x27;],[&#x27;flow&#x27;,&#x27;执行图&#x27;],[&#x27;files&#x27;,&#x27;成果&#x27;]].map(([k,t])=&gt;`&lt;button data-tab=&quot;${k}&quot; aria-pressed=&quot;${state.tab===k}&quot; class=&quot;${state.tab===k?&#x27;is-active&#x27;:&#x27;&#x27;}&quot;&gt;${t}${k===&#x27;files&#x27;&amp;&amp;!state.refused&amp;&amp;state.stage!==&#x27;approval&#x27;?&#x27; · &#x27;+(state.scenario===&#x27;complex&#x27;?&#x27;2&#x27;:&#x27;1&#x27;):&#x27;&#x27;}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/section&gt;&lt;div class=&quot;os-workspace&quot;&gt;${state.tab===&#x27;chat&#x27;?`&lt;section class=&quot;os-conversation&quot;&gt;&lt;div class=&quot;os-user-label&quot;&gt;你&lt;/div&gt;&lt;div class=&quot;os-user-msg&quot;&gt;${e(goal())}&lt;/div&gt;&lt;div class=&quot;os-agent-label&quot;&gt;&lt;span class=&quot;os-logomark&quot;&gt;${i(&#x27;orbit&#x27;)}&lt;/span&gt;AgentOS&lt;span&gt;${state.scenario===&#x27;complex&#x27;?&#x27;协作执行&#x27;:&#x27;直接执行&#x27;}&lt;/span&gt;&lt;/div&gt;&lt;div id=&quot;os-stream-area&quot;&gt;${messageContent()}&lt;/div&gt;&lt;form class=&quot;os-thread-composer&quot; id=&quot;os-reply-form&quot;&gt;&lt;label for=&quot;os-reply&quot; style=&quot;position:absolute;width:1px;height:1px;overflow:hidden&quot;&gt;补充要求或修改说明&lt;/label&gt;&lt;textarea id=&quot;os-reply&quot; placeholder=&quot;补充要求，或告诉我哪里需要修改…&quot;&gt;&lt;/textarea&gt;&lt;div class=&quot;os-compose-footer&quot;&gt;&lt;div class=&quot;os-compose-tools&quot;&gt;&lt;button type=&quot;button&quot; data-action=&quot;attach&quot;&gt;${i(&#x27;paperclip&#x27;)}&lt;/button&gt;&lt;span class=&quot;os-muted&quot; style=&quot;font-size:11px&quot;&gt;${state.running?&#x27;任务进行中，可暂停查看&#x27;:&#x27;继续这项工作&#x27;}&lt;/span&gt;&lt;/div&gt;${state.running?`&lt;button class=&quot;os-button&quot; type=&quot;button&quot; data-action=&quot;pause&quot;&gt;${i(&#x27;square&#x27;)}暂停演示&lt;/button&gt;`:`&lt;button class=&quot;os-send&quot; type=&quot;submit&quot; aria-label=&quot;发送修改要求&quot;&gt;${i(&#x27;arrow-up&#x27;)}&lt;/button&gt;`}&lt;/div&gt;&lt;/form&gt;&lt;/section&gt;`:state.tab===&#x27;flow&#x27;?flow():`&lt;section class=&quot;os-conversation&quot;&gt;&lt;div class=&quot;os-subhead&quot;&gt;&lt;h3&gt;本次成果&lt;/h3&gt;&lt;span class=&quot;os-muted&quot; style=&quot;font-size:11px&quot;&gt;不可变版本&lt;/span&gt;&lt;/div&gt;${state.stage===&#x27;approval&#x27;||state.refused?&#x27;&lt;p class=&quot;os-muted&quot;&gt;尚未生成成果。&lt;/p&gt;&#x27;:`${artifactInline()}${state.scenario===&#x27;complex&#x27;?`&lt;button class=&quot;os-inline-artifact&quot; data-action=&quot;visual&quot;&gt;&lt;span class=&quot;os-file-symbol&quot;&gt;${i(&#x27;image&#x27;)}&lt;/span&gt;&lt;span&gt;&lt;b&gt;活动宣传视觉 · v1&lt;/b&gt;&lt;small&gt;视觉成果占位 · 未生成真实图片&lt;/small&gt;&lt;/span&gt;${i(&#x27;arrow-up-right&#x27;)}&lt;/button&gt;`:&#x27;&#x27;}&lt;p class=&quot;os-panel-caption&quot;&gt;查看来源、版本与修改关系；旧成果始终保留。&lt;/p&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;revise&quot;&gt;${i(&#x27;git-branch&#x27;)}基于成果提出修改&lt;/button&gt;`}&lt;/section&gt;`}&lt;aside class=&quot;os-right-panel&quot; id=&quot;os-right&quot;&gt;${state.tab===&#x27;flow&#x27;?nodeDetail():documentPanel()}&lt;/aside&gt;&lt;/div&gt;`;}
+function documentPanel(){if(state.scenario===&#x27;approval&#x27;&amp;&amp;state.stage===&#x27;complete&#x27;&amp;&amp;!state.refused)return `&lt;div class=&quot;os-panel-head&quot;&gt;&lt;b&gt;成果预览&lt;/b&gt;${badge(&#x27;合成占位&#x27;)}&lt;/div&gt;&lt;div class=&quot;os-document&quot;&gt;&lt;div class=&quot;os-doc-eyebrow&quot;&gt;VISUAL / PLACEHOLDER&lt;/div&gt;&lt;h3&gt;西湖晨光宣传视觉&lt;/h3&gt;&lt;div style=&quot;aspect-ratio:4/3;display:grid;place-items:center;background:var(--os-panel);border-radius:8px;margin:20px 0;color:var(--os-muted)&quot;&gt;&lt;span&gt;${i(&#x27;image&#x27;)} 视觉成果占位&lt;/span&gt;&lt;/div&gt;&lt;p&gt;正式版本展示实际图片与尺寸。本样板没有生成图片。&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;os-doc-actions&quot;&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;visual&quot;&gt;查看交付信息&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-bound&quot;&gt;&lt;h3&gt;本次绑定&lt;/h3&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;执行角色&lt;/span&gt;&lt;b&gt;设计 Agent&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;执行设备&lt;/span&gt;&lt;b&gt;Windows&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;`;if(state.stage===&#x27;approval&#x27;||state.refused)return `&lt;div class=&quot;os-panel-head&quot;&gt;&lt;b&gt;任务上下文&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;执行角色&lt;/span&gt;&lt;b&gt;设计 Agent&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;执行设备&lt;/span&gt;&lt;b&gt;Windows&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;本次操作&lt;/span&gt;&lt;b&gt;生成 1 张图片&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound&quot;&gt;&lt;h3&gt;权限边界&lt;/h3&gt;&lt;p class=&quot;os-panel-caption&quot;&gt;确认绑定本次调用与参数。修改参数需要新的裁定；安装工具不自动获得执行权限。&lt;/p&gt;&lt;/div&gt;`;return `&lt;div class=&quot;os-panel-head&quot;&gt;&lt;b&gt;成果预览&lt;/b&gt;&lt;button data-action=&quot;source&quot; aria-label=&quot;查看成果来源&quot;&gt;${i(&#x27;book-open&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;article class=&quot;os-document&quot;&gt;&lt;div class=&quot;os-doc-eyebrow&quot;&gt;AGENTOS / DELIVERABLE&lt;/div&gt;&lt;h3&gt;${state.scenario===&#x27;simple&#x27;?&#x27;项目进展周报&#x27;:&#x27;春季活动方案&#x27;}&lt;/h3&gt;&lt;p&gt;版本 v${state.revision} · 合成内容&lt;/p&gt;&lt;div class=&quot;os-doc-divider&quot;&gt;&lt;/div&gt;&lt;h4&gt;01 / ${state.scenario===&#x27;simple&#x27;?&#x27;进展摘要&#x27;:&#x27;活动方向&#x27;}&lt;/h4&gt;&lt;p&gt;${state.scenario===&#x27;simple&#x27;?&#x27;已完成 2 项任务，剩余 1 项阻塞于资料输入缺失。&#x27;:&#x27;以春日城市漫步为主题，结合品牌规范中的自然、克制与轻量表达。&#x27;}&lt;/p&gt;&lt;h4&gt;02 / ${state.scenario===&#x27;simple&#x27;?&#x27;阻塞与下一步&#x27;:&#x27;执行建议&#x27;}&lt;/h4&gt;&lt;p&gt;${state.scenario===&#x27;simple&#x27;?&#x27;补齐缺失资料后继续验证。该项为建议，不属于已完成事实。&#x27;:&#x27;线上素材与线下活动配合；活动日期等待确认，避免使用未经证实的承诺。&#x27;}&lt;/p&gt;&lt;h4&gt;03 / 来源与未决项&lt;/h4&gt;&lt;div class=&quot;os-doc-quote&quot;&gt;${state.scenario===&#x27;simple&#x27;?&#x27;[1] 项目记录，第 2 段&#x27;:&#x27;[1] 品牌规范，第 3 节&#x27;}&lt;br&gt;引用已关联来源片段。&lt;/div&gt;&lt;/article&gt;&lt;div class=&quot;os-doc-actions&quot;&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;download&quot;&gt;${i(&#x27;download&#x27;)}下载示例&lt;/button&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;revise&quot;&gt;${i(&#x27;pencil&#x27;)}修改&lt;/button&gt;&lt;/div&gt;&lt;p class=&quot;os-panel-caption&quot;&gt;${state.scenario===&#x27;complex&#x27;?&#x27;评审返修 1 次 · 视觉成果沿用 v1&#x27;:&#x27;结构与引用检查通过&#x27;} · 合成示例&lt;/p&gt;${state.scenario===&#x27;complex&#x27;?`&lt;button class=&quot;os-artifact-extra&quot; data-action=&quot;visual&quot;&gt;${i(&#x27;image&#x27;)}&lt;span&gt;活动宣传视觉&lt;small&gt;占位卡 · 样板不生成真实媒体&lt;/small&gt;&lt;/span&gt;&lt;/button&gt;`:&#x27;&#x27;}&lt;div class=&quot;os-bound&quot;&gt;&lt;h3&gt;本次绑定&lt;/h3&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;知识后端&lt;/span&gt;&lt;b&gt;${backend()}&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;Skill&lt;/span&gt;&lt;b&gt;${state.scenario===&#x27;simple&#x27;?&#x27;report-writer&#x27;:&#x27;campaign-kit&#x27;} · v1.2&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;执行设备&lt;/span&gt;&lt;b&gt;${state.scenario===&#x27;complex&#x27;?&#x27;本地 + Windows&#x27;:&#x27;本地&#x27;}&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;模型 / 费用&lt;/span&gt;&lt;b&gt;样板未记录&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;`;}
+const nodes=[{id:&#x27;goal&#x27;,title:&#x27;理解目标与安排协作&#x27;,role:&#x27;协调 Agent&#x27;,machine:&#x27;本地&#x27;,icon:&#x27;list-tree&#x27;,input:&#x27;用户目标、材料引用与预算边界&#x27;,output:&#x27;计划 v1，明确研究、设计与评审依赖&#x27;,tools:&#x27;目标整理、计划校验&#x27;,status:&#x27;计划已保存&#x27;}, {id:&#x27;research&#x27;,title:&#x27;研究与方案整理&#x27;,role:&#x27;研究 Agent&#x27;,machine:&#x27;本地&#x27;,icon:&#x27;book-open&#x27;,input:&#x27;品牌规范、活动简报&#x27;,output:&#x27;方案 v2，补齐来源与未决项&#x27;,tools:&#x27;knowledge.search · &#x27;+backend(),status:&#x27;已返修 1 次&#x27;}, {id:&#x27;design&#x27;,title:&#x27;视觉设计执行&#x27;,role:&#x27;设计 Agent&#x27;,machine:&#x27;Windows&#x27;,icon:&#x27;image&#x27;,input:&#x27;风格约束与已授权素材&#x27;,output:&#x27;宣传视觉 v1，成果引用&#x27;,tools:&#x27;图像生成工具&#x27;,status:&#x27;成果复用&#x27;}, {id:&#x27;merge&#x27;,title:&#x27;汇总方案与视觉&#x27;,role:&#x27;协调 Agent&#x27;,machine:&#x27;本地&#x27;,icon:&#x27;combine&#x27;,input:&#x27;研究与设计两路成果&#x27;,output:&#x27;待评审的交付集合&#x27;,tools:&#x27;Asset 读取与关联&#x27;,status:&#x27;已汇总&#x27;}, {id:&#x27;review&#x27;,title:&#x27;质量与来源评审&#x27;,role:&#x27;评审 Agent&#x27;,machine:&#x27;本地&#x27;,icon:&#x27;shield-check&#x27;,input:&#x27;方案、引用与视觉成果&#x27;,output:&#x27;第一次：退回补充来源；第二次：通过&#x27;,tools:&#x27;引用回查 + 确定性检查&#x27;,status:&#x27;第 2 次通过&#x27;}, {id:&#x27;finish&#x27;,title:&#x27;最终交付&#x27;,role:&#x27;协调 Agent&#x27;,machine:&#x27;本地&#x27;,icon:&#x27;package-check&#x27;,input:&#x27;检查通过的版本与成果&#x27;,output:&#x27;方案 v2、视觉 v1，保留修改关系&#x27;,tools:&#x27;成果登记与授权下载&#x27;,status:&#x27;已交付&#x27;}];
+function flow(){const simple=state.scenario!==&#x27;complex&#x27;;const list=simple?[{...nodes[0],role:&#x27;执行 Agent&#x27;},{...nodes[1],title:&#x27;读取与直接处理&#x27;,role:&#x27;执行 Agent&#x27;,status:&#x27;已完成&#x27;},{...nodes[4],role:&#x27;执行 Agent&#x27;},{...nodes[5],role:&#x27;执行 Agent&#x27;}]:nodes;return `&lt;section class=&quot;os-flow-page&quot;&gt;&lt;div class=&quot;os-flow-toolbar&quot;&gt;&lt;span&gt;${simple?&#x27;直接处理 · 无需角色拆分&#x27;:&#x27;计划 v2 · 已合并一轮局部返修&#x27;}&lt;/span&gt;&lt;button class=&quot;os-button os-mobile-open&quot; data-action=&quot;show-node&quot;&gt;步骤详情&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-graph&quot; id=&quot;os-graph&quot;&gt;&lt;svg class=&quot;os-graph-lines&quot; aria-label=&quot;任务依赖与评审返修连接&quot; role=&quot;img&quot;&gt;&lt;defs&gt;&lt;marker id=&quot;os-arrow&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;9&quot; refY=&quot;5&quot; markerWidth=&quot;5&quot; markerHeight=&quot;5&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M 0 0 L 10 5 L 0 10 z&quot; fill=&quot;var(--os-muted)&quot;&gt;&lt;/path&gt;&lt;/marker&gt;&lt;marker id=&quot;os-return-arrow&quot; viewBox=&quot;0 0 10 10&quot; refX=&quot;9&quot; refY=&quot;5&quot; markerWidth=&quot;5&quot; markerHeight=&quot;5&quot; orient=&quot;auto&quot;&gt;&lt;path d=&quot;M 0 0 L 10 5 L 0 10 z&quot; fill=&quot;var(--os-accent)&quot;&gt;&lt;/path&gt;&lt;/marker&gt;&lt;/defs&gt;&lt;g id=&quot;os-edges&quot;&gt;&lt;/g&gt;&lt;/svg&gt;&lt;div class=&quot;os-graph-grid&quot;&gt;${list.map(n=&gt;`&lt;button class=&quot;os-graph-node ${simple||![&#x27;research&#x27;,&#x27;design&#x27;].includes(n.id)?&#x27;center&#x27;:&#x27;&#x27;} ${state.node===n.id?&#x27;is-selected&#x27;:&#x27;&#x27;}&quot; data-node=&quot;${n.id}&quot;&gt;${i(n.icon)}&lt;span&gt;&lt;b&gt;${n.title}&lt;/b&gt;&lt;small&gt;${n.role} · ${n.machine}&lt;/small&gt;${badge(n.status,n.id===&#x27;review&#x27;?&#x27;active&#x27;:&#x27;good&#x27;)}&lt;/span&gt;&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;${!simple?&#x27;&lt;span class=&quot;os-graph-loop&quot;&gt;评审退回 · 补来源 · 保留已完成设计&lt;/span&gt;&#x27;:&#x27;&#x27;}&lt;/div&gt;&lt;div class=&quot;os-flow-legend&quot;&gt;&lt;span&gt;实线：依赖与成果传递&lt;/span&gt;${!simple?&#x27;&lt;span&gt;虚线：历史返修事件（非当前 DAG 依赖）&lt;/span&gt;&#x27;:&#x27;&#x27;}&lt;span&gt;角色与设备分别标注&lt;/span&gt;&lt;/div&gt;&lt;p class=&quot;os-panel-caption&quot;&gt;执行图为设计示例；正式接入后由已保存计划和实际事件驱动。&lt;/p&gt;&lt;/section&gt;`;}
+function nodeDetail(){const base=nodes.find(n=&gt;n.id===state.node)||nodes[4];const n=state.scenario===&#x27;complex&#x27;?{...base,tools:base.id===&#x27;research&#x27;?&#x27;knowledge.search · &#x27;+backend():base.tools}:{...base,role:&#x27;执行 Agent&#x27;,title:base.id===&#x27;research&#x27;?&#x27;读取与直接处理&#x27;:base.title};return `&lt;div class=&quot;os-panel-head&quot;&gt;&lt;b&gt;步骤详情&lt;/b&gt;${badge(n.status,&#x27;active&#x27;)}&lt;/div&gt;&lt;section class=&quot;os-node-details&quot;&gt;&lt;h3&gt;${n.title}&lt;/h3&gt;&lt;p&gt;${n.role} 负责这一步，${n.machine} 提供执行能力。&lt;/p&gt;&lt;div class=&quot;os-detail-section&quot;&gt;&lt;h4&gt;输入&lt;/h4&gt;&lt;p&gt;${e(n.input)}&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;os-detail-section&quot;&gt;&lt;h4&gt;输出与验收&lt;/h4&gt;&lt;p&gt;${e(n.output)}&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;os-detail-section&quot;&gt;&lt;h4&gt;实际能力&lt;/h4&gt;&lt;p&gt;${e(n.tools)}&lt;/p&gt;&lt;/div&gt;&lt;div class=&quot;os-detail-section&quot;&gt;&lt;h4&gt;本次执行&lt;/h4&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;角色&lt;/span&gt;&lt;b&gt;${n.role}&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;设备&lt;/span&gt;&lt;b&gt;${n.machine}&lt;/b&gt;&lt;/div&gt;&lt;div class=&quot;os-bound-row&quot;&gt;&lt;span&gt;结果&lt;/span&gt;&lt;b&gt;${n.status}&lt;/b&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;os-bound&quot;&gt;&lt;h3&gt;步骤检查器&lt;/h3&gt;&lt;button class=&quot;os-text-button&quot; data-action=&quot;tool-detail&quot;&gt;查看指令与参数 ${i(&#x27;arrow-up-right&#x27;)}&lt;/button&gt;&lt;p class=&quot;os-panel-caption&quot;&gt;展示可审计的指令、输入输出与交接事件，模型内部推理不进入界面。&lt;/p&gt;&lt;/div&gt;&lt;/section&gt;`;}
+function drawEdges(){const graph=root.querySelector(&#x27;#os-graph&#x27;);if(!graph)return;const g=graph.getBoundingClientRect();const svg=graph.querySelector(&#x27;.os-graph-lines&#x27;);svg.setAttribute(&#x27;viewBox&#x27;,`0 0 ${g.width} ${g.height}`);const p=id=&gt;{const el=graph.querySelector(`[data-node=&quot;${id}&quot;]`);if(!el)return null;const r=el.getBoundingClientRect();return{x:r.left-g.left,y:r.top-g.top,w:r.width,h:r.height};};const simple=state.scenario!==&#x27;complex&#x27;;const edges=simple?[[&#x27;goal&#x27;,&#x27;research&#x27;],[&#x27;research&#x27;,&#x27;review&#x27;],[&#x27;review&#x27;,&#x27;finish&#x27;]]:[[&#x27;goal&#x27;,&#x27;research&#x27;],[&#x27;goal&#x27;,&#x27;design&#x27;],[&#x27;research&#x27;,&#x27;merge&#x27;],[&#x27;design&#x27;,&#x27;merge&#x27;],[&#x27;merge&#x27;,&#x27;review&#x27;],[&#x27;review&#x27;,&#x27;finish&#x27;]];let paths=edges.map(([a,b])=&gt;{const A=p(a),B=p(b);if(!A||!B)return&#x27;&#x27;;const x=A.x+A.w/2,y=A.y+A.h,bx=B.x+B.w/2,by=B.y,mid=(y+by)/2;return `&lt;path d=&quot;M ${x} ${y} C ${x} ${mid},${bx} ${mid},${bx} ${by}&quot; fill=&quot;none&quot; stroke=&quot;var(--os-muted)&quot; stroke-opacity=&quot;.45&quot; stroke-width=&quot;1.3&quot; marker-end=&quot;url(#os-arrow)&quot;/&gt;`;}).join(&#x27;&#x27;);if(!simple){const A=p(&#x27;review&#x27;),B=p(&#x27;research&#x27;);if(A&amp;&amp;B)paths+=`&lt;path d=&quot;M ${A.x} ${A.y+A.h/2} L 5 ${A.y+A.h/2} L 5 ${B.y+B.h/2} L ${B.x} ${B.y+B.h/2}&quot; fill=&quot;none&quot; stroke=&quot;var(--os-accent)&quot; stroke-width=&quot;1.5&quot; stroke-dasharray=&quot;4 4&quot; marker-end=&quot;url(#os-return-arrow)&quot;/&gt;`;}graph.querySelector(&#x27;#os-edges&#x27;).innerHTML=paths;}
+function hub(){const cards=[[&#x27;mcp&#x27;,&#x27;plug&#x27;,&#x27;WeKnora MCP&#x27;,&#x27;已发现&#x27;,&#x27;good&#x27;,&#x27;知识检索与来源阅读，接入统一工具调用边界。&#x27;,&#x27;Streamable HTTP · 只读范围&#x27;,&#x27;工具与连接&#x27;],[&#x27;mcp&#x27;,&#x27;cpu&#x27;,&#x27;Windows 工具&#x27;,&#x27;已连接&#x27;,&#x27;good&#x27;,&#x27;图像与视频生成，由已配对执行设备提供能力。&#x27;,&#x27;Node 传输 · 受控生成&#x27;,&#x27;查看能力&#x27;],[&#x27;skill&#x27;,&#x27;book-marked&#x27;,&#x27;报告整理 Skill&#x27;,&#x27;v1.2&#x27;,&#x27;&#x27;,&#x27;整理事实、冲突和未决项，要求保留来源引用。&#x27;,&#x27;版本固定 · 按需加载&#x27;,&#x27;版本与权限&#x27;],[&#x27;skill&#x27;,&#x27;workflow&#x27;,&#x27;活动交付 Skill&#x27;,&#x27;v1.2&#x27;,&#x27;&#x27;,&#x27;组织研究、设计与评审，定义交接和成果标准。&#x27;,&#x27;角色可复用 · 设备独立&#x27;,&#x27;版本与权限&#x27;],[&#x27;knowledge&#x27;,&#x27;database&#x27;,&#x27;WeKnora&#x27;,&#x27;外部后端&#x27;,&#x27;active&#x27;,&#x27;知识检索、来源回查，通过统一 KnowledgePort 适配。&#x27;,state.backend===&#x27;weknora&#x27;?&#x27;新任务默认使用&#x27;:&#x27;可切换 · 历史任务不变&#x27;,state.backend===&#x27;weknora&#x27;?&#x27;当前后端&#x27;:&#x27;设为默认&#x27;],[&#x27;knowledge&#x27;,&#x27;hard-drive&#x27;,&#x27;内置检索&#x27;,&#x27;本地后端&#x27;,&#x27;&#x27;,&#x27;轻量材料检索，用于本地任务与明确选择的回退。&#x27;,state.backend===&#x27;builtin&#x27;?&#x27;新任务默认使用&#x27;:&#x27;可切回 · 保留引用归属&#x27;,state.backend===&#x27;builtin&#x27;?&#x27;当前后端&#x27;:&#x27;设为默认&#x27;],[&#x27;nodes&#x27;,&#x27;laptop&#x27;,&#x27;本地执行设备&#x27;,&#x27;示例在线&#x27;,&#x27;good&#x27;,&#x27;资料处理、协调与评审。可执行多个 Agent 角色。&#x27;,&#x27;CPU · 文本与知识处理&#x27;,&#x27;设备详情&#x27;],[&#x27;nodes&#x27;,&#x27;monitor&#x27;,&#x27;Windows 执行设备&#x27;,&#x27;示例在线&#x27;,&#x27;good&#x27;,&#x27;提供 GPU 图像与视频工具，Agent 按能力调用。&#x27;,&#x27;GPU · 图像与视频&#x27;,&#x27;设备详情&#x27;]].filter(c=&gt;state.hub===&#x27;all&#x27;||c[0]===state.hub);return `&lt;section class=&quot;os-page&quot;&gt;&lt;div class=&quot;os-page-heading&quot;&gt;&lt;div&gt;&lt;h2&gt;能力中心&lt;/h2&gt;&lt;p&gt;连接工具、加载技能，为任务提供合适的能力。&lt;/p&gt;&lt;/div&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;connect&quot;&gt;${i(&#x27;plus&#x27;)}连接能力&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-tabs&quot; aria-label=&quot;能力分类&quot;&gt;${[[&#x27;all&#x27;,&#x27;全部&#x27;],[&#x27;mcp&#x27;,&#x27;MCP 工具&#x27;],[&#x27;skill&#x27;,&#x27;Skills&#x27;],[&#x27;knowledge&#x27;,&#x27;知识后端&#x27;],[&#x27;nodes&#x27;,&#x27;执行设备&#x27;]].map(([k,t])=&gt;`&lt;button class=&quot;${state.hub===k?&#x27;is-active&#x27;:&#x27;&#x27;}&quot; data-hub=&quot;${k}&quot;&gt;${t}&lt;/button&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;div class=&quot;os-hub-grid&quot;&gt;${cards.map(c=&gt;`&lt;article class=&quot;os-capability&quot;&gt;&lt;div class=&quot;os-cap-top&quot;&gt;&lt;span class=&quot;os-cap-icon&quot;&gt;${i(c[1])}&lt;/span&gt;&lt;h3&gt;${c[2]}&lt;/h3&gt;${badge(c[3],c[4])}&lt;/div&gt;&lt;p&gt;${c[5]}&lt;/p&gt;&lt;div class=&quot;os-cap-foot&quot;&gt;&lt;span&gt;${c[6]}&lt;/span&gt;&lt;button ${c[0]===&#x27;knowledge&#x27;?`data-backend=&quot;${c[2]===&#x27;WeKnora&#x27;?&#x27;weknora&#x27;:&#x27;builtin&#x27;}&quot;`:`data-cap=&quot;${e(c[2])}&quot;`}&gt;${c[7]} ${i(&#x27;arrow-up-right&#x27;)}&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;p class=&quot;os-hub-note&quot;&gt;${i(&#x27;info&#x27;)}连接、健康、版本与切换均为交互样板。正式运行需要真实探针与契约验收，切换不改变在途任务。&lt;/p&gt;&lt;/section&gt;`;}
+function library(){return `&lt;section class=&quot;os-page&quot;&gt;&lt;div class=&quot;os-page-heading&quot;&gt;&lt;div&gt;&lt;h2&gt;成果库&lt;/h2&gt;&lt;p&gt;完成的工作，连同来源和版本一起保存。&lt;/p&gt;&lt;/div&gt;${badge(&#x27;合成示例&#x27;)}&lt;/div&gt;&lt;div class=&quot;os-library-grid&quot;&gt;${[[&#x27;项目进展周报&#x27;,&#x27;项目记录中的完成情况、阻塞与下一步&#x27;,&#x27;simple&#x27;],[&#x27;春季活动方案&#x27;,&#x27;品牌研究、活动建议与待确认事项&#x27;,&#x27;complex&#x27;]].map(([t,d,s])=&gt;`&lt;article class=&quot;os-library-card&quot;&gt;&lt;div class=&quot;os-file-preview&quot;&gt;&lt;small class=&quot;os-muted&quot;&gt;MARKDOWN · v1&lt;/small&gt;&lt;h3&gt;${t}&lt;/h3&gt;&lt;p&gt;${d}&lt;/p&gt;&lt;div class=&quot;os-doc-divider&quot;&gt;&lt;/div&gt;&lt;small class=&quot;os-muted&quot;&gt;摘要 / 关键结论 / 来源与未决项&lt;/small&gt;&lt;/div&gt;&lt;h3&gt;${t}&lt;/h3&gt;&lt;p&gt;有来源 · 保留修改关系 · 合成示例&lt;/p&gt;&lt;div class=&quot;os-library-actions&quot;&gt;&lt;button class=&quot;os-button&quot; data-scenario=&quot;${s}&quot;&gt;${i(&#x27;arrow-up-right&#x27;)}打开任务&lt;/button&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;download&quot;&gt;${i(&#x27;download&#x27;)}下载示例&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;`).join(&#x27;&#x27;)}&lt;/div&gt;&lt;/section&gt;`;}
+function settings(){return `&lt;section class=&quot;os-page&quot;&gt;&lt;div class=&quot;os-page-heading&quot;&gt;&lt;div&gt;&lt;h2&gt;偏好设置&lt;/h2&gt;&lt;p&gt;先按你的工作方式组织界面。&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class=&quot;os-settings-row&quot;&gt;&lt;span&gt;工作区布局&lt;small&gt;对话优先，或默认展开协作执行图&lt;/small&gt;&lt;/span&gt;&lt;select id=&quot;os-layout&quot;&gt;&lt;option ${design.layout===&#x27;对话优先&#x27;?&#x27;selected&#x27;:&#x27;&#x27;}&gt;对话优先&lt;/option&gt;&lt;option ${design.layout===&#x27;协作优先&#x27;?&#x27;selected&#x27;:&#x27;&#x27;}&gt;协作优先&lt;/option&gt;&lt;/select&gt;&lt;/div&gt;&lt;div class=&quot;os-settings-row&quot;&gt;&lt;span&gt;成果侧栏&lt;small&gt;电脑上并排预览，手机上按需打开&lt;/small&gt;&lt;/span&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;split&quot;&gt;${design.split?&#x27;已开启&#x27;:&#x27;已关闭&#x27;}&lt;/button&gt;&lt;/div&gt;&lt;div class=&quot;os-settings-row&quot;&gt;&lt;span&gt;重要操作&lt;small&gt;审批由服务端裁定，在任务内确认&lt;/small&gt;&lt;/span&gt;${badge(&#x27;服务端管理&#x27;)}&lt;/div&gt;&lt;div class=&quot;os-settings-row&quot;&gt;&lt;span&gt;数据与用量&lt;small&gt;正式接入后展示实际记录，不补造指标&lt;/small&gt;&lt;/span&gt;${badge(&#x27;样板未记录&#x27;)}&lt;/div&gt;&lt;/section&gt;`;}
+function render(){if(graphObserver)graphObserver.disconnect();graphObserver=null;root.classList.toggle(&#x27;os-split-off&#x27;,!design.split);root.style.setProperty(&#x27;--os-accent&#x27;,design.accent);root.querySelector(&#x27;#os-breadcrumb&#x27;).textContent=({home:&#x27;我的工作空间&#x27;,tasks:&#x27;任务空间&#x27;,library:&#x27;成果库&#x27;,hub:&#x27;能力中心&#x27;,settings:&#x27;偏好设置&#x27;,thread:&#x27;任务空间 / &#x27;+title()})[state.view];root.querySelectorAll(&#x27;.os-nav [data-view]&#x27;).forEach(b=&gt;b.classList.toggle(&#x27;is-active&#x27;,b.dataset.view===state.view||(state.view===&#x27;thread&#x27;&amp;&amp;b.dataset.view===&#x27;tasks&#x27;)));body.innerHTML=({home,tasks,thread,hub,library,settings})[state.view]();icons();bindForms();if(state.tab===&#x27;flow&#x27;&amp;&amp;state.view===&#x27;thread&#x27;){graphObserver=new ResizeObserver(drawEdges);graphObserver.observe(root.querySelector(&#x27;#os-graph&#x27;));requestAnimationFrame(drawEdges);}root.querySelector(&#x27;.os-notification-dot&#x27;).style.display=state.notification?&#x27;block&#x27;:&#x27;none&#x27;;}
+function bindForms(){root.querySelector(&#x27;#os-start-form&#x27;)?.addEventListener(&#x27;submit&#x27;,ev=&gt;{ev.preventDefault();const goalText=root.querySelector(&#x27;#os-goal&#x27;).value.trim();if(!goalText){toast(&#x27;先填写目标，或选择下面的示例任务。&#x27;);return;}const mode=root.querySelector(&#x27;#os-mode&#x27;).value;const s=mode===&#x27;auto&#x27;?(/方案|视频|设计|协作|宣传/.test(goalText)?&#x27;complex&#x27;:&#x27;simple&#x27;):mode;openScenario(s);state.userGoal=goalText;render();startReplay();});root.querySelector(&#x27;#os-reply-form&#x27;)?.addEventListener(&#x27;submit&#x27;,ev=&gt;{ev.preventDefault();const text=root.querySelector(&#x27;#os-reply&#x27;).value.trim();if(!text){toast(&#x27;填写补充要求后发送。&#x27;);return;}if(state.stage===&#x27;approval&#x27;){toast(&#x27;参数修改需要重新裁定。本样板保留待确认状态。&#x27;);return;}stopStream();state.reason=text;state.revision++;state.stage=&#x27;complete&#x27;;state.reply=&#x27;已按你的修改说明生成关联新版本。这里演示版本交互，尚未调用真实模型。&#x27;;render();save();});root.querySelector(&#x27;#os-layout&#x27;)?.addEventListener(&#x27;change&#x27;,ev=&gt;{design.layout=ev.target.value;save();toast(&#x27;布局偏好已在本样板中更新。&#x27;);});}
+function startReplay(){stopStream();state.paused=false;state.running=true;state.step=0;state.characters=0;state.stage=&#x27;complete&#x27;;state.tab=&#x27;chat&#x27;;render();
+const update=()=&gt;{const area=root.querySelector(&#x27;#os-stream-area&#x27;);if(area){area.innerHTML=messageContent();icons();}};
+const tick=()=&gt;{if(!state.running||state.view!==&#x27;thread&#x27;)return;state.step++;state.characters=0;update();
+if(state.step===1||state.step===6){const typing=()=&gt;{if(!state.running||state.view!==&#x27;thread&#x27;)return;state.characters+=4;update();if(state.characters&lt;100){streamTimer=setTimeout(typing,55);return;}if(state.step===6){state.running=false;state.step=7;render();return;}streamTimer=setTimeout(tick,700);};streamTimer=setTimeout(typing,55);return;}
+streamTimer=setTimeout(tick,850);};streamTimer=setTimeout(tick,300);}
+
+function dialog(title,html){focusRestore=document.activeElement;overlay.innerHTML=`&lt;div class=&quot;os-overlay-mask&quot;&gt;&lt;section class=&quot;os-dialog&quot; role=&quot;dialog&quot; aria-modal=&quot;true&quot; aria-label=&quot;${e(title)}&quot;&gt;&lt;div class=&quot;os-dialog-head&quot;&gt;&lt;h3&gt;${e(title)}&lt;/h3&gt;&lt;button data-action=&quot;close&quot; aria-label=&quot;关闭对话框&quot;&gt;${i(&#x27;x&#x27;)}&lt;/button&gt;&lt;/div&gt;${html}&lt;/section&gt;&lt;/div&gt;`;icons();overlay.querySelector(&#x27;button&#x27;)?.focus();}
+function close(){overlay.innerHTML=&#x27;&#x27;;focusRestore?.focus();}
+function download(){if(state.scenario===&#x27;approval&#x27;){toast(&#x27;媒体卡为占位，没有实际图片可下载。&#x27;);return;}const text=`# ${title()}\n\n&gt; 合成设计样板，非真实模型产物。\n\n## 摘要\n${state.scenario===&#x27;simple&#x27;?&#x27;项目共有 3 项任务，2 项已完成，1 项因输入缺失阻塞。&#x27;:&#x27;活动方案以城市漫步为主题，日期保持待确认；宣传视觉为 UI 占位。&#x27;}\n\n## 下一步建议\n${state.scenario===&#x27;simple&#x27;?&#x27;补齐输入后继续验证。&#x27;:&#x27;确认日期后继续完善活动文案。&#x27;}\n\n## 来源\n${state.scenario===&#x27;simple&#x27;?&#x27;[1] 合成项目记录，第 2 段。&#x27;:&#x27;[1] 合成品牌规范，第 3 节。&#x27;}\n\n## 版本\nv${state.revision}；新版本保留关联，旧版不覆盖。\n`;const url=URL.createObjectURL(new Blob([text],{type:&#x27;text/markdown;charset=utf-8&#x27;}));const a=document.createElement(&#x27;a&#x27;);a.href=url;a.download=&#x27;agentos-design-example.md&#x27;;a.click();setTimeout(()=&gt;URL.revokeObjectURL(url),1000);toast(&#x27;已下载明确标注的合成报告示例。&#x27;);}
+root.addEventListener(&#x27;click&#x27;,ev=&gt;{const b=ev.target.closest(&#x27;button&#x27;);if(!b||!root.contains(b))return;if(b.dataset.view){navigate(b.dataset.view);return;}if(b.dataset.scenario){openScenario(b.dataset.scenario);return;}if(b.dataset.tab){state.tab=b.dataset.tab;render();save();return;}if(b.dataset.hub){state.hub=b.dataset.hub;render();save();return;}if(b.dataset.filter){state.filter=b.dataset.filter;render();return;}if(b.dataset.node){state.node=b.dataset.node;root.querySelector(&#x27;#os-right&#x27;).innerHTML=nodeDetail();root.querySelectorAll(&#x27;[data-node]&#x27;).forEach(n=&gt;n.classList.toggle(&#x27;is-selected&#x27;,n.dataset.node===state.node));icons();return;}if(b.dataset.backend){state.backend=b.dataset.backend;render();toast(&#x27;新任务默认使用&#x27;+(state.backend===&#x27;weknora&#x27;?&#x27; WeKnora&#x27;:&#x27;内置检索&#x27;)+&#x27;；已有任务绑定保持不变。&#x27;);save();return;}if(b.dataset.cap){dialog(b.dataset.cap,`&lt;p&gt;此能力通过统一边界接入，运行时固定版本和授权范围。&lt;/p&gt;&lt;div class=&quot;os-status-list&quot;&gt;&lt;div&gt;来源：示例配置&lt;/div&gt;&lt;div&gt;连接验证：样板状态，未实际探针&lt;/div&gt;&lt;div&gt;权限：只读检索或按风险确认写入&lt;/div&gt;&lt;/div&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;close&quot;&gt;返回能力中心&lt;/button&gt;`);return;}const action=b.dataset.action;
+if(action===&#x27;menu&#x27;)root.querySelector(&#x27;.os-sidebar&#x27;).classList.toggle(&#x27;is-open&#x27;);
+else if(action===&#x27;close&#x27;)close();
+else if(action===&#x27;guide&#x27;)dialog(&#x27;这版设计怎样评估&#x27;,`&lt;p&gt;从新任务开始，分别打开简单、复杂和需要确认的示例。&lt;/p&gt;&lt;ul&gt;&lt;li&gt;对话：查看文字、工具调用与角色交接。&lt;/li&gt;&lt;li&gt;执行图：查看并行、汇总、评审退回与最终交付。&lt;/li&gt;&lt;li&gt;成果：预览、来源回查、下载合成示例与修改版本。&lt;/li&gt;&lt;li&gt;能力中心：查看 MCP、Skill、知识后端、执行设备；切换只影响新任务。&lt;/li&gt;&lt;/ul&gt;&lt;p&gt;流式过程、角色协作、WeKnora 和连接状态均为设计演示，尚未接入这些真实链路。&lt;/p&gt;`);
+else if(action===&#x27;inbox&#x27;)dialog(&#x27;需要你处理&#x27;,`&lt;p&gt;确认是任务中的一个状态，通知帮助你找到需要介入的位置。&lt;/p&gt;&lt;button class=&quot;os-task-row&quot; data-scenario=&quot;approval&quot;&gt;&lt;span&gt;&lt;strong&gt;西湖主题宣传素材&lt;/strong&gt;&lt;p&gt;请确认本次生成内容和参数。&lt;/p&gt;&lt;/span&gt;${i(&#x27;arrow-right&#x27;)}&lt;/button&gt;`);
+else if(action===&#x27;attach&#x27;)dialog(&#x27;添加资料&#x27;,`&lt;p&gt;样板使用合成文本，不读取你的本地文件。&lt;/p&gt;&lt;label for=&quot;os-material&quot;&gt;材料内容&lt;/label&gt;&lt;textarea id=&quot;os-material&quot;&gt;项目甲计划做 3 项任务，2 项已完成，1 项因输入缺失阻塞。&lt;/textarea&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;attach-save&quot;&gt;添加到任务&lt;/button&gt;`);
+else if(action===&#x27;attach-save&#x27;){state.attached=true;close();render();toast(&#x27;合成材料已添加。&#x27;);}
+else if(action===&#x27;approve&#x27;){state.stage=&#x27;complete&#x27;;state.notification=false;state.tab=&#x27;chat&#x27;;render();startReplay();toast(&#x27;已确认本次示例调用。&#x27;);}
+else if(action===&#x27;reject&#x27;){state.refused=true;state.notification=false;state.stage=&#x27;complete&#x27;;render();toast(&#x27;已拒绝，样板不会继续生成。&#x27;);}
+else if(action===&#x27;replay&#x27;)startReplay();
+else if(action===&#x27;pause&#x27;){stopStream();state.paused=true;render();toast(&#x27;示例回放已暂停；没有实际任务被取消。&#x27;);}
+else if(action===&#x27;open-artifact&#x27;){state.tab=&#x27;files&#x27;;render();root.querySelector(&#x27;#os-right&#x27;)?.classList.add(&#x27;mobile-visible&#x27;);}
+else if(action===&#x27;show-node&#x27;){root.querySelector(&#x27;#os-right&#x27;)?.classList.add(&#x27;mobile-visible&#x27;);root.querySelector(&#x27;#os-right&#x27;)?.scrollIntoView({behavior:&#x27;smooth&#x27;,block:&#x27;start&#x27;});}
+else if(action===&#x27;source&#x27;)dialog(&#x27;来源片段&#x27;,`&lt;p&gt;${state.scenario===&#x27;simple&#x27;?&#x27;项目记录 · 第 2 段&#x27;:&#x27;品牌规范 · 第 3 节&#x27;} · 固定来源版本 v1&lt;/p&gt;&lt;div class=&quot;os-doc-quote&quot;&gt;${state.scenario===&#x27;simple&#x27;?&#x27;项目甲计划做 3 项任务，其中 2 项已完成，1 项因输入缺失阻塞。&#x27;:&#x27;品牌表达强调自然、克制与轻量。活动简报未提供已确认的日期。&#x27;}&lt;/div&gt;&lt;p&gt;知识后端：${backend()}（示例）。正式引用回查会再次校验来源权限。&lt;/p&gt;`);
+else if(action===&#x27;tool-detail&#x27;)dialog(&#x27;步骤检查器&#x27;,`&lt;p&gt;查看已保存的指令和输入输出，不展示模型内部推理。&lt;/p&gt;&lt;div class=&quot;os-status-list&quot;&gt;&lt;div&gt;&lt;b&gt;系统指令&lt;/b&gt;&lt;br&gt;仅使用已授权来源；缺少依据时保留未决项。&lt;/div&gt;&lt;div&gt;&lt;b&gt;输入&lt;/b&gt;&lt;br&gt;本任务目标、来源引用和上一角色交付。&lt;/div&gt;&lt;div&gt;&lt;b&gt;输出&lt;/b&gt;&lt;br&gt;结构化结论、引用及可交付成果。&lt;/div&gt;&lt;/div&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;failure&quot;&gt;体验回传失败状态&lt;/button&gt;`);
+else if(action===&#x27;failure&#x27;){close();state.failure=true;state.tab=&#x27;chat&#x27;;render();}
+else if(action===&#x27;deliver&#x27;){state.failure=false;render();toast(&#x27;示例成果补传完成，生成步骤未重跑。&#x27;);}
+else if(action===&#x27;revise&#x27;)dialog(&#x27;基于成果提出修改&#x27;,`&lt;p&gt;修改会产生关联的新版本。原成果与来源继续保留。&lt;/p&gt;&lt;label for=&quot;os-revision&quot;&gt;修改说明&lt;/label&gt;&lt;textarea id=&quot;os-revision&quot; placeholder=&quot;例如：把活动日期改为待确认，并保留原视觉稿&quot;&gt;&lt;/textarea&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;revise-save&quot;&gt;生成示例新版本&lt;/button&gt;`);
+else if(action===&#x27;revise-save&#x27;){const text=root.querySelector(&#x27;#os-revision&#x27;).value.trim();if(!text){toast(&#x27;填写修改说明后继续。&#x27;);return;}state.revision++;state.reason=text;state.stage=&#x27;complete&#x27;;state.tab=&#x27;chat&#x27;;close();render();toast(&#x27;示例新版本已关联，旧版本保留。&#x27;);}
+else if(action===&#x27;download&#x27;)download();
+else if(action===&#x27;visual&#x27;)dialog(&#x27;活动宣传视觉&#x27;,`&lt;p&gt;这是一张视觉成果占位卡。UI 设计阶段未生成图片，也没有调用 Windows。&lt;/p&gt;&lt;div class=&quot;os-status-list&quot;&gt;&lt;div&gt;正式交付：缩略图、原图预览与授权下载。&lt;/div&gt;&lt;div&gt;版本：v1；方案返修后继续复用。&lt;/div&gt;&lt;/div&gt;`);
+else if(action===&#x27;connect&#x27;)dialog(&#x27;连接能力&#x27;,`&lt;p&gt;按能力类型接入，凭据保存在服务端。&lt;/p&gt;&lt;div class=&quot;os-design-toggle&quot;&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;connect-mcp&quot;&gt;MCP 服务&lt;/button&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;connect-skill&quot;&gt;Skill 包&lt;/button&gt;&lt;button class=&quot;os-button&quot; data-action=&quot;connect-knowledge&quot;&gt;知识后端&lt;/button&gt;&lt;/div&gt;&lt;p&gt;此处演示接入入口；不会安装软件或连接外部服务。&lt;/p&gt;`);
+else if(action===&#x27;connect-mcp&#x27;)dialog(&#x27;连接 MCP 服务&#x27;,`&lt;label for=&quot;os-service-name&quot;&gt;服务名称&lt;/label&gt;&lt;input id=&quot;os-service-name&quot; value=&quot;示例知识服务&quot;&gt;&lt;label for=&quot;os-service-url&quot;&gt;服务地址&lt;/label&gt;&lt;input id=&quot;os-service-url&quot; value=&quot;https://example.invalid/mcp&quot;&gt;&lt;p&gt;连接流程：配置 → 验证 → 发现工具 → 收窄权限 → 启用。&lt;/p&gt;&lt;button class=&quot;os-button os-primary&quot; data-action=&quot;connect-save&quot;&gt;验证示例连接&lt;/button&gt;`);
+else if(action===&#x27;connect-save&#x27;){dialog(&#x27;示例连接结果&#x27;,`&lt;div class=&quot;os-status-list&quot;&gt;&lt;div&gt;配置格式：通过&lt;/div&gt;&lt;div&gt;真实连通性：未验证&lt;/div&gt;&lt;div&gt;工具发现：样板示例&lt;/div&gt;&lt;/div&gt;&lt;p&gt;正式版本只有真实验证通过才允许启用。&lt;/p&gt;`);}
+else if(action===&#x27;connect-skill&#x27;)dialog(&#x27;安装 Skill&#x27;,`&lt;p&gt;指定来源与固定版本，查看声明的工具和资源，审核后启用。&lt;/p&gt;&lt;div class=&quot;os-status-list&quot;&gt;&lt;div&gt;report-writer · 示例 v1.2&lt;/div&gt;&lt;div&gt;允许能力：材料读取、知识检索、报告保存&lt;/div&gt;&lt;div&gt;安装成功不等于授予工具执行权限。&lt;/div&gt;&lt;/div&gt;`);
+else if(action===&#x27;connect-knowledge&#x27;){close();state.hub=&#x27;knowledge&#x27;;navigate(&#x27;hub&#x27;);}
+else if(action===&#x27;split&#x27;){design.split=!design.split;render();save();}
+});
+window.addEventListener(&#x27;openai:set_globals&#x27;,ev=&gt;{const next=ev.detail?.globals?.widgetState;if(!next)return;const m=next.modelContent||{},p=next.privateContent||{};let changed=false;const set=(obj,key,value)=&gt;{if(obj[key]!==value){obj[key]=value;changed=true;}};if([&#x27;home&#x27;,&#x27;tasks&#x27;,&#x27;library&#x27;,&#x27;hub&#x27;,&#x27;settings&#x27;].includes(m.screen))set(state,&#x27;view&#x27;,m.screen);if([&#x27;simple&#x27;,&#x27;complex&#x27;,&#x27;approval&#x27;].includes(m.scenario))set(state,&#x27;scenario&#x27;,m.scenario);if([&#x27;weknora&#x27;,&#x27;builtin&#x27;].includes(m.knowledgeBackend))set(state,&#x27;backend&#x27;,m.knowledgeBackend);if(typeof p.split===&#x27;boolean&#x27;)set(design,&#x27;split&#x27;,p.split);if(changed)render();});
+root.addEventListener(&#x27;keydown&#x27;,ev=&gt;{if(ev.key===&#x27;Escape&#x27;){if(overlay.children.length)close();else root.querySelector(&#x27;.os-sidebar&#x27;).classList.remove(&#x27;is-open&#x27;);}if((ev.metaKey||ev.ctrlKey)&amp;&amp;ev.key.toLowerCase()===&#x27;k&#x27;){ev.preventDefault();navigate(&#x27;home&#x27;);root.querySelector(&#x27;#os-goal&#x27;)?.focus();}if(ev.key===&#x27;Tab&#x27;&amp;&amp;overlay.children.length){const list=[...overlay.querySelectorAll(&#x27;button,input,textarea,select&#x27;)].filter(el=&gt;!el.disabled);if(!list.length)return;const first=list[0],last=list.at(-1);if(ev.shiftKey&amp;&amp;document.activeElement===first){ev.preventDefault();last.focus();}else if(!ev.shiftKey&amp;&amp;document.activeElement===last){ev.preventDefault();first.focus();}}});
+const saved=globalThis.openai?.widgetState;if(saved?.modelContent?.screen&amp;&amp;[&#x27;home&#x27;,&#x27;tasks&#x27;,&#x27;library&#x27;,&#x27;hub&#x27;,&#x27;settings&#x27;].includes(saved.modelContent.screen))state.view=saved.modelContent.screen;
+render();
+if(globalThis.Tweak){let previous={...design};const tweak=new Tweak({container:root,onChange:()=&gt;{if(JSON.stringify(previous)===JSON.stringify(design))return;if(previous.layout!==design.layout&amp;&amp;state.view===&#x27;thread&#x27;&amp;&amp;state.scenario===&#x27;complex&#x27;)state.tab=design.layout===&#x27;协作优先&#x27;?&#x27;flow&#x27;:&#x27;chat&#x27;;previous={...design};render();save();}});tweak.addSelect(design,&#x27;layout&#x27;,{label:&#x27;工作区布局&#x27;,options:[&#x27;对话优先&#x27;,&#x27;协作优先&#x27;]});tweak.addToggle(design,&#x27;split&#x27;,{label:&#x27;并排显示成果 / 步骤&#x27;});tweak.addColorPicker(design,&#x27;accent&#x27;,{label:&#x27;交互强调色&#x27;,reference:&#x27;--os-accent&#x27;});}
+})();
+&lt;/script&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+  let lastPointerWasTouch = false;
+  let pinnedByTouch = false;
+
+  const getTrigger = (event) =&gt; {
+    for (const target of event.composedPath()) {
+      if (target?.nodeType === Node.ELEMENT_NODE) {
+        const trigger = target.closest(&quot;[data-tooltip]&quot;);
+        if (trigger) return trigger;
+      }
+    }
+    return null;
+  };
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    pinnedByTouch = false;
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handlePointer = (event) =&gt; {
+    lastPointerWasTouch =
+      event.type === &quot;pointerdown&quot; &amp;&amp; event.pointerType === &quot;touch&quot;;
+  };
+  const handleTouchClick = (event) =&gt; {
+    const isTouch = event.pointerType === &quot;touch&quot; || lastPointerWasTouch;
+    lastPointerWasTouch = false;
+    if (!isTouch || event.detail === 0) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (
+      trigger == null ||
+      !trigger.isConnected ||
+      getContent(trigger).length === 0 ||
+      (pinnedByTouch &amp;&amp; activeTrigger === trigger)
+    ) {
+      if (pinnedByTouch) {
+        closeTooltip();
+      }
+      return;
+    }
+    openTooltip(trigger);
+    pinnedByTouch = activeTrigger === trigger;
+    window.setTimeout(() =&gt; {
+      if (activeTrigger === trigger &amp;&amp; !trigger.isConnected) {
+        closeTooltip(false);
+      }
+    }, 0);
+  };
+  const handleLeave = (event) =&gt; {
+    if (pinnedByTouch) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    lastPointerWasTouch = false;
+    const trigger = getTrigger(event);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handlers = {
+    pointerover: handlePointerOpen,
+    pointerdown: handlePointer,
+    pointercancel: handlePointer,
+    click: handleTouchClick,
+    pointerout: handleLeave,
+    focusin: handleFocusIn,
+    focusout: handleLeave,
+    keydown: handleKeyDown,
+    contextmenu: handleContextMenu,
+  };
+  const roots = new Map();
+  const handledEvents = new WeakSet();
+  const handleEvent = (event) =&gt; {
+    if (handledEvents.has(event)) return;
+    handledEvents.add(event);
+    handlers[event.type](event);
+  };
+  const discoverRoots = (node) =&gt; {
+    if (node.shadowRoot) listen(node.shadowRoot);
+    for (const element of node.querySelectorAll(&quot;*&quot;)) {
+      if (element.shadowRoot) listen(element.shadowRoot);
+    }
+  };
+  const listen = (root) =&gt; {
+    if (roots.has(root)) return;
+    for (const type of Object.keys(handlers)) root.addEventListener(type, handleEvent);
+    const observer = new window.MutationObserver((records) =&gt; {
+      for (const { addedNodes } of records) {
+        for (const node of addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) discoverRoots(node);
+        }
+      }
+      for (const [root, cleanup] of roots) {
+        if (root.host &amp;&amp; !root.host.isConnected) {
+          cleanup();
+          roots.delete(root);
+        }
+      }
+      if (activeTrigger &amp;&amp; !activeTrigger.isConnected) closeTooltip(false);
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    roots.set(root, () =&gt; {
+      observer.disconnect();
+      for (const type of Object.keys(handlers)) root.removeEventListener(type, handleEvent);
+    });
+    discoverRoots(root);
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    lastPointerWasTouch = false;
+    for (const cleanup of roots.values()) cleanup();
+    roots.clear();
+    tooltip = null;
+  };
+
+  // Events between children of one shadow root never reach the document.
+  listen(document);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-tabs&quot;&gt;
+(() =&gt; {
+  const selector = &#x27;.nav[role=&quot;tablist&quot;] [role=&quot;tab&quot;]&#x27;;
+  const disabled = &#x27;:disabled,[aria-disabled=&quot;true&quot;]&#x27;;
+  const selectTab = (selected) =&gt; {
+    const panelId = selected.getAttribute(&quot;aria-controls&quot;);
+    for (const tab of selected.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;)) {
+      const active = tab === selected;
+      tab.classList.toggle(&quot;active&quot;, active);
+      tab.setAttribute(&quot;aria-selected&quot;, String(active));
+      const id = tab.getAttribute(&quot;aria-controls&quot;);
+      const panel = id &amp;&amp; document.getElementById(id);
+      if (panel != null) {
+        panel.hidden = id !== panelId;
+        if (!panel.hidden &amp;&amp; selected.id) {
+          panel.setAttribute(&quot;aria-labelledby&quot;, selected.id);
+        }
+      }
+    }
+  };
+  const interact = (event) =&gt; {
+    const tab = event.target?.closest?.(selector);
+    if (event.defaultPrevented || tab == null || tab.matches(disabled)) {
+      return;
+    }
+    if (event.type === &quot;click&quot;) {
+      selectTab(tab);
+      return;
+    }
+    const tabs = Array.from(
+      tab.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;),
+    ).filter((candidate) =&gt; !candidate.matches(disabled));
+    const current = tabs.indexOf(tab);
+    let next;
+    if (event.key === &quot;ArrowRight&quot; || event.key === &quot;ArrowDown&quot;) {
+      next = (current + 1) % tabs.length;
+    } else if (event.key === &quot;ArrowLeft&quot; || event.key === &quot;ArrowUp&quot;) {
+      next = (current + tabs.length - 1) % tabs.length;
+    } else if (event.key === &quot;Home&quot;) {
+      next = 0;
+    } else if (event.key === &quot;End&quot;) {
+      next = tabs.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    tabs[next].focus();
+    selectTab(tabs[next]);
+  };
+
+  for (const list of document.querySelectorAll(&#x27;.nav[role=&quot;tablist&quot;]&#x27;)) {
+    const selected =
+      list.querySelector(&#x27;[role=&quot;tab&quot;][aria-selected=&quot;true&quot;]&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;].active&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;]&#x27;);
+    if (selected != null) {
+      selectTab(selected);
+    }
+  }
+  document.addEventListener(&quot;click&quot;, interact);
+  document.addEventListener(&quot;keydown&quot;, interact);
+  window.addEventListener(&quot;pagehide&quot;, () =&gt; {
+    document.removeEventListener(&quot;click&quot;, interact);
+    document.removeEventListener(&quot;keydown&quot;, interact);
+  }, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-carousel&quot;&gt;
+  (() =&gt; {
+    for (const root of document.querySelectorAll(&quot;.viz-carousel&quot;)) {
+      const panels = Array.from(
+        root.querySelectorAll(&quot;:scope &gt; [data-variant]&quot;),
+      );
+      if (panels.length === 0) {
+        continue;
+      }
+      root.setAttribute(&quot;role&quot;, &quot;group&quot;);
+      panels.forEach((panel, index) =&gt; {
+        panel.hidden = index !== 0;
+        panel.setAttribute(&quot;role&quot;, &quot;group&quot;);
+        if (!panel.hasAttribute(&quot;aria-label&quot;)) {
+          panel.setAttribute(&quot;aria-label&quot;, panel.dataset.variant);
+        }
+      });
+      root.dataset.activeVariant = panels[0].dataset.variant;
+      if (panels.length === 1) {
+        continue;
+      }
+
+      const controls = document.createElement(&quot;div&quot;);
+      controls.className = &quot;viz-carousel-controls&quot;;
+      // Portable copy of the settings dropdown&#x27;s legacy glyph; no 14px icon-package preset matches it.
+      // https://github.com/openai/openai/blob/master/codex/codex-apps/webview/src/icons/chevron.svg
+      controls.innerHTML = `
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-previous cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-left&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;details class=&quot;viz-carousel-picker&quot;&gt;
+        &lt;summary class=&quot;cursor-interaction&quot;&gt;
+          &lt;span class=&quot;viz-carousel-count tabular-nums&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;viz-carousel-name&quot;&gt;&lt;/span&gt;
+          &lt;svg class=&quot;viz-carousel-caret&quot; width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 20 21&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;&gt;
+            &lt;path d=&quot;M15.2793 7.71101C15.539 7.45131 15.961 7.45131 16.2207 7.71101C16.4804 7.97071 16.4804 8.39272 16.2207 8.65242L10.4707 14.4024C10.211 14.6621 9.78902 14.6621 9.52932 14.4024L3.77932 8.65242L3.69436 8.54792C3.52385 8.28979 3.55205 7.93828 3.77932 7.71101C4.00659 7.48374 4.3581 7.45554 4.61623 7.62605L4.72073 7.71101L10 12.9903L15.2793 7.71101Z&quot; fill=&quot;currentColor&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;0.6&quot; /&gt;
+          &lt;/svg&gt;
+        &lt;/summary&gt;
+        &lt;div class=&quot;viz-carousel-options&quot;&gt;&lt;/div&gt;
+      &lt;/details&gt;
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-next cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-right&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;`;
+      const previous = controls.querySelector(&quot;.viz-carousel-previous&quot;);
+      const next = controls.querySelector(&quot;.viz-carousel-next&quot;);
+      const picker = controls.querySelector(&quot;.viz-carousel-picker&quot;);
+      const summary = picker.querySelector(&quot;summary&quot;);
+      const count = controls.querySelector(&quot;.viz-carousel-count&quot;);
+      const name = controls.querySelector(&quot;.viz-carousel-name&quot;);
+      const options = controls.querySelector(&quot;.viz-carousel-options&quot;);
+      const status = document.createElement(&quot;span&quot;);
+      status.className = &quot;sr-only&quot;;
+      status.setAttribute(&quot;role&quot;, &quot;status&quot;);
+      status.setAttribute(&quot;aria-live&quot;, &quot;polite&quot;);
+      status.setAttribute(&quot;aria-atomic&quot;, &quot;true&quot;);
+      previous.setAttribute(
+        &quot;aria-label&quot;,
+        root.dataset.previousLabel ?? &quot;Previous variant&quot;,
+      );
+      next.setAttribute(&quot;aria-label&quot;, root.dataset.nextLabel ?? &quot;Next variant&quot;);
+
+      let active = 0;
+      const choices = panels.map((panel, index) =&gt; {
+        const choice = document.createElement(&quot;button&quot;);
+        choice.type = &quot;button&quot;;
+        choice.className = &quot;cursor-interaction&quot;;
+        choice.textContent = panel.dataset.variant;
+        choice.addEventListener(&quot;click&quot;, () =&gt; {
+          select(index);
+          summary.focus();
+        });
+        options.appendChild(choice);
+        return choice;
+      });
+      const select = (index) =&gt; {
+        const changed = active !== index;
+        active = index;
+        panels.forEach((panel, position) =&gt; {
+          panel.hidden = position !== active;
+          choices[position].setAttribute(
+            &quot;aria-current&quot;,
+            String(position === active),
+          );
+        });
+        root.dataset.activeVariant = panels[active].dataset.variant;
+        count.textContent = `${active + 1} / ${panels.length}`;
+        name.textContent = panels[active].dataset.variant;
+        picker.open = false;
+        if (changed) {
+          status.textContent = `${count.textContent}: ${name.textContent}`;
+        }
+      };
+      previous.addEventListener(&quot;click&quot;, () =&gt;
+        select((active + panels.length - 1) % panels.length),
+      );
+      next.addEventListener(&quot;click&quot;, () =&gt;
+        select((active + 1) % panels.length),
+      );
+      picker.addEventListener(&quot;keydown&quot;, (event) =&gt; {
+        if (event.key === &quot;Escape&quot; &amp;&amp; picker.open) {
+          event.preventDefault();
+          picker.open = false;
+          summary.focus();
+        }
+      });
+      const dismiss = (event) =&gt; {
+        if (!picker.contains(event.target)) {
+          picker.open = false;
+        }
+      };
+      const sizePicker = () =&gt; {
+        root.style.setProperty(
+          &quot;--viz-carousel-picker-height&quot;,
+          `${picker.open ? options.offsetHeight : 0}px`,
+        );
+      };
+      picker.addEventListener(&quot;toggle&quot;, sizePicker);
+      window.addEventListener(&quot;resize&quot;, sizePicker);
+      document.addEventListener(&quot;pointerdown&quot;, dismiss);
+      window.addEventListener(
+        &quot;pagehide&quot;,
+        () =&gt; {
+          document.removeEventListener(&quot;pointerdown&quot;, dismiss);
+          window.removeEventListener(&quot;resize&quot;, sizePicker);
+        },
+        { once: true },
+      );
+      root.append(controls, status);
+      select(0);
+    }
+  })();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+<script>(() => {
+  const frame = document.getElementById("codex-visualization");
+  if (!(frame instanceof HTMLIFrameElement)) {
+    return;
+  }
+  let viewportHeight = globalThis.innerHeight;
+  const storageKey = `codex:visualization-widget-state-v2:${JSON.stringify([
+    globalThis.location.pathname,
+    globalThis.location.search,
+  ])}`;
+  const parseState = (serializedState) => {
+    if (
+      typeof serializedState !== "string" ||
+      new TextEncoder().encode(serializedState).length > 16 * 1024
+    ) {
+      throw new TypeError(
+        "Widget state must be a JSON object of at most 16 KiB",
+      );
+    }
+    /** @type {unknown} */
+    const state = JSON.parse(serializedState);
+    if (
+      state == null ||
+      typeof state !== "object" ||
+      Array.isArray(state) ||
+      ("imageIds" in state &&
+        (!Array.isArray(state.imageIds) || state.imageIds.length > 0))
+    ) {
+      throw new TypeError("Widget state must be a JSON object");
+    }
+    const storedState = { modelContent: null, privateContent: null, ...state };
+    const canonicalState = JSON.stringify(
+      storedState,
+      (_key, /** @type {unknown} */ value) => {
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          throw new TypeError("Widget state must contain finite numbers");
+        }
+        return value;
+      },
+    );
+    if (new TextEncoder().encode(canonicalState).length > 16 * 1024) {
+      throw new TypeError(
+        "Widget state must be a JSON object of at most 16 KiB",
+      );
+    }
+    return storedState;
+  };
+  let storage = null;
+  let state = null;
+  try {
+    const localStorage = globalThis.localStorage;
+    const probeKey = `${storageKey}:probe`;
+    localStorage.setItem(probeKey, "1");
+    localStorage.removeItem(probeKey);
+    storage = localStorage;
+    const savedState = storage.getItem(storageKey);
+    if (savedState != null) {
+      try {
+        state = parseState(savedState);
+      } catch {
+        // Invalid saved state does not disable future writes.
+      }
+    }
+  } catch {
+    storage = null;
+  }
+  const initialGlobals = {
+    widgetState: state,
+    statePersistence: storage == null ? "none" : "local",
+  };
+
+  const channel = new MessageChannel();
+  channel.port1.addEventListener("message", (event) => {
+    const data = event.data;
+    if (typeof data !== "object" || data == null) {
+      return;
+    }
+    if (data.type === "widget-state-write") {
+      if (!Number.isSafeInteger(data.id) || data.id <= 0) {
+        return;
+      }
+      let ok = false;
+      try {
+        if (storage != null) {
+          const state = parseState(data.state);
+          storage.setItem(storageKey, JSON.stringify(state));
+          ok = true;
+        }
+      } catch {
+        // Storage denial, quota limits, and invalid state return a failed receipt.
+      }
+      channel.port1.postMessage({
+        type: "widget-state-result",
+        id: data.id,
+        ok,
+      });
+      return;
+    }
+    if (data.type === "height") {
+      const height = data.height;
+      if (
+        typeof height === "number" &&
+        Number.isFinite(height) &&
+        height >= 0 &&
+        height <= 10_000
+      ) {
+        frame.style.height = Math.ceil(height) + "px";
+      }
+      return;
+    }
+    if (data.type === "scroll-to") {
+      const top = data.top;
+      if (
+        typeof top === "number" &&
+        Number.isFinite(top) &&
+        top >= 0 &&
+        globalThis.navigator.userActivation?.isActive === true
+      ) {
+        globalThis.scrollTo({
+          top: Math.ceil(
+            globalThis.scrollY + frame.getBoundingClientRect().top + top,
+          ),
+        });
+      }
+      return;
+    }
+    if (data.type === "open-external") {
+      const rawHref = data.href;
+      if (typeof rawHref !== "string") {
+        return;
+      }
+      let href;
+      try {
+        const url = new URL(rawHref, document.baseURI);
+        if (url.protocol !== "https:") {
+          return;
+        }
+        href = url.href;
+      } catch {
+        return;
+      }
+      if (globalThis.navigator.userActivation?.isActive === true) {
+        const anchor = document.createElement("a");
+        anchor.href = href;
+        anchor.rel = "noopener noreferrer";
+        anchor.target = "_blank";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      }
+      return;
+    }
+    if (data.type === "follow-up") {
+      const prompt = data.prompt;
+      if (
+        typeof prompt !== "string" ||
+        globalThis.navigator.userActivation?.isActive !== true
+      ) {
+        return;
+      }
+      const title = data.title;
+      globalThis.prompt(typeof title === "string" ? title : prompt, prompt);
+    }
+  });
+  channel.port1.start();
+  const srcdoc = frame.dataset.srcdoc;
+  if (srcdoc == null) {
+    return;
+  }
+  globalThis.addEventListener("resize", () => {
+    const height = Number.parseFloat(frame.style.height);
+    if (!Number.isFinite(height) || height <= viewportHeight) {
+      frame.style.removeProperty("height");
+    }
+    viewportHeight = globalThis.innerHeight;
+    channel.port1.postMessage({ type: "measure" });
+  });
+  frame.addEventListener(
+    "load",
+    () => {
+      frame.contentWindow?.postMessage(
+        { type: "codex-visualization-initialize" },
+        "*",
+        [channel.port2],
+      );
+    },
+    { once: true },
+  );
+  // Match the trusted bootstrap element, not the same text in an authored title.
+  frame.srcdoc = srcdoc.replace(
+    '<script type="application/json" id="codex-visualization-widget-state">__CODEX_VISUALIZATION_WIDGET_STATE__<\/script>',
+    () =>
+      '<script type="application/json" id="codex-visualization-widget-state">' +
+      JSON.stringify(initialGlobals).replaceAll("<", "\\u003c") +
+      "<\/script>",
+  );
+  delete frame.dataset.srcdoc;
+})();
+</script>
+</body>
+</html>

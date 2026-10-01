@@ -1,0 +1,124 @@
+[project]
+name = "agentos"
+version = "0.1.0"
+description = "可插拔 AgentOS：统一、可插拔的 AI 基础设施与数字员工运行底座"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "pydantic>=2.9",
+    "typer>=0.12",
+    "httpx>=0.27",
+    "mcp>=2.2",
+    "jsonschema>=4.23",
+    "sqlite-vec>=0.1.9",
+    "pyjwt[crypto]>=2.15.0",
+    "authlib>=1.6.9,<2",
+    "temporalio>=1.17,<2",
+    "opentelemetry-sdk>=1.39,<2",
+    "itsdangerous>=2.2,<3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "types-jsonschema>=4.23",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "mypy>=1.13",
+    "import-linter>=2.1",
+    "types-authlib>=1.8.0.20260911",
+]
+
+[project.scripts]
+agentos = "agentos.apps.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentos"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"frontend/app.js" = "agentos/web/app.js"
+"frontend/console.css" = "agentos/web/console.css"
+"frontend/icon-192.png" = "agentos/web/icon-192.png"
+"frontend/icon-512.png" = "agentos/web/icon-512.png"
+"frontend/index.html" = "agentos/web/index.html"
+"frontend/legacy.html" = "agentos/web/legacy.html"
+"frontend/manifest.webmanifest" = "agentos/web/manifest.webmanifest"
+"frontend/safe.js" = "agentos/web/safe.js"
+"frontend/style.css" = "agentos/web/style.css"
+"frontend/sw.js" = "agentos/web/sw.js"
+"frontend/workspace.css" = "agentos/web/workspace.css"
+"frontend/js" = "agentos/web/js"
+"frontend/workflow-dist" = "agentos/web/workflow-dist"
+
+[tool.ruff]
+line-length = 120
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+# 仓库既有文档工具脚本，本次实现前已存在；不按新门禁回溯整改
+"scripts/md2html.py" = ["E501", "F401", "E741", "E722", "F841", "W605", "SIM115", "UP009", "UP020", "UP032", "I001"]
+# 运维脚本（blind_run/e2e/eval 等）有意在常量定义后再导入部署配置（凭据只存 gitignored runtime.json），
+# 且包含长中文字符串与未用占位变量；E402/E501/F811/F841 按"脚本工具"口径豁免，src/tests 仍全量检查。
+"scripts/*.py" = ["E402", "E501", "F811", "F841", "SIM105"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["pydantic.mypy"]
+strict = true
+warn_unreachable = true
+mypy_path = "src"
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "uvicorn.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q --basetemp=.pytest-tmp"
+
+[tool.importlinter]
+root_package = "agentos"
+
+[[tool.importlinter.contracts]]
+name = "kernel must not depend on implementations"
+type = "forbidden"
+source_modules = ["agentos.kernel"]
+forbidden_modules = [
+    "agentos.runtime",
+    "agentos.domains",
+    "agentos.services",
+    "agentos.adapters",
+    "agentos.apps",
+]
+
+[[tool.importlinter.contracts]]
+name = "runtime uses ports only"
+type = "forbidden"
+source_modules = ["agentos.runtime"]
+forbidden_modules = [
+    "agentos.adapters",
+    "agentos.apps",
+]
+
+[[tool.importlinter.contracts]]
+name = "domains are pure business rules"
+type = "forbidden"
+source_modules = ["agentos.domains"]
+forbidden_modules = [
+    "agentos.adapters",
+    "agentos.apps",
+    "agentos.runtime",
+]

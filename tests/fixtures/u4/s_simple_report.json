@@ -1,0 +1,59 @@
+{
+  "fixture_version": "u4-s-1",
+  "frozen_at": "2026-09-30",
+  "tree": "cfa12be5aacf06900cf98aa666ce40cfcf217c5e",
+  "note": "合成数据。S 简单报告：单执行角色、固定 Skill、实际读取授权材料，结论可回查；缺依据必须弃答而非编造。",
+  "plan": {"kind": "simple", "roles": ["research"], "max_agents": 1, "skill_id": "material-report", "skill_version": "1"},
+  "samples": [
+    {
+      "id": "P1",
+      "materials": [
+        {"name": "brand-overview.md", "text": "合成品牌 A：成立于 2021 年，主营户外装备，活动城市杭州。\n"},
+        {"name": "event-plan.md", "text": "合成活动：春季徒步节，日期 2026-04-12，地点杭州西湖区，预算 8 万元。\n"}
+      ],
+      "goal": "根据授权材料写一份不超过 300 字的品牌活动摘要",
+      "expectations": {
+        "completes": true,
+        "contains": ["2026-04-12", "杭州"],
+        "refs_min": 1,
+        "new_asset_version": 1,
+        "note": "结论必须能回查到具体材料与版本；不得凭常识补日期/金额"
+      }
+    },
+    {
+      "id": "P2",
+      "materials": [
+        {"name": "brand-overview.md", "text": "合成品牌 A：成立于 2021 年，主营户外装备。\n"},
+        {"name": "event-conflict.md", "text": "合成活动：春季徒步节，日期 2026-04-12；另一处记载日期 2026-04-19。\n"}
+      ],
+      "goal": "根据授权材料写一份不超过 300 字的品牌活动摘要",
+      "expectations": {
+        "completes": true,
+        "flags_conflict": true,
+        "must_not": "不得静默任选一个日期充当结论",
+        "note": "材料冲突必须显式说明冲突并给出引用"
+      }
+    },
+    {
+      "id": "P3",
+      "materials": [
+        {"name": "brand-overview.md", "text": "合成品牌 A：成立于 2021 年，主营户外装备。\n"}
+      ],
+      "goal": "根据授权材料写一份不超过 300 字的品牌活动摘要",
+      "expectations": {
+        "completes": true,
+        "abstains_on_missing": true,
+        "must_not": "不得编造活动日期/金额",
+        "note": "缺金额/日期时明确弃答该字段；正确弃答算合格报告",
+        "deterministic_check": "缺依据却出现具体日期 → 检查失败"
+      }
+    }
+  ],
+  "mutation": {
+    "case": "修改请求（补充要求/纠错）",
+    "expect": ["形成新 run", "产生新不可变 Asset 版本（version+1，parent 指向旧版本）", "旧版本内容字节不变", "游客只能看到管理员显式发布的那一个版本"]
+  },
+  "usage_expectation": {
+    "note": "usage 与实际调用一致；未记录须明确标注 estimated 或 未记录，不得虚构数值"
+  }
+}

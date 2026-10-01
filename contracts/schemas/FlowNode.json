@@ -1,0 +1,52 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "config": {
+      "additionalProperties": true,
+      "title": "Config",
+      "type": "object"
+    },
+    "depends_on": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Depends On",
+      "type": "array"
+    },
+    "id": {
+      "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "agent",
+        "tool",
+        "condition",
+        "wait",
+        "custom",
+        "template"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "label": {
+      "default": "",
+      "title": "Label",
+      "type": "string"
+    },
+    "when": {
+      "additionalProperties": {
+        "type": "boolean"
+      },
+      "title": "When",
+      "type": "object"
+    }
+  },
+  "required": [
+    "id",
+    "kind"
+  ],
+  "title": "FlowNode",
+  "type": "object"
+}

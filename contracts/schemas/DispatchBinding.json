@@ -1,0 +1,65 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "agent_run_id": {
+      "title": "Agent Run Id",
+      "type": "string"
+    },
+    "call_id": {
+      "title": "Call Id",
+      "type": "string"
+    },
+    "capability_revision": {
+      "title": "Capability Revision",
+      "type": "string"
+    },
+    "expires_at": {
+      "format": "date-time",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "fence": {
+      "title": "Fence",
+      "type": "integer"
+    },
+    "input_manifest_hash": {
+      "title": "Input Manifest Hash",
+      "type": "string"
+    },
+    "node_id": {
+      "title": "Node Id",
+      "type": "string"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "plan_version": {
+      "title": "Plan Version",
+      "type": "integer"
+    },
+    "reservation_id": {
+      "title": "Reservation Id",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "plan_id",
+    "plan_version",
+    "task_id",
+    "agent_run_id",
+    "node_id",
+    "capability_revision",
+    "reservation_id",
+    "call_id",
+    "fence",
+    "input_manifest_hash",
+    "expires_at"
+  ],
+  "title": "DispatchBinding",
+  "type": "object"
+}

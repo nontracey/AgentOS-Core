@@ -1,0 +1,142 @@
+{
+  "$defs": {
+    "PlannedTask": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_checks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Acceptance Checks",
+          "type": "array"
+        },
+        "budget_microusd": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Budget Microusd",
+          "type": "integer"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        },
+        "input_asset_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Input Asset Ids",
+          "type": "array"
+        },
+        "output_kinds": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Output Kinds",
+          "type": "array"
+        },
+        "pinned_node_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pinned Node Id"
+        },
+        "preferred_node_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preferred Node Id"
+        },
+        "required_capabilities": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required Capabilities",
+          "type": "array"
+        },
+        "required_os": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Os"
+        },
+        "role_id": {
+          "title": "Role Id",
+          "type": "string"
+        },
+        "skill_version": {
+          "default": "",
+          "title": "Skill Version",
+          "type": "string"
+        },
+        "task_id": {
+          "title": "Task Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "role_id"
+      ],
+      "title": "PlannedTask",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "goal_id": {
+      "title": "Goal Id",
+      "type": "string"
+    },
+    "goal_version": {
+      "minimum": 1,
+      "title": "Goal Version",
+      "type": "integer"
+    },
+    "plan_id": {
+      "title": "Plan Id",
+      "type": "string"
+    },
+    "tasks": {
+      "items": {
+        "$ref": "#/$defs/PlannedTask"
+      },
+      "title": "Tasks",
+      "type": "array"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "plan_id",
+    "version",
+    "goal_id",
+    "goal_version",
+    "tasks"
+  ],
+  "title": "TaskPlan",
+  "type": "object"
+}

@@ -1,0 +1,36 @@
+{
+  "fixture_version": "u4-c-1",
+  "frozen_at": "2026-09-30",
+  "tree": "cfa12be5aacf06900cf98aa666ce40cfcf217c5e",
+  "note": "合成数据。C 复杂协作：研究/设计→汇总→评审→研究返修→交付；一轮真实缺来源返修；已确认视觉只生成一次并复用。",
+  "goal": "为合成品牌 A 的春季徒步节做一份活动方案与一张视觉素材",
+  "materials": [
+    {"name": "brand-overview.md", "text": "合成品牌 A：主营户外装备，活动城市杭州。\n", "has_date": false, "has_budget": false},
+    {"name": "event-supplement.md", "text": "合成补充资料：春季徒步节日期 2026-04-12，预算 8 万元。\n", "has_date": true, "has_budget": true, "provided_at_stage": "rework"}
+  ],
+  "plan_expectations": {
+    "roles": ["research", "design", "review"],
+    "max_rework_rounds": 2,
+    "must_be_dag": true,
+    "dispatch_refusal": ["有环", "缺依赖", "缺能力", "越权", "预算冲突"]
+  },
+  "steps": [
+    {"step": "research-1", "role": "research", "device": "local", "expect": "输出带引用的研究要点"},
+    {"step": "design-1", "role": "design", "device": "windows-node", "expect": "真实调用节点视觉生成，返回 sha256"},
+    {"step": "aggregate-1", "role": "research", "device": "local", "expect": "汇总方案与视觉引用"},
+    {"step": "review-1", "role": "review", "device": "local", "expect": "结构化问题：缺日期依据 → 定向返修 research-1，不重做 design-1"},
+    {"step": "research-2", "role": "research", "device": "local", "expect": "定向修订，复用 design-1 成果（只生成一次）"},
+    {"step": "deliver-1", "role": "research", "device": "local", "expect": "最终报告 + 素材登记为不可变 Asset"}
+  ],
+  "expectations": [
+    {"id": "C01", "case": "计划版本与分派依据持久化", "expect": "pass"},
+    {"id": "C02", "case": "每步可追到角色/设备/输入输出/Skill 与工具版本/审批/ledger", "expect": "pass"},
+    {"id": "C03", "case": "缺来源检查由确定性检查指出，不依赖模型自觉", "expect": "pass"},
+    {"id": "C04", "case": "返修只重做受影响步骤，视觉不重生成", "expect": "pass", "assert": ["节点生成调用计数不增加", "asset sha256 不变"]},
+    {"id": "C05", "case": "返修历史为事件（虚线），当前图仍为合法 DAG", "expect": "pass"},
+    {"id": "C06", "case": "不同 step 相同参数合法；同 step 重放不重复", "expect": "pass"},
+    {"id": "C07", "case": "guest 不能控制/取消/重试任何步骤", "expect": "denied"},
+    {"id": "C08", "case": "预算与返修上限由服务端强制终止", "expect": "pass"}
+  ],
+  "node": {"kind": "existing-windows-node", "note": "使用已配对的一个 Windows 节点；不覆盖既有工具与数据；失败时记录真实故障切片，不补录为合成演练"}
+}
