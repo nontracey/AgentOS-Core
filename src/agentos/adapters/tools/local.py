@@ -71,6 +71,8 @@ class LocalToolAdapter:
         self._knowledge = knowledge_searcher  # KnowledgePort：跨 await 边界只调端口
         self._skills, self._store = skills, store
         self._tools = self._build_registry()
+        if knowledge_searcher is None:
+            self._tools.pop("knw.search")
 
     def _build_registry(self) -> dict[str, tuple[ToolSpec, str]]:
         """注册表保存方法名（而非绑定方法）：测试可替换、运行时可核对版本。"""

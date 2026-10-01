@@ -57,7 +57,11 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI):  # type: ignore[no-untyped-def]
         if handle.workflow_engine is not None:
-            await handle.workflow_engine.open()
+            try:
+                await asyncio.wait_for(handle.workflow_engine.open(), timeout=5)
+            except Exception:
+                # Optional engine failure must not disable UI, HTTP or ordinary tasks.
+                handle.workflow_driver.engine = None
         try:
             async with mcp_server.session_manager.run():
                 stop = asyncio.Event()
@@ -487,6 +491,8 @@ def create_app(
                 }
             )
         return {
+            "features": {"knowledge": handle.knowledge.enabled,
+                         "workflows": handle.workflow_driver.engine is not None},
             "model": {
                 "name": "scripted-1" if handle.settings.model_provider == "scripted" else handle.settings.model_name,
                 "provider": handle.settings.model_provider,
@@ -784,12 +790,28 @@ def create_app(
     async def flow_catalog(authorization: str | None = Header(default=None)) -> dict[str, Any]:
         actor = await _actor(authorization)
         handle.access.require(actor, "workflow.list")
-        tools = await handle.deps.tools.list_tools(actor)
-        return {"engine_enabled": handle.workflow_engine is not None,
+        from agentos.services.capabilities import CapabilityCatalog
+
+        catalog = handle.deps.tools
+        assert isinstance(catalog, CapabilityCatalog)
+        tools = await catalog.describe(actor)
+        return {"engine_enabled": handle.workflow_driver.engine is not None,
+                "engine_status": ("available" if handle.workflow_driver.engine is not None
+                                  else "unavailable" if handle.settings.temporal_address else "disabled"),
                 "node_types": ["agent", "tool", "condition", "wait", "custom"],
                 "business_templates": sorted(handle.workflow_driver.templates),
                 "custom_nodes": sorted(handle.workflow_driver.custom),
-                "tools": [{"name": t.name, "description": t.description} for t in tools]}
+                "tools": tools}
+
+    @app.get("/v1/capabilities/catalog")
+    async def capability_catalog(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _actor(authorization)
+        handle.access.require(actor, "capabilities.read")
+        from agentos.services.capabilities import CapabilityCatalog
+
+        catalog = handle.deps.tools
+        assert isinstance(catalog, CapabilityCatalog)
+        return {"tools": await catalog.describe(actor)}
 
     @app.get("/v1/workflow-definitions")
     async def flow_definitions(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
@@ -813,6 +835,11 @@ def create_app(
         actor = await _write_actor(authorization, "workflow.publish")
         definition = dict(body)
         definition["id"] = workflow_id
+        from agentos.services.capabilities import CapabilityCatalog
+
+        catalog = handle.deps.tools
+        assert isinstance(catalog, CapabilityCatalog)
+        definition = await catalog.bind_graph(actor, definition)
         return handle.workflows.publish(actor, definition)
 
     @app.post("/v1/workflows/{workflow_id}/start", status_code=202)
@@ -829,6 +856,10 @@ def create_app(
         if not isinstance(inputs, dict):
             raise _http_error(AgentOSError(ErrorCode.INVALID, "body.inputs must be an object"))
         idempotency_key = str(body.get("idempotency_key") or f"wf_{workflow_id}_{version}")
+        definition = handle.store.get_workflow_definition(actor.tenant_id, workflow_id, version)
+        if (definition and json.loads(definition["definition_json"]).get("nodes")
+                and handle.workflow_driver.engine is None):
+            raise AgentOSError(ErrorCode.UNAVAILABLE, "workflow execution requires an available Temporal engine")
         result = handle.workflows.start(actor, workflow_id, version, inputs, idempotency_key)
         return result
 

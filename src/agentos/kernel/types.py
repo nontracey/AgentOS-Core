@@ -89,6 +89,17 @@ class ToolSpec(BoundaryModel):
     risks: list[Risk] = Field(default_factory=list)
     recovery: Recovery = "manual"
     timeout_ms: int = Field(gt=0)
+    discovery_status: Literal["local", "cached", "refreshed", "unavailable"] = "local"
+
+    @property
+    def revision(self) -> str:
+        """Contract fingerprint; connection health never changes an immutable binding."""
+        import hashlib
+        import json
+
+        contract = self.model_dump(mode="json", exclude={"discovery_status"})
+        return hashlib.sha256(json.dumps(contract, sort_keys=True, separators=(",", ":"),
+                                         ensure_ascii=False).encode()).hexdigest()
 
 
 class ModelToolCall(BoundaryModel):
@@ -167,6 +178,7 @@ class CallContext(BoundaryModel):
     fence: int
     deadline_at: datetime
     approval_id: str | None = None
+    expected_revision: str | None = None
 
 
 class ToolResult(BoundaryModel):

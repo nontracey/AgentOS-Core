@@ -1,7 +1,7 @@
 /* AgentOS 工作台 Service Worker：静态外壳缓存（离线可开 UI），API 不缓存。
- * v38：模型限流暂停与恢复入口；升级预取绕过浏览器旧 HTTP 缓存。
+ * v39：能力目录与工作流参数表单；升级预取绕过浏览器旧 HTTP 缓存。
  * API/私有素材永不进入外壳缓存（仅缓存 /ui/ 静态资源）。 */
-const SHELL = "agentos-shell-v38";
+const SHELL = "agentos-shell-v39";
 const SHELL_FILES = [
   "/ui/", "/ui/index.html", "/ui/legacy.html",
   "/ui/style.css", "/ui/workspace.css", "/ui/console.css",

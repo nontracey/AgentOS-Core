@@ -59,7 +59,7 @@ class Settings:
     microusd_per_1k_output: int = 0
     stt_cmd: str = ""  # 语音入口 STT CLI 模板（{audio} 占位，env AGENTOS_STT_CMD；空=语音端点关闭）
     # U4-06/07：知识后端（只在此处选择实现；kernel/runtime/业务调用者不感知）
-    knowledge_backend: str = "builtin"      # builtin | weknora
+    knowledge_backend: str = "builtin"      # disabled | builtin | weknora
     knowledge_weknora_url: str = ""         # WeKnora 基址（env AGENTOS_WEKNORA_URL）
     knowledge_weknora_auth_kind: str = "api_key"
     knowledge_weknora_probe_token: str = ""
@@ -94,7 +94,7 @@ class Settings:
             raise AgentOSError(ErrorCode.INVALID, "public_demo_ttl_hours must be 1..720")
         if not 1 <= self.public_demo_max_sessions <= 5000:
             raise AgentOSError(ErrorCode.INVALID, "public_demo_max_sessions must be 1..5000")
-        if self.knowledge_backend not in {"builtin", "weknora"}:
+        if self.knowledge_backend not in {"disabled", "builtin", "weknora"}:
             raise AgentOSError(
                 ErrorCode.INVALID, f"unknown knowledge backend: {self.knowledge_backend}")
         if self.knowledge_backend == "weknora":

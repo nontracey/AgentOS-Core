@@ -108,23 +108,33 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
 
     from agentos.services.knowledge_backends import KnowledgeBackends
 
-    builtin = backend_from_settings(replace(settings, knowledge_backend="builtin"), store)
-    available = {builtin.backend_id: builtin}
-    if settings.knowledge_weknora_url and settings.knowledge_weknora_version and settings.knowledge_weknora_kb_id:
+    available = {}
+    selected = "disabled"
+    if settings.knowledge_backend != "disabled":
+        builtin = backend_from_settings(replace(settings, knowledge_backend="builtin"), store)
+        available[builtin.backend_id] = builtin
+        selected = builtin.backend_id
+    if (settings.knowledge_backend != "disabled" and settings.knowledge_weknora_url
+            and settings.knowledge_weknora_version
+            and (settings.knowledge_backend == "weknora" or settings.knowledge_weknora_kb_id)):
         external = backend_from_settings(replace(settings, knowledge_backend="weknora"), store)
         available[external.backend_id] = external
-    selected = "builtin-sqlite" if settings.knowledge_backend == "builtin" else external.backend_id
+        if settings.knowledge_backend == "weknora":
+            selected = external.backend_id
     knowledge = KnowledgeBackends(store, available, selected, settings.data_dir / "knowledge-selection.json")
     tools = LocalToolAdapter(
         settings.sandbox_dir,
         material_reader=assets_service.read_run_material,  # 模板材料读取（服务端双重授权）
         skills=skills_service,
         store=store,
-        knowledge_searcher=knowledge,  # 普通任务的知识检索工具（走端口，不直连具体库）
+        knowledge_searcher=knowledge if knowledge.enabled else None,
     )
 
     inner_hub = McpHubAdapter(store, tools)
     tool_hub = NodeHubAdapter(inner_hub, store, audit_service, assets=assets_service)
+    from agentos.services.capabilities import CapabilityCatalog
+
+    catalog = CapabilityCatalog(tool_hub)
     nodes_service = NodeRegistryService(store, audit_service)
     roles = RoleRegistry(settings.data_dir / "roles")
     # 租约互斥依赖唯一 owner（同名字符串会让 claim 的 lease_owner=? 恒真）
@@ -142,7 +152,7 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         approvals=approvals,
         audit=audit,
         budget=budget,
-        tools=tool_hub,
+        tools=catalog,
         skills=skills_service,
         concurrency=settings.runtime.tools_per_run,
         telemetry=OpenTelemetryMetadata(),
@@ -285,7 +295,7 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         attachment_dir=settings.attachment_dir,
         run_budget_microusd=settings.run_budget_microusd,
         queue_limit=settings.runtime.queue_limit,
-        knowledge=knowledge,
+        knowledge=knowledge if knowledge.enabled else None,
         skills=skills_service,
         report_skill_source=Path(__file__).resolve().parents[1] / "resources" / "material-report",
         assets=assets_service,  # N2a：材料引用解析

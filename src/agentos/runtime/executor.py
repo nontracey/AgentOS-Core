@@ -80,20 +80,33 @@ async def _refresh_actor(deps: RuntimeDeps, run: RunRecord) -> AuthContext:
 
 
 async def _resolve_or_fail(
-    deps: RuntimeDeps, run: RunRecord, step_id: str, tool_name: str, actor: AuthContext
+    deps: RuntimeDeps, run: RunRecord, step_id: str, tool_name: str, actor: AuthContext,
+    expected_revision: str | None = None,
 ) -> ToolSpec | StepOutcome:
     """未知工具：确定性失败，无任何副作用（FR-GOV-05 注入面）。"""
     try:
-        return await deps.tools.resolve(actor, tool_name)
+        spec = await deps.tools.resolve(actor, tool_name)
+        if expected_revision and spec.revision != expected_revision:
+            raise AgentOSError(ErrorCode.CONFLICT, "published capability contract changed; republish required")
+        return spec
     except AgentOSError as exc:
+        prior = deps.store.get_step(run.tenant_id, run.id, step_id)
+        if prior is not None and prior.state == StepState.DISPATCHED:
+            # A changed/unavailable contract cannot prove an earlier dispatched effect failed.
+            error = {"code": "uncertain", "message": exc.message, "needs_reconciliation": True}
+            deps.store.transition_step(run.tenant_id, run.id, step_id, {StepState.DISPATCHED},
+                                       StepState.UNCERTAIN, error_json=_json(error))
+            deps.store.transition_run(run.tenant_id, run.id, {RunState.RUNNING, RunState.CREATED},
+                                      RunState.PAUSED, error_json=_json(error))
+            return StepOutcome(state=StepState.UNCERTAIN, blocked=True, error=error)
         deps.store.transition_step(
             run.tenant_id, run.id, step_id,
             {StepState.PREPARED, StepState.AWAITING_APPROVAL, StepState.DISPATCHED},
-            StepState.FAILED, error_json=_json({"code": "denied", "message": exc.message}),
+            StepState.FAILED, error_json=_json({"code": str(exc.code), "message": exc.message}),
         )
         deps.store.transition_run(
             run.tenant_id, run.id, {RunState.RUNNING, RunState.CREATED}, RunState.FAILED,
-            error_json=_json({"code": "denied", "message": f"unknown tool: {tool_name}"}),
+            error_json=_json({"code": str(exc.code), "message": exc.message}),
         )
         deps.audit.record(
             run.tenant_id, "policy.denied", subject=actor.subject, run_id=run.id,
@@ -124,6 +137,7 @@ async def execute_tool_step(
     tool_name: str,
     step_args: dict[str, Any],
     lease: Lease,
+    *, expected_revision: str | None = None,
 ) -> StepOutcome:
     tenant = run.tenant_id
     actor = await _refresh_actor(deps, run)
@@ -167,7 +181,7 @@ async def execute_tool_step(
 
     # ---- dispatched：崩溃/租约接管后的恢复分支 ----
     if call.state == StepState.DISPATCHED:
-        resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor)
+        resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor, expected_revision)
         if isinstance(resolved, StepOutcome):
             return resolved
         return await _resume_dispatched(deps, run, call, resolved, step_args, actor, lease)
@@ -178,7 +192,7 @@ async def execute_tool_step(
             deps.store.get_approval(tenant, call.approval_id) if call.approval_id else None
         )
         if approval is not None and approval.state == ApprovalState.APPROVED:
-            resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor)
+            resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor, expected_revision)
             if isinstance(resolved, StepOutcome):
                 return resolved
             assert resolved is not None
@@ -207,7 +221,7 @@ async def execute_tool_step(
         )
 
     # ---- prepared：先过确定性 Policy ----
-    resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor)
+    resolved = await _resolve_or_fail(deps, run, step_id, tool_name, actor, expected_revision)
     if isinstance(resolved, StepOutcome):
         return resolved
     spec = resolved
@@ -325,6 +339,7 @@ async def _dispatch_and_call(
         idempotency_key=f"{run.id}:{call.id}",  # 同一步重试沿用同一幂等键（FR-ORC-08）
         fence=lease.fence,
         deadline_at=utc_now() + timedelta(milliseconds=spec.timeout_ms),
+        expected_revision=spec.revision,
     )
     deps.audit.record(
         tenant, "tool.called", subject=actor.subject, run_id=run.id,

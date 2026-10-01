@@ -200,6 +200,30 @@
       "license": "MIT",
       "source": "https://github.com/mermaid-js/mermaid-cli",
       "review": "pinned official npm CLI; generated SVGs exclude embedded fonts; tool/transitive packages are not redistributed with runtime"
+    },
+    {
+      "kind": "npm",
+      "name": "@rjsf/core",
+      "version": "6.11.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/rjsf-team/react-jsonschema-form",
+      "review": "official license and installed package metadata; React >=18; schema-only UI, no authority"
+    },
+    {
+      "kind": "npm",
+      "name": "@rjsf/utils",
+      "version": "6.11.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/rjsf-team/react-jsonschema-form",
+      "review": "official license and installed package metadata; React >=18; schema-only UI, no authority"
+    },
+    {
+      "kind": "npm",
+      "name": "@rjsf/validator-ajv8",
+      "version": "6.11.0",
+      "license": "Apache-2.0",
+      "source": "https://github.com/rjsf-team/react-jsonschema-form",
+      "review": "official license and installed package metadata; React >=18; schema-only UI, no authority"
     }
   ]
 }

@@ -68,7 +68,7 @@ export async function renderHub(ctx) {
     const actions = admin ? `<div class="hub-manage-actions">
       ${tab === "all" || tab === "mcp" ? '<button class="btn" data-hub-add="mcp">连接 MCP</button>' : ""}
       ${tab === "all" || tab === "skill" ? '<button class="btn" data-hub-add="skill">安装 Skill</button>' : ""}
-      ${tab === "all" || tab === "knowledge" ? '<button class="btn" data-hub-add="ingest">添加知识</button><button class="btn" data-hub-add="search">检索知识</button>' : ""}
+      ${(tab === "all" || tab === "knowledge") && knowledge.enabled !== false ? '<button class="btn" data-hub-add="ingest">添加知识</button><button class="btn" data-hub-add="search">检索知识</button>' : ""}
     </div>` : "";
 
     if (tab === "all" || tab === "mcp") {
@@ -113,9 +113,9 @@ export async function renderHub(ctx) {
     if (tab === "all" || tab === "knowledge") {
       const backend = capabilities.knowledge_backend || knowledge.backend || "builtin";
       cards.push(card({
-        glyph: "files", title: `${backend === "weknora" ? "WeKnora" : "内置检索"}（当前）`,
-        status: "配置已生效", tone: "active",
-        desc: `统一 KnowledgePort 提供 ingest / search / resolve / delete 语义。`
+        glyph: "files", title: knowledge.enabled === false ? "知识库未启用" : `${backend === "weknora" ? "WeKnora" : "内置检索"}（当前）`,
+        status: knowledge.enabled === false ? "按需接入" : "配置已生效", tone: "active",
+        desc: knowledge.enabled === false ? "当前只运行核心。需要知识能力时，由部署配置启用内置检索或接入已有知识库。" : `统一 KnowledgePort 提供 ingest / search / resolve / delete 语义。`
           + `已声明能力：${esc(Object.keys(knowledge).filter(k => knowledge[k] === true).join("、") || "未记录")}。`,
         foot: `版本 ${knowledge.version || "未记录"} · 新任务生效，旧任务保持绑定`,
         actions: admin ? (knowledge.choices || []).filter(b => b.backend !== backend).map(b =>

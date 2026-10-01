@@ -10,7 +10,7 @@ AgentOS 是可自托管的 AI 集成与治理底座，把已有模型、Agent、
 - 资料报告、来源回查、补充修改与不可变成果版本。
 - Codex 自主选择已有工具，调用前核权、审批、预算与出域裁定。
 - 官方 MCP 双向互通、固定版本 Skill、授权执行节点。
-- React Flow 版本化工作流、Temporal 持久编排与自定义 Adapter。
+- React Flow/RJSF 工作流编辑、Temporal 持久编排、统一工具目录与自定义 Adapter。
 - 可选 OIDC/ID4/JWT 身份和 WeKnora 知识接入。
 
 核心已能独立启动；完整的功能关闭、统一能力目录、接入后实时节点同步、schema 参数表单及 Agent 接入助手仍需补齐。当前实现与目标分别记录，详见 [能力接入模块](docs/modules/capabilities.md) 与 [开发计划](docs/04-开发计划.md)。

@@ -1346,7 +1346,7 @@ class SqliteStore:
     ) -> None:
         with self._lock:
             self._conn.execute(
-                "UPDATE mcp_servers SET protocol_version=?, tools_json=?, enabled=1 WHERE tenant_id=? AND id=?",
+                "UPDATE mcp_servers SET protocol_version=?, tools_json=? WHERE tenant_id=? AND id=?",
                 (protocol_version, tools_json, tenant_id, server_id),
             )
             self._conn.commit()

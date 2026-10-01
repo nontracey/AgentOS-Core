@@ -84,6 +84,17 @@
           "title": "Description",
           "type": "string"
         },
+        "discovery_status": {
+          "default": "local",
+          "enum": [
+            "local",
+            "cached",
+            "refreshed",
+            "unavailable"
+          ],
+          "title": "Discovery Status",
+          "type": "string"
+        },
         "input_schema": {
           "additionalProperties": true,
           "title": "Input Schema",

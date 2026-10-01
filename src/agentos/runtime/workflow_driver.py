@@ -147,6 +147,9 @@ class WorkflowDriver:
                 specs = [s for s in available if s.name in requested]
                 if requested - {s.name for s in specs}:
                     raise AgentOSError(ErrorCode.DENIED, 'node requested an unavailable tool')
+                bindings = node.config.get('capability_bindings', {})
+                if any(s.name in bindings and s.revision != bindings[s.name] for s in specs):
+                    raise AgentOSError(ErrorCode.CONFLICT, 'published capability contract changed; republish required')
                 prompt = str(node.config.get('prompt', 'Complete this node.')) + '\nAuthorized inputs: ' + json.dumps(
                     resolve(node.config.get('inputs', {'$ref': 'inputs'})), ensure_ascii=False)
                 result = await self.agent.execute(run, lease, node_id='flow-' + node_id,
@@ -157,8 +160,10 @@ class WorkflowDriver:
                     return {'status': 'blocked'}
                 output = state['answer']
             elif node.kind == 'tool':
+                expected = node.config.get('capability_bindings', {}).get(node.config['tool'])
                 outcome = await execute_tool_step(self.deps, run, 'flow-' + node_id,
-                    node.config['tool'], resolve(node.config.get('arguments', {})), lease)
+                    node.config['tool'], resolve(node.config.get('arguments', {})), lease,
+                    expected_revision=expected)
                 if outcome.state in {StepState.UNCERTAIN, StepState.AWAITING_APPROVAL, StepState.PENDING_EXTERNAL}:
                     return {'status': 'blocked'}
                 if outcome.state != StepState.COMPLETED:

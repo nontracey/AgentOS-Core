@@ -19,6 +19,8 @@ class KnowledgeBackends:
         self._selected: dict[str, str] = json.loads(path.read_text()) if path.exists() else {}
 
     def current(self, actor: AuthContext | None = None) -> Any:
+        if not self.enabled:
+            raise AgentOSError(ErrorCode.UNSUPPORTED, "knowledge is disabled by deployment configuration")
         tenant = actor.tenant_id if actor else "default"
         key = self._selected.get(tenant, self._default)
         backend = self._backends.get(key)
@@ -35,12 +37,19 @@ class KnowledgeBackends:
         return str(self.current().backend_version)
 
     @property
+    def enabled(self) -> bool:
+        return bool(self._backends)
+
+    @property
     def sync_service(self) -> Any:
         # Existing builtin references continue to resolve even when new work switches backend.
-        return self._backends["builtin-sqlite"].sync_service
+        backend = self._backends.get("builtin-sqlite")
+        return backend.sync_service if backend else None
 
     def capabilities(self, actor: AuthContext | None = None) -> dict[str, Any]:
-        return {**self.current(actor).capabilities(), "choices": [
+        if not self.enabled:
+            return {"enabled": False, "backend": "disabled", "choices": []}
+        return {**self.current(actor).capabilities(), "enabled": True, "choices": [
             {"backend": key, "version": backend.backend_version} for key, backend in self._backends.items()
         ]}
 
@@ -49,6 +58,8 @@ class KnowledgeBackends:
         return {"backend": backend.backend_id, "version": backend.backend_version}
 
     def for_run(self, actor: AuthContext, run_id: str) -> Any:
+        if not self.enabled:
+            self.current(actor)  # deployment disable applies to old tasks too
         run = self._store.get_run(actor.tenant_id, run_id)
         if run is None:
             raise AgentOSError(ErrorCode.INVALID, "knowledge run missing")
@@ -61,12 +72,16 @@ class KnowledgeBackends:
         return backend
 
     def for_binding(self, binding: dict[str, str]) -> Any:
+        if not self.enabled:
+            self.current()
         backend = self._backends.get(binding.get("backend", ""))
         if backend is None or backend.backend_version != binding.get("version"):
             raise AgentOSError(ErrorCode.UNAVAILABLE, "pinned knowledge backend is unavailable")
         return backend
 
     async def select(self, actor: AuthContext, key: str) -> dict[str, Any]:
+        if not self.enabled:
+            self.current(actor)
         backend = self._backends.get(key)
         if backend is None:
             raise AgentOSError(ErrorCode.INVALID, "backend is not configured")

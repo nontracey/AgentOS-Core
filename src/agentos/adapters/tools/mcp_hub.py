@@ -15,12 +15,14 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import shlex
+import time
 from datetime import timedelta
 from typing import Any
 
-from mcp import ClientSession, StdioServerParameters
+from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamable_http_client
 
@@ -43,6 +45,8 @@ class McpHubAdapter:
     def __init__(self, store: StoreProtocol, local: Any) -> None:
         self._store = store
         self._local = local
+        self._discovery: dict[tuple[str, str], tuple[float, str]] = {}
+        self._discovery_locks: dict[tuple[str, str], asyncio.Lock] = {}
 
     # ------------------------------------------------------------ registry
     async def add_server(
@@ -82,6 +86,7 @@ class McpHubAdapter:
         """启用/停用：停用后不再出现在工具清单、不再可解析/调用（新 run 立即受阻）。"""
         self._require_server(actor.tenant_id, server_id)
         self._store.set_mcp_server_enabled(actor.tenant_id, server_id, enabled)
+        self._discovery.pop((actor.tenant_id, server_id), None)
         self._store.audit_append(
             actor.tenant_id, "mcp.server_toggle", subject=actor.subject, run_id=None,
             detail={"server": server_id, "enabled": enabled},
@@ -140,6 +145,11 @@ class McpHubAdapter:
         else:
             protocol, raw_tools = await self._http_discover(row)
         risks = json.loads(row["risks_json"])
+        from jsonschema.validators import validator_for
+
+        for tool in raw_tools:
+            schema = tool.input_schema or {"type": "object"}
+            validator_for(schema).check_schema(schema)
         specs = [
             ToolSpec(
                 name=f"{server_id}:{t.name}",
@@ -160,7 +170,29 @@ class McpHubAdapter:
                 ensure_ascii=False,
             ),
         )
+        self._discovery[(actor.tenant_id, server_id)] = (time.monotonic(), "refreshed")
         return specs
+
+    async def _refresh_cached(self, actor: AuthContext, server_id: str) -> None:
+        """Lazy TTL discovery; bounded per connection and single-flight per tenant.
+
+        No write tools are called. A failed optional server cannot suppress local
+        tools; the cached schema remains visible with an unavailable status.
+        """
+        key = (actor.tenant_id, server_id)
+        now, _ = self._discovery.get(key, (0.0, "cached"))
+        if time.monotonic() - now < 60:
+            return
+        lock = self._discovery_locks.setdefault(key, asyncio.Lock())
+        async with lock:
+            now, _ = self._discovery.get(key, (0.0, "cached"))
+            if time.monotonic() - now < 60:
+                return
+            try:
+                await asyncio.wait_for(self.discover(actor, server_id), timeout=3)
+            except Exception:
+                # Provider exceptions may contain URLs or secrets; retain a safe status only.
+                self._discovery[key] = (time.monotonic(), "unavailable")
 
     async def _stdio_discover(self, row: dict[str, Any]) -> tuple[str, list[Any]]:
         command = shlex.split(str(row["command"]))
@@ -168,8 +200,7 @@ class McpHubAdapter:
         params = StdioServerParameters(command=command[0], args=command[1:], env=env or None)
         async with stdio_client(params) as (read, write), ClientSession(read, write) as session:
             result = await session.initialize()
-            tools = await session.list_tools()
-            return result.protocol_version, list(tools.tools)
+            return result.protocol_version, await self._all_tools(session)
 
     async def _http_discover(self, row: dict[str, Any]) -> tuple[str, list[Any]]:
         headers = self._auth_headers(row)
@@ -179,8 +210,23 @@ class McpHubAdapter:
             ClientSession(read, write) as session,
         ):
             result = await session.initialize()
-            tools = await session.list_tools()
-            return result.protocol_version, list(tools.tools)
+            return result.protocol_version, await self._all_tools(session)
+
+    @staticmethod
+    async def _all_tools(session: ClientSession) -> list[Any]:
+        tools: list[Any] = []
+        cursor: str | None = None
+        seen: set[str] = set()
+        for _ in range(100):
+            result = await session.list_tools(params=types.PaginatedRequestParams(cursor=cursor))
+            tools.extend(result.tools)
+            cursor = result.next_cursor
+            if cursor is None:
+                return tools
+            if cursor in seen:
+                break
+            seen.add(cursor)
+        raise AgentOSError(ErrorCode.INVALID, "MCP discovery pagination did not terminate")
 
     # ----------------------------------------------------------------- call
     async def call(self, name: str, args: dict[str, Any], ctx: CallContext) -> ToolResult:
@@ -189,6 +235,8 @@ class McpHubAdapter:
             return local_result
         server_id, _, tool_name = name.partition(":")
         row = self._require_server(ctx.actor.tenant_id, server_id)
+        if not row["enabled"]:
+            raise AgentOSError(ErrorCode.DENIED, "MCP connection is disabled")
         if row["transport"] == "stdio":
             result = await self._stdio_call(row, tool_name, args)
         else:
@@ -223,6 +271,8 @@ class McpHubAdapter:
     async def list_tools(self, actor: AuthContext) -> list[ToolSpec]:
         local = await self._local.list_tools(actor)
         remote: list[ToolSpec] = []
+        await asyncio.gather(*(self._refresh_cached(actor, row["id"])
+                               for row in self._store.list_mcp_servers(actor.tenant_id) if row["enabled"]))
         for row in self._store.list_mcp_servers(actor.tenant_id):
             if not row["enabled"]:
                 continue
@@ -237,6 +287,8 @@ class McpHubAdapter:
                         risks=risks,
                         recovery="manual",
                         timeout_ms=int(_CALL_TIMEOUT_S * 1000),
+                        discovery_status=self._discovery.get(
+                            (actor.tenant_id, row["id"]), (0.0, "cached"))[1],
                     )
                 )
         specs: list[ToolSpec] = local + remote

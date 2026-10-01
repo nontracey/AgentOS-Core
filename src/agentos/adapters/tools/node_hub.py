@@ -97,6 +97,7 @@ class NodeHubAdapter:
             risks=list(cap.get("risks") or ["read"]),
             recovery="manual",  # 远程副作用：默认保守，需人工/对账兜底
             timeout_ms=int(self._timeout * 1000),
+            discovery_status="refreshed",
         )
 
     # ------------------------------------------------------------- ToolPort
@@ -109,10 +110,11 @@ class NodeHubAdapter:
             # 实时刷新能力快照（派发前能力确认）；节点断线退回上次缓存——
             # 模型永远看到最新能力，且不会因单节点失联丢掉全部工具。
             try:
-                specs.extend(await self.refresh_node_tools(actor, node_id))
-            except AgentOSError:
+                specs.extend(await asyncio.wait_for(self.refresh_node_tools(actor, node_id), timeout=3))
+            except (AgentOSError, TimeoutError):
                 for cap in json.loads(row["capabilities_json"] or "[]"):
                     spec = self._spec_from_capability(node_id, cap)
+                    spec.discovery_status = "unavailable"
                     # 缓存回退同样必须回填合规名映射：否则断线期间派发查不到
                     # (node_id, tool_name)，合规名落进内层报 unknown tool，
                     # "断线退回缓存"形同虚设（F1 断连演练发现的真 bug）。

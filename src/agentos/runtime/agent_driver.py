@@ -52,6 +52,11 @@ class AgentRuntimeDriver:
             if current.state == RunState.CANCEL_REQUESTED:
                 return {'success': False, 'blocked': True, 'status': 'cancel_requested'}
             step_id = 'engine-' + hashlib.sha256((node_id + '\0' + call_id).encode()).hexdigest()[:24]
+            selected = next((spec for spec in specs if spec.name == name), None)
+            prior = store.get_step(tenant, run.id, step_id)
+            if selected is None and (prior is None or prior.state != StepState.COMPLETED):
+                return {'success': False, 'blocked': False, 'status': 'denied',
+                        'error': {'code': 'denied', 'message': 'tool is outside this node capability selection'}}
             pending = binding.get('pending')
             if pending and pending['step_id'] == step_id:
                 if pending['name'] != name or pending['arguments'] != arguments:
@@ -68,7 +73,8 @@ class AgentRuntimeDriver:
             trace = (self.deps.telemetry.span('tool.dispatch', run_id=run.id, node_id=node_id)
                      if self.deps.telemetry else nullcontext())
             with trace:
-                outcome = await execute_tool_step(self.deps, current, step_id, name, arguments, lease)
+                outcome = await execute_tool_step(self.deps, current, step_id, name, arguments, lease,
+                                                 expected_revision=selected.revision if selected else None)
             blocked = outcome.blocked or outcome.state in {
                 StepState.AWAITING_APPROVAL, StepState.UNCERTAIN, StepState.PENDING_EXTERNAL}
             result = {'success': outcome.state == StepState.COMPLETED, 'blocked': blocked,

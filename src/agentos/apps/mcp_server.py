@@ -77,13 +77,14 @@ def mount(app: FastAPI, handle: SystemHandle) -> MCPServer:
         handle.store.request_cancel(actor.tenant_id, run_id)
         return {'run_id': run_id, 'cancellation_requested': True}
 
-    @server.tool()
-    async def knowledge_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
-        """Search only the caller's currently authorized knowledge scope."""
-        actor, _ = await identity()
-        handle.access.require(actor, 'knowledge.search')
-        hits = await handle.knowledge.search(actor, query, max(1, min(limit, 20)))
-        return [public_value(hit.model_dump(mode='json')) for hit in hits]
+    if handle.knowledge.enabled:
+        @server.tool()
+        async def knowledge_search(query: str, limit: int = 5) -> list[dict[str, Any]]:
+            """Search only the caller's currently authorized knowledge scope."""
+            actor, _ = await identity()
+            handle.access.require(actor, 'knowledge.search')
+            hits = await handle.knowledge.search(actor, query, max(1, min(limit, 20)))
+            return [public_value(hit.model_dump(mode='json')) for hit in hits]
 
     @server.tool()
     async def skills_list() -> list[dict[str, Any]]:

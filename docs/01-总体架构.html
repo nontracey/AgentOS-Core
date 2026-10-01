@@ -50,7 +50,7 @@ img{display:block;max-width:100%;height:auto;margin:16px auto}
 }
 </style></head>
 <body><div class="wrap">
-<div class="hero"><h1>AgentOS 总体架构</h1><p>版本：3.0</p><p>更新日期：2026-10-01</p><p>文档性质：逻辑分层与部署边界</p><p>适用范围：可自托管的 AI 集成与治理底座</p><p>阅读入口：<a href="README.md">文档目录</a></p></div>
+<div class="hero"><h1>AgentOS 总体架构</h1><p>版本：3.1</p><p>更新日期：2026-10-01</p><p>文档性质：逻辑分层与部署边界</p><p>适用范围：可自托管的 AI 集成与治理底座</p><p>阅读入口：<a href="README.md">文档目录</a></p></div>
 <div class="card toc"><a href="#1-架构目标">1. 架构目标</a><a href="#2-总体分层">2. 总体分层</a><a href="#3-核心与可选能力">3. 核心与可选能力</a><a href="#4-部署形态">4. 部署形态</a><a href="#5-模块与依赖方向">5. 模块与依赖方向</a><a href="#6-自主执行与工作流">6. 自主执行与工作流</a><a href="#7-治理与扩展约束">7. 治理与扩展约束</a></div>
 <h2 id="1-架构目标">1. 架构目标</h2>
 <p>AgentOS 把已有模型、Agent、知识、工具、技能、身份与业务系统连接起来，提供统一任务、权限、审批、成果与成本视图。Web 工作台是默认入口，HTTP 和 MCP 让其他应用与 Agent 使用同一底座。</p>
@@ -77,7 +77,7 @@ flowchart TB
 <tr><td>入口</td><td>用户、应用和其他 Agent 提交及查看任务</td><td>FastAPI 同源 UI、HTTP、官方入站 MCP 已有；真实 IM 后置</td></tr>
 <tr><td>任务与治理</td><td>统一资源、执行身份、审批、预算、幂等与成果</td><td>AgentOS 保留业务差异与治理规则；企业身份通过 Authlib/PyJWT 接入</td></tr>
 <tr><td>执行与编排</td><td>自主选择工具，或执行确定的业务流程</td><td>Codex 承载真实推理与上下文；Temporal 按需承载持久工作流</td></tr>
-<tr><td>能力接入</td><td>通过协议与 Adapter 复用既有能力</td><td>MCP/Skill/Knowledge/Node 等 Port；完整统一能力目录尚待补齐</td></tr>
+<tr><td>能力接入</td><td>通过协议与 Adapter 复用既有能力</td><td>MCP/Skill/Knowledge/Node 等 Port；统一工具目录已接通，工作流/外部 Agent 工具化后置</td></tr>
 <tr><td>数据与运维</td><td>保存状态与效果、恢复、追踪与部署配置</td><td>当前单核心 SQLite/文件资产；OTel 只发元数据，多核心与 HA 待验</td></tr>
 </tbody></table>
 <h2 id="3-核心与可选能力">3. 核心与可选能力</h2>
@@ -91,12 +91,12 @@ flowchart TB
 <tr><td>Web UI</td><td>随核心同源提供</td><td>默认工作台已有；可视编辑器构建见部署指南</td></tr>
 <tr><td>模型</td><td>可连接已有服务或云端</td><td>通过端点、模型名、凭据和出域策略配置；LiteLLM 可选</td></tr>
 <tr><td>固定工作流</td><td>接入既有或自行部署 Temporal</td><td>不配置地址可运行普通任务；持久图工作流需要 Temporal</td></tr>
-<tr><td>知识</td><td>可连接已有知识系统</td><td>无需 WeKnora；目前仍装配内置知识，彻底关闭模式未实现</td></tr>
+<tr><td>知识</td><td>可连接已有知识系统</td><td>可选择 disabled / builtin / weknora；关闭后目录、工具和 UI 同步</td></tr>
 <tr><td>工具、技能、执行节点</td><td>随需安装或连接</td><td>MCP 注册后发现工具；Skill 安装、节点配对均受权限约束</td></tr>
 <tr><td>企业身份</td><td>连接企业已有系统</td><td>本地身份可启动；OIDC/ID4/JWT 是可选接入通道</td></tr>
 <tr><td>项目、额度、渠道</td><td>复用旧系统与协议</td><td>Port 已留，真实业务适配按需求后续实现</td></tr>
 </tbody></table>
-<p>“可选”描述接入与使用关系，不表示已经完成所有功能开关。统一关闭、发现、健康状态和节点同步的差距见能力接入模块及 <a href="04-开发计划.md">开发计划</a>。</p>
+<p>知识关闭、工具发现状态、目录同步与参数表单已实现；完整跨工作流/外部 Agent 接入仍按 <a href="04-开发计划.md">开发计划</a> 推进。</p>
 <h2 id="4-部署形态">4. 部署形态</h2>
 <img src="diagrams/01-current-2.svg" alt="架构与执行关系图 2">
 <details><summary>查看 Mermaid 源码</summary><pre><code>%%{init: {"flowchart": {"wrappingWidth": 320}, "theme": "base"}}%%
@@ -132,7 +132,7 @@ flowchart LR
 <p><code>kernel</code> 不依赖具体实现，<code>runtime</code> 不导入 <code>adapters/apps</code>，由组合根配置实现。成熟开源件负责通用引擎；业务治理和必要适配的保留理由见 <a href="08-集成底座改造方案.md#10-开源优先复核与保留例外">开源取舍</a>。</p>
 <h2 id="6-自主执行与工作流">6. 自主执行与工作流</h2>
 <p>普通任务不要求用户先画流程：Codex 读取平台提供的工具描述与参数 schema，选择合适工具，所有调用仍经过服务端核权、审批、预算和效果账本。当前不会自动选择或生成任意已发布工作流、主动配置外部服务或加载全机 Skill。</p>
-<p>固定工作流用于需要明确节点、业务顺序、分支或持久等待的任务。MCP 工具已可从工作流目录选择；参数表单、接入后实时同步和跨工具/Skill/Agent/工作流的统一发现仍需完善。选择路径与缺口详见 <a href="modules/capabilities.md">能力接入模块</a>。</p>
+<p>固定工作流用于需要明确节点、业务顺序、分支或持久等待的任务。MCP 工具可从统一目录选择，参数表单使用 RJSF/AJV，编辑器定期同步接入变化，发布固定契约；跨 Skill/Agent/工作流的统一调用仍需完善。选择路径与缺口详见 <a href="modules/capabilities.md">能力接入模块</a>。</p>
 <h2 id="7-治理与扩展约束">7. 治理与扩展约束</h2>
 <p>发现能力只代表“知道它存在”，执行仍由平台核权。已有授权内的只读动作可直接执行；写入、执行、费用或数据出域按策略审批，参数改变重新裁定。权限不足、预算不足、服务断开或结果未知可能导致拒绝/暂停，并非只需用户点击授权就一定能继续。</p>
 <p>成果不可变，效果账本绑定稳定步骤键；已确认成功不重放，未知结果先对账。撤权后拒绝后续读取和派发，已下载数据无法远程收回。凭据、内部路径和私有正文不进入公开投影。</p>
