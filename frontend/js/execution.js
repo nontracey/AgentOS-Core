@@ -1,4 +1,5 @@
 /* Evidence projection only: missing events remain missing, no synthetic progress. */
+import { capabilityLabel } from "./workspace-data.js";
 import { esc } from './safe-export.js';
 import { stateBadge, fmtCost } from './ui.js';
 import * as ui from './ui.js';
@@ -18,6 +19,7 @@ export function duration(ms) {
   return `${Math.floor(ms / 60000)}m ${Math.floor(ms / 1000 % 60)}s`;
 }
 function toolLabel(name, args = {}) {
+  const label=capabilityLabel({name});if(/^(artifact\.|data\.|material\.)/.test(name) && label!==name)return label;
   if (name === 'skill.read') return '加载任务技能';
   if (name === 'fs.write_text') return '保存成果文件';
   if (name === 'material.read') return '读取授权材料';

@@ -6,7 +6,7 @@
 import { esc } from "../safe-export.js";
 import { emptyState, icon, modelZh, timeShort, toast } from "../ui.js";
 
-import { capabilitySource, riskLabels } from "../workspace-data.js";
+import { capabilitySource, capabilityLabel, isExampleTool, riskLabels } from "../workspace-data.js";
 
 const TABS = [
   ["all", "工具目录"], ["mcp", "MCP 服务"], ["skill", "Skills"],
@@ -17,7 +17,7 @@ export async function renderHub(ctx) {
   const { el, api } = ctx;
   let stopped = false, tab = "all", snapshot = null, admin = false;
   const dialogs = new Set();
-  let loading = false;
+  let loading = false, showExamples = false;
 
   el.innerHTML = `
     <section class="page">
@@ -29,10 +29,10 @@ export async function renderHub(ctx) {
         ${TABS.map(([key, name]) => `<button data-hub="${key}" class="${key === tab ? "on" : ""}"
           role="tab">${name}</button>`).join("")}
       </div>
-      <div class="hub-search"><input type="search" id="hub-search" aria-label="搜索能力" placeholder="搜索名称或用途…"><span class="hub-summary" id="hub-summary"></span></div>
+      <div class="hub-search"><input type="search" id="hub-search" aria-label="搜索能力" placeholder="搜索名称或用途…"><label class="hub-example-toggle"><input type="checkbox" id="hub-examples">显示示例工具</label><span class="hub-summary" id="hub-summary"></span></div>
       <div id="hub-body"><div class="skeleton" style="height:160px"></div></div>
       <p class="side-caption">安装或连接能力不自动授予执行权限；每次调用仍由服务端策略、审批与预算裁定。
-        知识后端切换只影响新任务，已有任务固定其来源与版本。</p>
+        知识后端切换只影响新任务；停用会阻止后续调用，已有任务的来源与版本记录保留。</p>
     </section>`;
 
   el.querySelectorAll("[data-hub]").forEach((btn) => btn.addEventListener("click", () => {
@@ -42,6 +42,8 @@ export async function renderHub(ctx) {
   }));
   el.querySelector("#hub-search").addEventListener("input", () => draw());
   el.querySelector("#hub-refresh").addEventListener("click", () => load().catch(e => toast(e.message, "err")));
+
+  el.querySelector("#hub-examples").addEventListener("change", e=>{showExamples=e.target.checked;draw();});
 
   async function load() {
     if (stopped) return false;
@@ -91,11 +93,13 @@ export async function renderHub(ctx) {
 
     if (tab === "all") {
       for (const tool of catalog.tools || []) {
-        cards.push(card({glyph: "blocks", title: tool.name,
+        if (!showExamples && isExampleTool(tool)) continue;
+        cards.push(card({glyph: tool.name.startsWith("artifact.") ? "doc" : "blocks", title: capabilityLabel(tool),
           status: tool.available === false ? "暂不可用" : "可用于任务", tone: tool.available === false ? "" : "good",
           desc: esc(tool.description || "用途未声明，请查看参数与授权范围。"),
           foot: capabilitySource(tool) + " · " + (riskLabels(tool.risks).join("、") || "风险未声明"),
           details: `<details class="cap-detail"><summary>权限与技术详情</summary><dl>
+            <dt>调用标识</dt><dd>${esc(tool.name)}</dd>
             <dt>所需权限</dt><dd>${esc((tool.required_scopes || []).join("、") || "未声明")}</dd>
             <dt>发现状态</dt><dd>${esc(({local:"本地能力",cached:"缓存发现，执行时核验",refreshed:"最近发现，执行时核验",unavailable:"发现失败"})[tool.discovery_status] || "未记录")}</dd>
             <dt>版本</dt><dd>${esc(tool.version || "未记录")}</dd>

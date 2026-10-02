@@ -15,7 +15,7 @@ type Props = {request:(path:string, body?:unknown)=>Promise<any>; navigate:(hash
   confirm:(message:string)=>Promise<boolean>; registerGuard?:(guard:(()=>Promise<boolean>)|null)=>void};
 const configs: Record<Kind, Record<string,unknown>> = {
   agent:{prompt:'根据输入完成任务',tools:[],inputs:{$ref:'inputs'}},
-  tool:{tool:'math.add',arguments:{a:2,b:3}}, condition:{path:'inputs.approved',operator:'eq',value:true},
+  tool:{tool:'',arguments:{}}, condition:{path:'inputs.approved',operator:'eq',value:true},
   wait:{seconds:5}, custom:{adapter:'passthrough',inputs:{$ref:'inputs'}},
 };
 const labels:Record<Kind,string>={agent:'AI 节点',tool:'工具节点',condition:'条件节点',wait:'等待节点',custom:'自定义节点'};
@@ -151,7 +151,16 @@ function Editor({request,navigate,confirm,registerGuard}:Props) {
     setNodes(g.nodes.map((n,i)=>({id:n.id,position:{x:40+(i%3)*230,y:40+Math.floor(i/3)*150},data:{label:n.label||labels[n.kind],kind:n.kind,config:n.config}})));
     setEdges(g.nodes.flatMap(n=>n.depends_on.map(d=>({id:d+'-'+n.id,source:d,target:n.id}))));
     setConditions(Object.fromEntries(g.nodes.map(n=>[n.id,n.when||{}])));setSelected(null);setVersion(null);setDirty(false);setDraftStarted(true);};
-  const add=(kind:Kind)=>{const nid='node-'+crypto.randomUUID().slice(0,8);setNodes(ns=>[...ns,{id:nid,position:{x:40+ns.length%3*230,y:40+Math.floor(ns.length/3)*150},data:{label:labels[kind],kind,config:structuredClone(configs[kind])}}]);setVersion(null);setDirty(true);};
+  const add=(kind:Kind)=>{
+    const nid='node-'+crypto.randomUUID().slice(0,8);const config=structuredClone(configs[kind]);
+    if(kind==='tool') {
+      const tools=(catalog?.tools as Capability[]|undefined)||[];
+      const available=tools.filter(t=>t.available!==false&&(!t.name.startsWith('workflow.')||t.name==='workflow.status'));
+      config.tool=(available.find(t=>t.name==='material.list')||available.find(t=>t.name==='clock.now')||available[0])?.name||'';
+    }
+    setNodes(ns=>[...ns,{id:nid,position:{x:40+ns.length%3*230,y:40+Math.floor(ns.length/3)*150},data:{label:labels[kind],kind,config}}]);
+    setSelected(nid);setDraft(JSON.stringify(config,null,2));setMappingField('');setMappingRef('');setBranch('always');setVersion(null);setDirty(true);
+  };
   const connect=useCallback((c:Connection)=>{setEdges(es=>addEdge(c,es));setVersion(null);setDirty(true);},[setEdges]);
   const choose=(n:Node)=>{setMappingField('');setMappingRef('');setSelected(n.id);setDraft(JSON.stringify(n.data.config,null,2));const w=conditions[n.id]||{};const first=Object.entries(w)[0];setBranch(first?first[0]+':'+first[1]:'always');};
   const apply=()=>{try{const config=JSON.parse(draft);if(!config||Array.isArray(config)||typeof config!=='object')throw Error('配置必须是对象');

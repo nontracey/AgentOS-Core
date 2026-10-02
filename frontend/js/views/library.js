@@ -4,12 +4,13 @@
 
 import { openPreview } from "../preview.js";
 import { esc } from "../safe-export.js";
+import { outputAssets } from "../workspace-data.js";
 import { assetTitle, emptyState, icon, timeShort, toast } from "../ui.js";
 
 export async function renderLibrary(ctx) {
-  const { el, api, navigate, params } = ctx;
+  const { el, api, params } = ctx;
   let stopped = false;
-  let assets = [];
+  let assets = [], query = "", kind = "all";
 
   el.innerHTML = `
     <section class="page">
@@ -17,6 +18,7 @@ export async function renderLibrary(ctx) {
         <div><h2>成果库</h2><p>完成的工作，连同来源与版本一起保存。</p></div>
         <span class="tag" id="lib-count">读取中…</span>
       </div>
+      <div class="library-toolbar"><input type="search" aria-label="搜索成果" placeholder="搜索成果名称…" id="lib-search"><select id="lib-kind" aria-label="成果类型"><option value="all">全部成果</option><option value="text">文档与数据</option><option value="image">图片</option><option value="video">视频</option></select></div>
       <div id="lib-grid" class="lib-grid"><div class="skeleton" style="height:180px"></div></div>
       <p class="side-caption">成果为不可变版本：修改会新建关联版本，旧版本与旧授权继续可查。</p>
     </section>`;
@@ -24,7 +26,7 @@ export async function renderLibrary(ctx) {
   async function load() {
     if (stopped) return false;
     try {
-      assets = (await api.listAssets()).filter((a) => a.run_id || a.id);
+      assets = outputAssets(await api.listAssets());
     } catch (e) {
       el.querySelector("#lib-grid").innerHTML =
         `<div class="error-state"><div class="title">无法加载成果</div>
@@ -32,13 +34,20 @@ export async function renderLibrary(ctx) {
       return false;
     }
     if (stopped) return false;
-    const isMd = (a) => /markdown|text/.test(String(a.mime || ""));
-    el.querySelector("#lib-count").textContent = `${assets.length} 份已登记`;
-    el.querySelector("#lib-grid").innerHTML = assets.length ? assets.map((a) => `
+    draw();
+    if (params[0]) { const a=assets.find(x=>x.id===params[0]);if(a) {try{await openPreview(api,a.id,{title:assetTitle(a),mime:a.mime});}catch(e){toast(e.message,"err");}} }
+    return true;
+  }
+
+  function draw() {
+    const shown=assets.filter(a=>(!query || assetTitle(a).toLowerCase().includes(query)) && (kind==="all" || (kind==="text" ? /text|json/.test(a.mime || "") : String(a.mime || "").startsWith(kind+"/"))));
+    const isMd = (a) => /markdown|text|json/.test(String(a.mime || ""));
+    el.querySelector("#lib-count").textContent = `${shown.length} / ${assets.length} 份成果`;
+    el.querySelector("#lib-grid").innerHTML = shown.length ? shown.map((a) => `
       <article class="lib-card">
         <div class="lib-preview">${isMd(a)
           ? `<div class="lib-doc"><span class="doc-eyebrow">${esc(String(a.mime || "").includes("markdown")
-              ? "MARKDOWN" : "TEXT")}</span>
+              ? "MARKDOWN" : String(a.mime || "").includes("json") ? "JSON" : String(a.mime || "").includes("csv") ? "CSV" : "TEXT")}</span>
              <h3>${esc(assetTitle(a))}</h3>
              <p>${a.version ? `v${a.version} · ` : ""}${esc(a.mime || "—")} ·
                 ${Number(a.size || 0).toLocaleString()} 字节</p>
@@ -59,8 +68,8 @@ export async function renderLibrary(ctx) {
           <a class="btn small" href="#/tasks/${esc(a.run_id || "")}">打开任务</a>
         </div>
       </article>`).join("")
-      : emptyState(icon("files", 26), "还没有登记的成果",
-        "任务产出通过服务端检查后登记在这里；未登记时不显示下载。");
+      : emptyState(icon("files", 26), query || kind!=="all" ? "没有匹配的成果" : "还没有登记的成果",
+        query || kind!=="all" ? "尝试其他名称或类型。" : "任务生成的文件会保存在这里；上传材料不混入成果。");
 
     el.querySelectorAll("[data-lib-preview]").forEach((btn) => btn.addEventListener("click", async () => {
       const a = assets.find((x) => x.id === btn.dataset.libPreview);
@@ -68,17 +77,9 @@ export async function renderLibrary(ctx) {
       catch (e) { toast(e.isForbidden ? "权限不足，无法预览" : e.message, "err"); }
     }));
     ctx.bindCommon();
-    // 旧链接：#/artifacts/<id> 直接打开预览
-    if (params[0]) {
-      const a = assets.find((x) => x.id === params[0]);
-      if (a) {
-        try { await openPreview(api, a.id, { title: assetTitle(a), mime: a.mime }); }
-        catch (e) { toast(e.message, "err"); }
-      }
-      navigate("#/library");
-    }
-    return true;
   }
+  el.querySelector("#lib-search").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();draw();});
+  el.querySelector("#lib-kind").addEventListener("change",e=>{kind=e.target.value;draw();});
 
   await load();
   return { destroy: () => { stopped = true; } };

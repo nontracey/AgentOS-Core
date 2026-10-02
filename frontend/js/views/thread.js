@@ -12,6 +12,8 @@ import { closePreviews, openPreview } from "../preview.js";
 import { esc } from "../safe-export.js";
 import { confirmDialog, humanError, icon, modelZh, stateBadge, timeShort, toast } from "../ui.js";
 
+import { shortGoal } from "../workspace-data.js";
+
 const ACTIVE = new Set(["created", "planning", "running", "awaiting_approval", "cancel_requested"]);
 
 export async function renderThread(ctx) {
@@ -93,8 +95,9 @@ export async function renderThread(ctx) {
 
     el.innerHTML = `
       <div class="work-header">
-        <div class="work-title"><h2>${esc(run.goal_text || run.goal || id)}</h2>
+        <div class="work-title"><h2>${esc(shortGoal(run.goal_text || run.goal || id))}</h2>
           ${stateBadge(run.state)}</div>
+        <details class="task-goal"><summary>查看完整目标</summary><p>${esc(run.goal_text || run.goal || id)}</p></details>
         <div class="work-meta">
           <span>${steps.length ? `${steps.length} 个执行步骤` : "尚无执行步骤"}</span><span>·</span>
           <span>${events.length} 条已记录事件</span><span>·</span>
@@ -115,7 +118,7 @@ export async function renderThread(ctx) {
       ${approvals.length && tab !== "chat"
         ? `<div class="notice warn inline-ask">${icon("shield", 14)}
             这一步需要你确认（${approvals.length} 项）——切到「对话」查看具体操作与参数。</div>` : ""}
-      ${run.state === "awaiting_input" ? `<div class="notice warn">评审发现缺少活动日期或预算依据。请在下方补充材料后提交；将继续同一任务的研究返修，复用已生成视觉。已返修 ${data.supplement?.round || 0}/2 轮。</div>` : ""}
+      ${run.state === "awaiting_input" ? `<div class="notice warn">任务需要补充信息。请查看评审意见，在下方补充要求或材料后继续；已确认的成果会保留。</div>` : ""}
       ${run.error_json || data.error ? `<div class="notice err">${esc(readableError(run.error_json || data.error))}</div>` : ""}
       ${resumable || uncertain || pendingDelivery.length || ACTIVE.has(run.state) || run.state === "succeeded" && artifacts.length ? `
         <div class="work-actions">

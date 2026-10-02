@@ -31,6 +31,7 @@ class Settings:
     data_dir: Path = field(default_factory=lambda: Path(os.environ.get("AGENTOS_DATA_DIR", "./data")))
     runtime: RuntimeLimits = field(default_factory=RuntimeLimits)
     agent_runtime: str = "scripted"  # codex | scripted (deterministic fixtures)
+    example_tools: bool | None = None  # None: scripted fixtures only; True: explicit demo compatibility
     codex_binary: str = "codex"
     codex_version: str = "0.159.2"
     runtime_gateway_url: str = "http://127.0.0.1:8800"

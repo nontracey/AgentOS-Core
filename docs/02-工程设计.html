@@ -50,7 +50,7 @@ img{display:block;max-width:100%;height:auto;margin:16px auto}
 }
 </style></head>
 <body><div class="wrap">
-<div class="hero"><h1>AgentOS 工程设计</h1><p>版本：2.5</p><p>更新日期：2026-10-01</p><p>文档性质：实现与验证参考</p><p>适用范围：当前 Python 后端、ES 模块 / React Flow 前端和固定验收样本</p><p>阅读入口：<a href="README.md">文档目录</a></p></div>
+<div class="hero"><h1>AgentOS 工程设计</h1><p>版本：2.6</p><p>更新日期：2026-10-03</p><p>文档性质：实现与验证参考</p><p>适用范围：当前 Python 后端、ES 模块 / React Flow 前端和固定验收样本</p><p>阅读入口：<a href="README.md">文档目录</a></p></div>
 <div class="card toc"><a href="#1-技术基线">1. 技术基线</a><a href="#2-实现定位">2. 实现定位</a><a href="#3-状态与并发">3. 状态与并发</a><a href="#4-输入-上下文与成果">4. 输入、上下文与成果</a><a href="#5-执行策略">5. 执行策略</a><a href="#6-模型-技能与知识">6. 模型、技能与知识</a><a href="#7-访问授权与演示发布">7. 访问授权与演示发布</a><a href="#8-api-入口索引">8. API 入口索引</a><a href="#9-前端与恢复">9. 前端与恢复</a><a href="#10-验证与交付">10. 验证与交付</a></div>
 <h2 id="1-技术基线">1. 技术基线</h2>
 <table>
@@ -129,6 +129,7 @@ img{display:block;max-width:100%;height:auto;margin:16px auto}
 <tr><td>下载</td><td>受鉴权请求，核对动作权限；响应不暴露内部文件路径</td></tr>
 </tbody></table>
 <p>字数、日期、金额与引用检查是确定性规则，不能扩展解释为完整语义真实性保证。没有依据的字段须保留为待确认。Markdown 预览禁用原始 HTML，限制链接协议，动态内容安全渲染。</p>
+<p>普通材料工具通过既有 AssetService 核对主体/任务授权，CSV/JSON 解析复用标准库。<code>artifact.create</code> 和普通 <code>fs.write_text</code> 的合适文本输出使用稳定效果键登记不可变成果；固定模板保持原审阅登记。报告续改沿用受理时校验的父成果与原因，下载继续核权并校验字节 hash。工具循环、解析库和文件治理职责不混合，取舍见 <a href="03-架构决策.md#adr-0025">ADR-0025</a>。</p>
 <h2 id="5-执行策略">5. 执行策略</h2>
 <h3 id="5-1-简单报告">5.1 简单报告</h3>
 <p>固定 <code>material-report</code> Skill 和版本，依次读取授权材料、调用模型生成、检查、经审批保存、登记不可变成果。模型上下文与累计 token 受护栏约束；长度修正调用有上限。检查失败不得登记合格报告。</p>

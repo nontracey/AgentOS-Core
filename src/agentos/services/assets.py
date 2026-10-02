@@ -12,7 +12,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
+import threading
 import uuid
 from pathlib import Path
 from typing import Any
@@ -24,6 +26,18 @@ from agentos.kernel.store import StoreProtocol
 from agentos.kernel.types import AuthContext
 from agentos.services.access import ROLE_ADMIN, role_of
 from agentos.services.audit import AuditService
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError("non-finite JSON number")
+
+
+def _finite_json_float(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("JSON number exceeds finite range")
+    return number
+
 
 MAX_MATERIAL_BYTES = 64 * 1024  # 单份素材 64 KiB（计划 §2.1）
 
@@ -57,6 +71,7 @@ class AssetService:
         self._store = store
         self._audit = audit
         self._dir = assets_dir
+        self._output_lock = threading.RLock()
 
     # ---------------------------------------------------------------- 登记
     def _write_and_register(
@@ -69,7 +84,7 @@ class AssetService:
         source_node: str,
         **binding: Any,
     ) -> dict[str, Any]:
-        asset_id = "asset_" + uuid.uuid4().hex[:16]
+        asset_id = binding.get("asset_id") or "asset_" + uuid.uuid4().hex[:16]
         digest = sha256_bytes(data)
         path = self._dir / asset_id
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -159,7 +174,8 @@ class AssetService:
                 ErrorCode.INVALID,
                 f"material '{name}' exceeds {MAX_MATERIAL_BYTES} bytes limit",
             )
-        mime = "text/markdown" if str(content_type).endswith("markdown") else "text/plain"
+        mime = (content_type if content_type in {"text/plain", "text/markdown", "text/csv", "application/json"}
+                else "text/plain")
         digest = sha256_bytes(data)
 
         # 幂等键：同键同内容回原 Asset；同键异正文 CONFLICT（FR-ING-03 同语义）
@@ -252,6 +268,79 @@ class AssetService:
         return {**reg, "name": name, "version": version}
 
     # ---------------------------------------------------------------- 读取
+    def register_tool_output(self, actor: AuthContext, run_id: str, key: str,
+                             name: str, content: str, *, legacy: bool = False) -> dict[str, Any]:
+        """Immutable, task-owned output; receipt-loss retries return the same Asset.
+
+        Fixed templates retain their own reviewed report/version registration.
+        This supplements ordinary sandbox writes without changing their contract.
+        """
+        run = self._store.get_run(actor.tenant_id, run_id)
+        if (not run or run.subject != actor.subject or actor.is_expired
+                or not actor.has_scope("write")):
+            raise AgentOSError(ErrorCode.DENIED, "output requires an authorized task")
+        payload = json.loads(run.envelope_json).get("payload", {})
+        if legacy and payload.get("template"):
+            return {}
+        if run.state != "running":
+            raise AgentOSError(ErrorCode.DENIED, "output task is not running")
+        if (not name or len(name) > 100 or name in {".", ".."}
+                or any(c in name for c in "/\\\r\n\0")):
+            raise AgentOSError(ErrorCode.INVALID, "output name must be a filename")
+        suffix = Path(name).suffix.lower()
+        mime = {".md": "text/markdown", ".txt": "text/plain", ".csv": "text/csv",
+                ".json": "application/json"}.get(suffix)
+        try:
+            data = content.encode("utf-8")
+        except UnicodeEncodeError as exc:
+            raise AgentOSError(ErrorCode.INVALID, "output must be valid UTF-8") from exc
+        if not mime or len(data) > 1_000_000:
+            if legacy:
+                return {}  # Arbitrary legacy sandbox files are not public deliverables.
+            raise AgentOSError(ErrorCode.INVALID, "use .md/.txt/.csv/.json, at most one megabyte")
+        if suffix == ".json":
+            try:
+                json.loads(content, parse_constant=_reject_json_constant, parse_float=_finite_json_float)
+            except (ValueError, RecursionError) as exc:
+                if not legacy:
+                    raise AgentOSError(ErrorCode.INVALID, "output must be valid JSON") from exc
+        asset_id = "asset_" + hashlib.sha256(
+            f"{actor.tenant_id}\0{actor.subject}\0{run_id}\0{key}".encode()).hexdigest()[:24]
+        with self._output_lock:
+            prior = self._store.get_asset(actor.tenant_id, asset_id)
+            if prior:
+                if prior["sha256"] != sha256_bytes(data) or prior["name"] != name:
+                    raise AgentOSError(ErrorCode.CONFLICT, "output key already used for different content")
+                self.read(actor, asset_id)  # Verify persisted content before returning its receipt.
+                return {"asset_ref": asset_id, "sha256": prior["sha256"], "bytes": len(data), "replayed": True}
+            parent_id = payload.get("parent_asset_id") if mime == "text/markdown" else None
+            reason = str(payload.get("revision_reason") or "") if parent_id else ""
+            version = 1
+            if parent_id:
+                parent = self._owned(actor, parent_id)
+                if parent.get("mime") != "text/markdown" or not reason.strip():
+                    raise AgentOSError(ErrorCode.INVALID, "report revision requires a report and a reason")
+                version = self._store.next_asset_version(actor.tenant_id, parent_id)
+            result = self._write_and_register(actor, data, mime=mime, meta={"origin": "tool-output"},
+                source_node="", run_id=run_id, name=name, version=version, asset_id=asset_id, kind="output",
+                parent_asset_id=parent_id, revision_reason=reason)
+            self._store.event_append(actor.tenant_id, run_id, "artifact.created",
+                {"asset_id": asset_id, "name": name, "mime": mime, "size": len(data), "version": version})
+            return {"asset_ref": asset_id, "sha256": result["sha256"], "bytes": len(data), "replayed": False}
+
+    def list_run_materials(self, actor: AuthContext, run_id: str) -> list[dict[str, Any]]:
+        run = self._store.get_run(actor.tenant_id, run_id)
+        if not run or run.subject != actor.subject or actor.is_expired:
+            raise AgentOSError(ErrorCode.DENIED, "task materials not authorized")
+        payload = json.loads(run.envelope_json).get("payload", {})
+        entries = [*(payload.get("materials") or []),
+                   *json.loads(run.checkpoint_json or "{}").get("collaboration", {}).get("additional_materials", [])]
+        if isinstance(payload.get("context_asset"), dict):
+            entries.append(payload["context_asset"])
+        return [{"asset_id": m["asset_id"], "name": m.get("name", ""),
+                 "size": m.get("size"), "sha256": m.get("sha256"), "mime": m.get("mime")}
+                for m in entries]
+
     def _owned(self, actor: AuthContext, asset_id: str) -> dict[str, Any]:
         row = self._store.get_asset(actor.tenant_id, asset_id)
         if row is None:

@@ -7,9 +7,11 @@ import { icon } from "./ui.js";
 import { render as renderMarkdown } from "./md.js";
 
 const opened = [];
+let previewEpoch = 0;
 
 /** 关闭全部预览并释放 Blob（退出/撤权/切页时调用）。 */
 export function closePreviews() {
+  previewEpoch++;
   while (opened.length) {
     const { url, node } = opened.pop();
     if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
@@ -24,9 +26,12 @@ export function closePreviews() {
  * @param {{guest?:boolean, title?:string, mime?:string, meta?:string}} opts
  */
 export async function openPreview(api, assetId, opts = {}) {
+  const epoch = previewEpoch;
+  const previousFocus = document.activeElement;
   const blob = opts.guest
     ? (await api.demoPreview(assetId)).blob      // 预览走 preview 判据，不等于下载授权
     : await api.downloadAsset(assetId);
+  if (epoch !== previewEpoch) return;
   const mime = opts.mime || blob.type || "";
   const mask = document.createElement("div");
   mask.className = "dialog-mask preview-mask";
@@ -56,7 +61,7 @@ export async function openPreview(api, assetId, opts = {}) {
     holder.className = "md-view";
     // Markdown 渲染默认禁用原始 HTML（md.js 内已做协议白名单与转义）
     holder.innerHTML = mime.includes("json")
-      ? `<pre>${esc(text.slice(0, 200_000))}</pre>` : renderMarkdown(text);
+      ? `<pre>${esc(text.slice(0, 200_000))}</pre>` : mime === "text/csv" || mime === "text/plain" ? `<pre>${esc(text.slice(0, 200_000))}</pre>` : renderMarkdown(text);
     body.appendChild(holder);
   } else {
     body.innerHTML = `<div class="empty-state"><div class="icon">${icon("files", 26)}</div>
@@ -64,14 +69,16 @@ export async function openPreview(api, assetId, opts = {}) {
       <div class="desc">${esc(mime || "未知类型")} 需要本地程序打开，请使用下载。</div></div>`;
   }
 
-  mask.addEventListener("click", (e) => {
-    if (e.target === mask || e.target.closest("[data-close]")) {
+  const close = () => {
       URL.revokeObjectURL(url);
       const idx = opened.findIndex((it) => it.url === url);
       if (idx >= 0) opened.splice(idx, 1);
       mask.remove();
-    }
-  });
+      if (previousFocus?.isConnected) previousFocus.focus();
+  };
+  mask.addEventListener("click", e => { if(e.target===mask || e.target.closest("[data-close]")) close(); });
+  mask.addEventListener("keydown", e => {if(e.key==="Escape"){e.preventDefault();close();}});
+  if (epoch !== previewEpoch) {close();return;}
   document.body.appendChild(mask);
   mask.querySelector("[data-close]").focus();
 }

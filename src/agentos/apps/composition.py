@@ -128,7 +128,11 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
     knowledge = KnowledgeBackends(store, available, selected, settings.data_dir / "knowledge-selection.json")
     tools = LocalToolAdapter(
         settings.sandbox_dir,
-        material_reader=assets_service.read_run_material,  # 模板材料读取（服务端双重授权）
+        material_reader=assets_service.read_run_material,  # 服务端双重授权
+        material_lister=assets_service.list_run_materials,
+        artifact_writer=assets_service.register_tool_output,
+        example_tools=(settings.example_tools if settings.example_tools is not None else
+                       settings.agent_runtime == "scripted" and settings.model_provider == "scripted"),
         skills=skills_service,
         store=store,
         knowledge_searcher=knowledge if knowledge.enabled else None,

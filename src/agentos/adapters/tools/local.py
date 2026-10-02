@@ -1,4 +1,4 @@
-"""本地受控示例工具（M0：CLI 可受理并执行受控本地示例）。
+"""本地受控工具：授权材料、结构化数据检查和不可变成果；示例单独显式开启。
 
 设计要点（FR-TOOL-08、FR-ORC-08）：
 - 工具声明风险元数据（risks/recovery），Policy 据此裁决；高危工具无审批必拒。
@@ -62,11 +62,14 @@ class LocalToolAdapter:
         material_reader: Any | None = None,
         knowledge_searcher: Any | None = None,
         skills: Any | None = None, store: Any | None = None, isolated_subjects: bool = True,
+        material_lister: Any | None = None, artifact_writer: Any | None = None, example_tools: bool = True,
     ) -> None:
         self._sandbox = sandbox_dir
         self._isolated_subjects = isolated_subjects
         self._ledger_file = ledger_file or sandbox_dir.parent / "_log_append_ledger.json"
         self._ledger_lock = threading.Lock()
+        self._material_lister, self._artifact_writer = material_lister, artifact_writer
+        self._example_tools = example_tools
         self._material_reader = material_reader  # (actor, run_id, asset_id) -> dict（模板材料读取）
         self._knowledge = knowledge_searcher  # KnowledgePort：跨 await 边界只调端口
         self._skills, self._store = skills, store
@@ -76,7 +79,28 @@ class LocalToolAdapter:
 
     def _build_registry(self) -> dict[str, tuple[ToolSpec, str]]:
         """注册表保存方法名（而非绑定方法）：测试可替换、运行时可核对版本。"""
+        asset = {"type": "string", "minLength": 1}
         return {
+            "material.list": (_spec("material.list", "列出本任务已授权材料的 ID、名称与校验信息；再按需读取",
+                {"type": "object", "properties": {}, "additionalProperties": False},
+                ["read"], "pure"), "_material_list"),
+            "data.csv_profile": (_spec("data.csv_profile", "检查授权 CSV 的行列、空值、唯一值和数值统计；不修改材料",
+                {"type": "object", "properties": {"asset_id": asset,
+                 "delimiter": {"type": "string", "enum": [",", ";", "\t"]}},
+                 "required": ["asset_id"], "additionalProperties": False},
+                 ["read"], "pure"), "_csv_profile"),
+            "data.json_query": (_spec("data.json_query",
+                "读取授权 JSON 指定字段；路径为字段名/数组下标列表，不执行代码",
+                {"type": "object", "properties": {"asset_id": asset, "path": {"type": "array",
+                 "maxItems": 32, "items": {"oneOf": [{"type": "string"}, {"type": "integer", "minimum": 0}]}}},
+                 "required": ["asset_id", "path"], "additionalProperties": False},
+                 ["read"], "pure"), "_json_query"),
+            "artifact.create": (_spec("artifact.create",
+                "生成可预览、下载的不可变成果（md/txt/csv/json）；同次调用重放复用原成果",
+                {"type": "object", "properties": {"name": {"type": "string", "minLength": 1, "maxLength": 100},
+                 "content": {"type": "string", "maxLength": 1000000}},
+                 "required": ["name", "content"], "additionalProperties": False},
+                 ["write"], "idempotency_key"), "_artifact_create"),
             "math.add": (
                 _spec(
                     "math.add",
@@ -188,7 +212,8 @@ class LocalToolAdapter:
 
     # ------------------------------------------------------------- ToolPort
     async def list_tools(self, actor: AuthContext) -> list[ToolSpec]:
-        return [spec for spec, _ in self._tools.values()]
+        return [spec for spec, _ in self._tools.values()
+                if self._example_tools or spec.name not in {"math.add", "log.append", "flaky.timeout"}]
 
     async def resolve(self, actor: AuthContext, name: str) -> ToolSpec:
         entry = self._tools.get(name)
@@ -250,19 +275,21 @@ class LocalToolAdapter:
     async def _fs_write_text(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
         target = _sandboxed_path(self._subject_sandbox(ctx.actor), str(args["path"]))
         content = str(args["content"])
+        output = (self._artifact_writer(ctx.actor, ctx.run_id, ctx.idempotency_key, target.name, content, legacy=True)
+                  if self._artifact_writer else {})
         if target.exists() and target.read_text(encoding="utf-8") == content:
             # 幂等重放：同内容重复写入不产生第二次副作用
             return ToolResult(
                 call_id=ctx.call_id,
                 status="completed",
-                value={"written": False, "reason": "idempotent replay", "path": str(target)},
+                value={"written": False, "reason": "idempotent replay", "path": str(target), **output},
             )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
         return ToolResult(
             call_id=ctx.call_id,
             status="completed",
-            value={"written": True, "path": str(target), "bytes": len(content.encode())},
+            value={"written": True, "path": str(target), "bytes": len(content.encode()), **output},
         )
 
     async def _log_append(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
@@ -286,6 +313,32 @@ class LocalToolAdapter:
         entries[ctx.idempotency_key] = str(args["message"])
         ledger.write_text(json.dumps(entries, ensure_ascii=False), encoding="utf-8")
         return ToolResult(call_id=ctx.call_id, status="completed", value={"appended": True})
+
+    async def _material_list(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
+        if self._material_lister is None:
+            raise AgentOSError(ErrorCode.UNSUPPORTED, "material intake not configured")
+        return ToolResult(call_id=ctx.call_id, status="completed",
+                          value={"materials": self._material_lister(ctx.actor, ctx.run_id)})
+
+    async def _csv_profile(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
+        from agentos.adapters.tools.data_tools import csv_profile
+
+        material = await self._material_read(args, ctx)
+        result = csv_profile(material.value["content"], args.get("delimiter", ","))
+        return ToolResult(call_id=ctx.call_id, status="completed", value=result)
+
+    async def _json_query(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
+        from agentos.adapters.tools.data_tools import json_query
+
+        material = await self._material_read(args, ctx)
+        return ToolResult(call_id=ctx.call_id, status="completed",
+                          value=json_query(material.value["content"], args["path"]))
+
+    async def _artifact_create(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
+        if self._artifact_writer is None:
+            raise AgentOSError(ErrorCode.UNSUPPORTED, "asset delivery not configured")
+        result = self._artifact_writer(ctx.actor, ctx.run_id, ctx.idempotency_key, args["name"], args["content"])
+        return ToolResult(call_id=ctx.call_id, status="completed", value=result)
 
     async def _material_read(self, args: dict[str, Any], ctx: CallContext) -> ToolResult:
         """模板材料读取：授权在服务端（AssetService.read_run_material 双重校验）。"""

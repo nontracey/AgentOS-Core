@@ -237,7 +237,7 @@ export function createApi() {
 
     // ---- 素材（N2a：文本上传/粘贴 → 稳定素材 ID）----
     uploadMaterial: (name, text) =>
-      request("/v1/materials", { method: "POST", body: { name, content_text: text } }),
+      request("/v1/materials", { method: "POST", body: { name, content_text: text, content_type: /\.md$/i.test(name) ? "text/markdown" : /\.csv$/i.test(name) ? "text/csv" : /\.json$/i.test(name) ? "application/json" : "text/plain" } }),
 
     // ---- 成果 ----
     listAssets: () => request("/v1/assets"),

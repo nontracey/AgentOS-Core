@@ -12,6 +12,8 @@ const EXAMPLES = [
   { goal: "根据附上的项目记录，整理本周进展、阻塞和下一步，生成一份有来源的进展报告",
     title: "整理一份项目周报", sub: "读取授权材料 → 生成报告 → 结构与引用检查",
     tag: "资料报告模板 · 交付 Markdown", toMaterials: true, requires: "material.read" },
+  { goal: "先列出本任务材料，检查附上的 CSV 的行列、空值和数值统计，解释数据问题，生成一份 Markdown 检查报告",
+    title: "检查一份数据表", sub: "添加 CSV → 检查数据 → 保存成果", requires: "data.csv_profile", glyph: "blocks" },
   { goal: "检查当前可用的工具与技能，并说明各自能完成什么任务",
     title: "看看系统能做什么", sub: "读取能力清单 → 汇总可执行范围" },
   { goal: "查看可用的图片生成能力，先告诉我需要你提供哪些输入",
@@ -26,7 +28,7 @@ export async function renderWorkspaceHome(ctx) {
   const parent = revise ? sessionStorage.getItem("agentos_revise_asset") || "" : "";
   el.innerHTML = `
     <section class="home">
-      <div class="home-greet">${icon("sparkles", 16)} 你的想法，从这里开始</div>
+      <div class="home-greet">${icon("sparkles", 16)} AGENTOS WORKSPACE</div>
       <h1>今天，我们完成什么？</h1>
       <p class="home-sub">描述目标，按需添加材料。需要你确认时，会在任务里提醒。</p>
       ${revise ? `<div class="notice">继续修改上一版报告，授权材料会沿用；原成果保留。</div>` : ""}
@@ -36,7 +38,7 @@ export async function renderWorkspaceHome(ctx) {
         <span id="home-cap">${icon("node", 13)} 执行环境读取中…</span>
       </div>
       <div class="home-status" id="home-status" aria-label="任务概况"></div>
-      <details class="home-examples"><summary>从一个示例开始</summary>
+      <details class="home-examples" open><summary>从一个实用场景开始</summary>
         <div class="example-grid" id="home-examples"></div>
       </details>
       <div class="home-recent">
@@ -63,7 +65,7 @@ export async function renderWorkspaceHome(ctx) {
     const examples = EXAMPLES.filter(ex => !ex.requires || available.has(ex.requires));
     const box = el.querySelector("#home-examples");
     box.innerHTML = examples.map((ex, i) => `<button class="example" data-example="${i}">
-      ${icon(ex.toMaterials ? "doc" : ex.requires ? "image" : "blocks", 18)}
+      ${icon(ex.glyph || (ex.toMaterials ? "doc" : ex.requires ? "image" : "blocks"), 18)}
       <strong>${esc(ex.title)}</strong><span>${esc(ex.sub)}</span>
       <small>${esc(ex.tag || "目标驱动 · 按授权执行")}</small></button>`).join("");
     box.querySelectorAll("[data-example]").forEach(btn => btn.addEventListener("click", () => {
@@ -71,8 +73,9 @@ export async function renderWorkspaceHome(ctx) {
       composer.setGoal(ex.goal, Boolean(ex.toMaterials));
     }));
   }
+  let capabilityCount = null;
   showExamples([]);
-  api.capabilityCatalog().then(c => { if (!stopped) showExamples(c.tools || []); }).catch(() => {});
+  api.capabilityCatalog().then(c => { if (!stopped) { capabilityCount=(c.tools || []).filter(t=>t.available!==false).length; showExamples(c.tools || []); const n=el.querySelector("#home-cap-count");if(n)n.textContent=capabilityCount; } }).catch(() => {});
 
   async function loadRuns() {
     if (stopped) return false;
@@ -81,8 +84,9 @@ export async function renderWorkspaceHome(ctx) {
       if (stopped) return false;
       const needs = runs.filter(r => ATTENTION_STATES.has(r.state)).length;
       const active = runs.filter(r => ACTIVE_STATES.has(r.state)).length;
-      el.querySelector("#home-status").innerHTML = `<a href="#/inbox"><b>${needs}</b> 需要我处理</a>
-        <a href="#/tasks"><b>${active}</b> 正在进行</a><a href="#/hub">浏览可用能力 ${icon("arrow", 13)}</a>`;
+      el.querySelector("#home-status").innerHTML = `<a href="#/inbox">${icon("shield", 18)}<span><b>${needs}</b><small>需要我处理</small></span>${icon("arrow", 14)}</a>
+        <a href="#/tasks">${icon("activity", 18)}<span><b>${active}</b><small>正在进行</small></span>${icon("arrow", 14)}</a>
+        <a href="#/hub">${icon("blocks", 18)}<span><b id="home-cap-count">${capabilityCount ?? "—"}</b><small>可用能力</small></span>${icon("arrow", 14)}</a>`;
       const box = el.querySelector("#home-runs");
       box.innerHTML = runs.length ? runs.slice(0, 4).map((r) => `
         <button class="recent-row" data-run="${esc(r.id)}">

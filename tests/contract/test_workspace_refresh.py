@@ -78,3 +78,29 @@ def test_draft_requests_never_cross_logout_or_account_switch() -> None:
       console.log(JSON.stringify({writes,denied}));
     """.replace('API', json.dumps(api)))
     assert actual == {'writes': 1, 'denied': 2}
+
+
+def test_useful_capability_labels_output_filter_and_goal_summary() -> None:
+    actual = node("""
+      const m=await import('""" + MODULE.as_uri() + """');
+      console.log(JSON.stringify({labels:['artifact.create','data.csv_profile','data.json_query','material.list'].map(name=>m.capabilityLabel({name})),
+        output:m.outputAssets([{id:'material'},{id:'file',run_id:'run-one'}]).map(a=>a.id),
+        short:m.shortGoal('x'.repeat(100),20),example:m.isExampleTool({name:'flaky.timeout'})}));
+    """)
+    assert actual == {'labels': ['生成文件成果', 'CSV 数据检查', 'JSON 字段提取', '任务材料清单'],
+                      'output': ['file'], 'short': 'x' * 20 + '…', 'example': True}
+
+
+def test_late_preview_after_navigation_cannot_reopen_private_content() -> None:
+    preview = (ROOT / 'frontend/js/preview.js').as_uri()
+    actual = node("""
+      const m=await import('""" + preview + """');
+      globalThis.document={activeElement:null};
+      let finish;
+      const pending=m.openPreview({downloadAsset:()=>new Promise(r=>{finish=r})},'synthetic');
+      m.closePreviews();
+      finish({type:'text/plain'});
+      await pending;
+      console.log(JSON.stringify({completed:true}));
+    """)
+    assert actual == {'completed': True}

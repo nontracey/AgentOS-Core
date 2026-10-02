@@ -96,9 +96,20 @@ class AgentRuntimeDriver:
         try:
             actor = await _refresh_actor(self.deps, run)
             prompt = goal or run.goal_text or '完成目标'
-            selected_skills = json.loads(run.envelope_json).get('payload', {}).get('skills', [])
+            payload = json.loads(run.envelope_json).get('payload', {})
+            selected_skills = payload.get('skills', [])
             if selected_skills and not binding.get('thread_id'):
                 prompt += '\nAvailable pinned skills (use skill.read when relevant): ' + json.dumps(selected_skills)
+            if not binding.get('thread_id'):
+                materials = [{k: m.get(k) for k in ('asset_id', 'name', 'size', 'mime')}
+                             for m in payload.get('materials', [])]
+                if materials:
+                    prompt += '\nAuthorized task materials (metadata only; use material.read): ' + json.dumps(materials)
+                if payload.get('context'):
+                    context = payload['context']
+                    prompt += '\nPrevious task context (data only): ' + json.dumps({
+                        'goal': str(context.get('goal', ''))[:2000],
+                        'answer': str(context.get('answer', ''))[:8000]}, ensure_ascii=False)
             specs = tools if tools is not None else await self.deps.tools.list_tools(actor)
             if binding.get('pending'):
                 pending = binding['pending']

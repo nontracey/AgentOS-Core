@@ -137,7 +137,7 @@ export function approvalCard(a) {
     .map((r) => ({ write: "本地写入", egress: "对外发送", exec: "执行命令",
       cost: "产生用量", gpu: "设备占用" }[r.trim()] || r.trim()))
     .join(" / ");
-  const friendly = tool === "fs.write_text" ? "保存成果文件" : /video.*generate/.test(tool) ? "生成视频" : /image.*generate/.test(tool) ? "生成图片" : tool;
+  const friendly = ["fs.write_text", "artifact.create"].includes(tool) ? "保存成果文件" : /video.*generate/.test(tool) ? "生成视频" : /image.*generate/.test(tool) ? "生成图片" : tool;
   const what = `执行「${friendly}」需要你的确认`;
   return `
   <div class="approval-card" data-approval="${esc(a.id)}">

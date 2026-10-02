@@ -19,12 +19,12 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
     <div class="composer-materials"></div>
     <div class="composer-foot"><div class="composer-tools">
       <button type="button" class="chip" data-paste>${icon("doc", 14)} 粘贴材料</button>
-      <label class="chip file-chip">${icon("upload", 14)} 上传文件<input type="file" accept=".txt,.md" multiple hidden aria-label="上传文本材料"></label>
+      <label class="chip file-chip">${icon("upload", 14)} 上传文件<input type="file" accept=".txt,.md,.csv,.json" multiple hidden aria-label="上传文本材料"></label>
       ${contextRun ? "" : `<label class="composer-template"><span class="sr-only">执行方式</span>
         <select aria-label="执行方式"><option value="">自动执行</option><option value="material-report">资料报告</option><option value="activity-collaboration">活动协作（研究／视觉／评审）</option></select></label>`}
       ${contextRun ? "" : `<select data-skill aria-label="使用技能"><option value="">默认技能</option></select>`}
     </div><button class="send" type="submit" aria-label="${contextRun ? "提交修改" : "开始任务"}">${icon("send", 18)}</button></div>
-    <div class="composer-note">${contextRun ? "沿用授权材料和必要上下文；文件成果保留旧版。" : "支持 UTF-8 .txt / .md，最多3份，单份64 KiB、合计128 KiB。"}</div>
+    <div class="composer-note">${contextRun ? "沿用授权材料和必要上下文；文件成果保留旧版。" : "支持 UTF-8 .txt / .md / .csv / .json，最多3份，单份64 KiB、合计128 KiB。"}</div>
     <div class="error-text" role="alert" hidden></div>
   </form>`;
   const form = el.querySelector("form"), input = el.querySelector("textarea"), error = el.querySelector('[role="alert"]');
@@ -62,7 +62,7 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
   el.querySelector("input[type=file]").addEventListener("change", async e => {
     for (const file of e.target.files) {
       try {
-        if (!/\.(txt|md)$/i.test(file.name)) throw new Error("仅支持 .txt / .md 文件");
+        if (!/\.(txt|md|csv|json)$/i.test(file.name)) throw new Error("仅支持 .txt / .md / .csv / .json 文件");
         if (file.size > MAX_FILE) throw new Error("单份材料不能超过64 KiB");
         const text = new TextDecoder("utf-8", { fatal: true }).decode(await file.arrayBuffer());
         if (destroyed) return;
@@ -105,7 +105,7 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
       const receipt = contextRun ? await (supplement() ? api.supplementTask : api.followupTask)(contextRun, {
         message: state.goal, material_asset_ids: materialIds, parent_asset_id: parentAsset || undefined, idempotency_key: state.key,
       }) : await api.submitTask({ payload: { goal: state.goal,
-        template: state.template || (materialIds.length ? "material-report" : undefined),
+        template: state.template || undefined,
         skill_ids: state.skillId ? [state.skillId] : [] },
         material_asset_ids: materialIds, idempotency_key: state.key });
       sessionStorage.removeItem(draftKey);
@@ -116,7 +116,7 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
   drawMaterials();
   return {
     setGoal(value, useTemplate = false) { state.goal = value; input.value = value;
-      if (useTemplate) { state.template = "material-report"; if (select) select.value = state.template; }
+      state.template = useTemplate ? "material-report" : ""; if (select) select.value = state.template;
       persist(); input.focus(); },
     focus: () => input.focus(), destroy: () => { destroyed = true; dialog?.remove(); },
   };

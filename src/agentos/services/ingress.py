@@ -29,7 +29,7 @@ MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024  # 10 MiB，超范围附件拒绝
 MAX_MATERIALS = 3
 MAX_MATERIAL_BYTES = 64 * 1024
 MAX_MATERIAL_TOTAL_BYTES = 128 * 1024
-MATERIAL_MIMES = {"text/plain", "text/markdown"}
+MATERIAL_MIMES = {"text/plain", "text/markdown", "text/csv", "application/json"}
 
 
 def canonical_hash(payload: dict[str, Any]) -> str:

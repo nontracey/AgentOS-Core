@@ -7,6 +7,7 @@
  */
 "use strict";
 
+import { capabilityLabel } from "./workspace-data.js";
 import { esc } from "./safe-export.js";
 import { approvalCard, assetTitle, humanError, icon, modelZh, stateBadge, timeShort } from "./ui.js";
 
@@ -22,6 +23,7 @@ const ROLE_LABELS = {
 export function toolLabel(name) {
   const tool = String(name || "");
   if (!tool) return "工具调用";
+  const label=capabilityLabel({name:tool}); if(/^(artifact\.|data\.|material\.)/.test(tool) && label!==tool)return label;
   if (/^skill\./i.test(tool)) return "加载任务技能";
   if (/video/i.test(tool)) return "生成视频";
   if (/image|comfyui/i.test(tool)) return "生成图片";
