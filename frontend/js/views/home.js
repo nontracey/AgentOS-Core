@@ -33,10 +33,11 @@ export async function renderWorkspaceHome(ctx) {
       <p class="home-sub">描述目标，按需添加材料。需要你确认时，会在任务里提醒。</p>
       ${revise ? `<div class="notice">继续修改上一版报告，授权材料会沿用；原成果保留。</div>` : ""}
       <div id="home-composer"></div>
-      <div class="context-line">
+      <details class="home-environment"><summary>执行环境与授权</summary><div class="context-line">
         <span>${icon("shield", 13)} 重要操作由服务端裁定，执行前请你确认</span>
         <span id="home-cap">${icon("node", 13)} 执行环境读取中…</span>
       </div>
+      </details>
       <div class="home-status" id="home-status" aria-label="任务概况"></div>
       <details class="home-examples" open><summary>从一个实用场景开始</summary>
         <div class="example-grid" id="home-examples"></div>
@@ -67,7 +68,7 @@ export async function renderWorkspaceHome(ctx) {
     box.innerHTML = examples.map((ex, i) => `<button class="example" data-example="${i}">
       ${icon(ex.glyph || (ex.toMaterials ? "doc" : ex.requires ? "image" : "blocks"), 18)}
       <strong>${esc(ex.title)}</strong><span>${esc(ex.sub)}</span>
-      <small>${esc(ex.tag || "目标驱动 · 按授权执行")}</small></button>`).join("");
+      </button>`).join("");
     box.querySelectorAll("[data-example]").forEach(btn => btn.addEventListener("click", () => {
       const ex = examples[Number(btn.dataset.example)];
       composer.setGoal(ex.goal, Boolean(ex.toMaterials));
@@ -85,13 +86,13 @@ export async function renderWorkspaceHome(ctx) {
       const needs = runs.filter(r => ATTENTION_STATES.has(r.state)).length;
       const active = runs.filter(r => ACTIVE_STATES.has(r.state)).length;
       el.querySelector("#home-status").innerHTML = `<a href="#/inbox">${icon("shield", 18)}<span><b>${needs}</b><small>需要我处理</small></span>${icon("arrow", 14)}</a>
-        <a href="#/tasks">${icon("activity", 18)}<span><b>${active}</b><small>正在进行</small></span>${icon("arrow", 14)}</a>
+        <a href="#/tasks">${icon("clock", 18)}<span><b>${active}</b><small>正在进行</small></span>${icon("arrow", 14)}</a>
         <a href="#/hub">${icon("blocks", 18)}<span><b id="home-cap-count">${capabilityCount ?? "—"}</b><small>可用能力</small></span>${icon("arrow", 14)}</a>`;
       const box = el.querySelector("#home-runs");
       box.innerHTML = runs.length ? runs.slice(0, 4).map((r) => `
         <button class="recent-row" data-run="${esc(r.id)}">
           <span class="rtext"><b>${esc(taskTitle(r))}</b>
-            <small>${esc(r.id)} · 最近活动 ${timeShort(r.updated_at || r.created_at)}</small></span>
+            <small>最近活动 ${timeShort(r.updated_at || r.created_at)}</small></span>
           ${stateBadge(r.state)}</button>`).join("")
         : emptyState(icon("folder", 24), "还没有任务",
             "在上方写下目标，或用「添加材料 / 使用模板」从资料报告开始。");

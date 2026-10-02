@@ -132,3 +132,28 @@ def test_guest_has_read_only_navigation_and_no_write_entry() -> None:
     # 服务端裁定：游客面全部走 /v1/demo/*
     assert "api.demoHome" in GUEST_JS and "api.demoRun" in GUEST_JS
     assert "/v1/tasks/" not in GUEST_JS
+
+
+def test_compact_conversation_keeps_decisions_visible_and_formats_safe_answers() -> None:
+    """Completed records collapse; a pending decision remains outside them; model text is inert."""
+    result = run_node(r'''
+      const html = renderConversation([
+        {type:'user',text:'整理项目甲的进展'},
+        {type:'tool',id:'s1',title:'读取材料',state:'completed',attempt:1},
+        {type:'approval',guest:false,data:{id:'a1',state:'pending',summary:'tool=artifact.create'}},
+        {type:'artifact',data:{id:'out1',name:'进展报告.md',mime:'text/markdown'},previewable:true},
+        {type:'answer',text:'## 项目进展\n\n**完成**材料核对。\n\n- 一项进展\n\n'
+          + '<script>alert(1)</script>\n\n[危险](javascript:alert(1))'},
+      ], {compact:true});
+      const active = renderConversation([{type:'tool',id:'s2',title:'执行',state:'dispatched'}], {compact:true});
+      console.log(JSON.stringify({html,active}));
+    ''')
+    assert isinstance(result, dict)
+    html = result["html"]
+    assert 'data-open-key="process:0">' in html
+    assert html.index("</details>") < html.index("data-decide")
+    assert html.index("<h2>项目进展</h2>") < html.index("进展报告.md")
+    assert "<h2>项目进展</h2>" in html and "<strong>完成</strong>" in html
+    assert "<script>" not in html and "&lt;script&gt;" in html
+    assert 'href="javascript:' not in html
+    assert 'data-open-key="process:0" open>' in result["active"]

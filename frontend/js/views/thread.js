@@ -91,27 +91,21 @@ export async function renderThread(ctx) {
       catch { return false; }
     });
     const items = projectConversation(data, events, { guest: false });
+    const showSide = tab === "flow" || artifacts.length > 0;
 
 
     el.innerHTML = `
       <div class="work-header">
-        <div class="work-title"><h2>${esc(shortGoal(run.goal_text || run.goal || id))}</h2>
+        <div class="work-title"><h2>${esc(shortGoal(run.goal_text || run.goal || id, 42))}</h2>
           ${stateBadge(run.state)}</div>
-        <details class="task-goal"><summary>查看完整目标</summary><p>${esc(run.goal_text || run.goal || id)}</p></details>
-        <div class="work-meta">
-          <span>${steps.length ? `${steps.length} 个执行步骤` : "尚无执行步骤"}</span><span>·</span>
-          <span>${events.length} 条已记录事件</span><span>·</span>
-          <span>创建 ${timeShort(run.created_at)}</span><span>·</span>
-          <span>${data.plan ? (data.plan.source === "template" ? "固定模板 v1" : "已保存计划")
-            : "未保存结构化计划"}</span>
-        </div>
+        <div class="work-meta"><span>创建于 ${timeShort(run.created_at)}</span></div>
         <div class="tabs work-tabs" role="tablist" aria-label="任务视图">
           ${[["chat", "对话"], ["flow", "执行图"], ["files", `成果${artifacts.length ? ` · ${artifacts.length}` : ""}`]]
             .map(([key, name]) => `<button data-tab="${key}" role="tab"
               aria-selected="${tab === key}" class="${tab === key ? "on" : ""}">${name}</button>`).join("")}
           <span class="tab-spacer"></span>
-          <button class="btn small mobile-open" id="th-side-toggle" type="button">
-            ${icon("eye", 13)} 成果与步骤详情</button>
+          ${showSide ? `<button class="btn small mobile-open" id="th-side-toggle" type="button">
+            ${icon("eye", 13)} ${tab === "flow" ? "步骤详情" : "成果预览"}</button>` : ""}
         </div>
       </div>
 
@@ -128,24 +122,27 @@ export async function renderThread(ctx) {
           ${run.state === "succeeded" && artifacts.length ? `<button class="btn small" id="th-revise">${icon("branch", 14)} 基于成果提出修改</button>` : ""}
           ${ACTIVE.has(run.state) ? `<button class="btn small danger" id="th-cancel">${icon("close", 14)} 请求取消</button>` : ""}
           <span class="grow"></span>
-          <span class="muted small">任务历时 ${duration(m.duration)} · 已记录 token ${m.tokens == null ? "未记录" : m.tokens.toLocaleString()} · 账本成本 ${esc(m.cost)}</span>
+
         </div>` : ""}
 
-      <div class="workspace">
+      <div class="workspace ${showSide ? "" : "workspace-reading"}">
         <section class="work-main">
           ${tab === "chat" ? `<div class="conversation" id="th-conv">${data.context ? `<div class="thread-context"><a href="#/tasks/${esc(data.context.run_id)}">${icon("branch", 13)} 查看上一轮</a>
-                <p>${esc(data.context.goal)}</p>${data.context.answer ? `<details><summary>上一轮答复</summary><div class="context-answer">${esc(data.context.answer)}</div></details>` : ""}</div>` : ""}${renderConversation(items)}
+                <p>${esc(data.context.goal)}</p>${data.context.answer ? `<details><summary>上一轮答复</summary><div class="context-answer">${esc(data.context.answer)}</div></details>` : ""}</div>` : ""}${renderConversation(items, {compact:true, active:ACTIVE.has(run.state)})}
               <div class="live-answer" id="th-live" hidden><b>实时输出</b><p class="live-text"></p></div>
             </div>
             <div id="thread-composer"></div>`
             : tab === "flow" ? flowView(graph) : filesView(artifacts, events)}
         </section>
-        <aside class="work-side" id="th-side-panel">${tab === "flow" ? nodePanel(graph) : docPanel(artifacts, events, m)}</aside>
+        ${showSide ? `<aside class="work-side" id="th-side-panel">${tab === "flow" ? nodePanel(graph) : docPanel(artifacts, events, m)}</aside>` : ""}
       </div>
 
       <details class="tech-details adv" data-open-key="advanced">
         <summary>高级：已脱敏事件与用量明细（管理员）</summary>
+        <p class="side-caption">${events.length} 条事件 · ${data.plan ? (data.plan.source === "template" ? "固定模板" : "已保存计划") : "未保存结构化计划"}</p>
         <div class="adv-metrics">${[
+          ["任务历时", duration(m.duration)], ["已记录 token", m.tokens ?? "未记录"],
+          ["知识后端", knowledgeLabel(events)], ["执行设备", deviceLabel(events)],
           ["有用量记录的模型调用", `${m.calls} 次`], ["步骤重试", `${m.retries} 次`],
           ["已完成工具步骤", `${m.completed} / ${m.steps}`], ["账本成本", m.cost],
         ].map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(String(v))}</b></div>`).join("")}</div>
@@ -222,7 +219,7 @@ export async function renderThread(ctx) {
     if (focus?.isConnected) { focus.focus({preventScroll:true}); if (selection) focus.setSelectionRange(...selection); }
     window.scrollTo({ top: pageY, behavior: "instant" });
     paintLive();
-    paintPreview(artifacts[0]);
+    paintPreview(artifacts.find(a => a.mime === "text/markdown") || artifacts[0]);
     bindActions(run, uncertain, pendingDelivery, artifacts);
     ctx.bindCommon();
   }
@@ -353,7 +350,7 @@ export async function renderThread(ctx) {
         : `<div class="empty-state"><div class="icon">${icon("files", 26)}</div>
             <div class="title">尚未登记成果</div>
             <div class="desc">文件成果通过服务端检查后显示在这里；未登记时不显示下载。</div></div>`}
-      ${finalText ? `<div class="msg-body final-answer-text"><b>任务答复</b><span>${esc(finalText)}</span></div>` : ""}
+      ${finalText ? `<div class="msg-body final-answer-text"><div class="answer-byline">${icon("flow", 16)} AgentOS · 答复</div><div class="md-view">${renderMarkdown(String(finalText))}</div></div>` : ""}
     </div>`;
   }
 
@@ -392,8 +389,7 @@ export async function renderThread(ctx) {
         : `<div class="side-empty">${ACTIVE.has(data.run?.state)
           ? "任务尚未产出可预览的成果；进展在对话与执行图中持续记录。"
           : "本次运行没有登记文件成果（结果以事件与答复为准）。"}</div>`}
-      <div class="side-bound">
-        <h4>本次绑定</h4>
+      <details class="side-bound" data-open-key="bindings"><summary>执行环境与用量</summary>
         ${[
           ["知识后端", knowledgeLabel(events)],
           ["执行设备", deviceLabel(events)],
@@ -403,7 +399,7 @@ export async function renderThread(ctx) {
           ["账本成本", m.cost],
         ].map(([k, v]) => `<div class="bound-row"><span>${esc(k)}</span><b>${v}</b></div>`).join("")}
         <p class="side-caption">未记录项保持「未记录」，不根据目标补造。</p>
-      </div>`;
+      </details>`;
   }
 
   function knowledgeLabel(events) {

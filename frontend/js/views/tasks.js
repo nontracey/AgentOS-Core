@@ -43,7 +43,7 @@ export async function renderTasks(ctx, hooks = {}) {
       box.innerHTML = rows.length ? rows.map((r) => `
         <button class="row-item" data-run="${esc(r.id)}">
           <span class="row-main"><b>${esc(taskTitle(r))}</b>
-            <p>${esc(r.id)} · 最近活动 ${timeShort(r.updated_at || r.created_at)}</p></span>
+            <p>最近活动 ${timeShort(r.updated_at || r.created_at)}</p></span>
           <span class="row-side">${stateBadge(r.state)}</span>
         </button>`).join("")
         : emptyState(icon("folder", 26),

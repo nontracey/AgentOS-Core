@@ -9,6 +9,7 @@
 
 import { capabilityLabel } from "./workspace-data.js";
 import { esc } from "./safe-export.js";
+import { render as renderMarkdown } from "./md.js";
 import { approvalCard, assetTitle, humanError, icon, modelZh, stateBadge, timeShort } from "./ui.js";
 
 const TOOL_LABELS = {
@@ -246,14 +247,39 @@ function safeError(raw) { return raw ? humanError(raw) : ""; }
 
 /* ---------------- 渲染（全部经 esc，不内嵌原始 JSON） ---------------- */
 
-export function renderConversation(items) {
-  return items.map(renderItem).join("");
+export function renderConversation(items, opts = {}) {
+  if (!opts.compact) return items.map(renderItem).join("");
+  // Only process records fold. Decisions, errors, sources and answers keep their order and visibility.
+  const isProcess = item => ["tool", "metric", "check", "handoff", "plan"].includes(item.type)
+    || item.type === "narration" && item.tone === "intro";
+  let html = "", batch = [], group = 0;
+  function flush() {
+    if (!batch.length) return;
+    const tools = batch.filter(i => i.type === "tool");
+    const attention = tools.some(i => ["failed", "uncertain", "awaiting_approval", "dispatched"].includes(i.state))
+      || batch.some(i => i.type === "check" && !i.passed);
+    html += `<details class="process-records" data-open-key="process:${group++}"${opts.active || attention ? " open" : ""}>
+      <summary>${icon("flow", 15)}<span>执行记录${tools.length ? ` · ${tools.length} 个步骤` : ""}</span><span class="process-hint">展开查看</span></summary>
+      <div class="process-body">${batch.map(renderItem).join("")}</div></details>`;
+    batch = [];
+  }
+  const ordered = items.some(i => i.type === "answer")
+    ? [...items.filter(i => i.type !== "artifact"), ...items.filter(i => i.type === "artifact")]
+    : items;
+  for (const item of ordered) {
+    if (isProcess(item)) batch.push(item);
+    else { flush(); html += renderItem(item); }
+  }
+  flush();
+  return html;
 }
 
 function renderItem(item) {
   switch (item.type) {
     case "user":
-      return `<div class="msg-user-label">你</div><div class="msg-user">${esc(item.text)}</div>`;
+      return `<div class="msg-user-label">你的目标</div>${String(item.text).length > 140
+        ? `<details class="msg-user user-goal" data-open-key="goal"><summary>${esc(String(item.text).slice(0, 140))}… <span>完整目标</span></summary><p>${esc(item.text)}</p></details>`
+        : `<div class="msg-user">${esc(item.text)}</div>`}`;
     case "narration":
       return `<div class="msg-agent"><span class="agent-mark">${icon("flow", 18)}</span><span>AgentOS</span></div>
         <p class="msg-body ${esc(item.tone || "")}">${esc(item.text)}</p>`;
@@ -319,7 +345,7 @@ function renderItem(item) {
       return `<div class="failure-card"><b>${esc(item.title)}</b><p>${esc(item.body)}</p>
         <button class="btn small" data-action="${esc(item.action)}">${icon("refresh", 14)} 补传已有成果</button></div>`;
     case "answer":
-      return `<div class="msg-body final-answer-text"><b>任务答复</b><span>${esc(item.text)}</span></div>`;
+      return `<div class="msg-body final-answer-text"><div class="answer-byline">${icon("flow", 16)} AgentOS · 答复</div><div class="md-view">${renderMarkdown(String(item.text))}</div></div>`;
     case "live":
       return `<div class="live-row"><span class="live-dot"></span><span>${esc(item.text)}</span></div>`;
     default:

@@ -136,7 +136,7 @@ function buildShell() {
       <aside class="sidebar" id="sidebar">
         <a class="brand" href="${guest ? "#/guest" : "#/home"}">
           <span class="logo">${icon("flow", 20)}</span>
-          <span>AgentOS<small>${guest ? "只读演示" : "AI 集成工作台"}</small></span>
+          <span>AgentOS<small>${guest ? "只读演示" : "你的 AI 工作空间"}</small></span>
         </a>
         ${guest ? "" : `<a class="nav-new" href="#/home">${icon("plus", 16)} 新任务</a>`}
         <nav class="nav-group">

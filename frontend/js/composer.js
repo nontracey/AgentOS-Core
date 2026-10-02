@@ -20,18 +20,21 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
     <div class="composer-foot"><div class="composer-tools">
       <button type="button" class="chip" data-paste>${icon("doc", 14)} 粘贴材料</button>
       <label class="chip file-chip">${icon("upload", 14)} 上传文件<input type="file" accept=".txt,.md,.csv,.json" multiple hidden aria-label="上传文本材料"></label>
-      ${contextRun ? "" : `<label class="composer-template"><span class="sr-only">执行方式</span>
-        <select aria-label="执行方式"><option value="">自动执行</option><option value="material-report">资料报告</option><option value="activity-collaboration">活动协作（研究／视觉／评审）</option></select></label>`}
-      ${contextRun ? "" : `<select data-skill aria-label="使用技能"><option value="">默认技能</option></select>`}
     </div><button class="send" type="submit" aria-label="${contextRun ? "提交修改" : "开始任务"}">${icon("send", 18)}</button></div>
-    <div class="composer-note">${contextRun ? "沿用授权材料和必要上下文；文件成果保留旧版。" : "支持 UTF-8 .txt / .md / .csv / .json，最多3份，单份64 KiB、合计128 KiB。"}</div>
+    ${contextRun ? `<div class="composer-note">沿用授权材料和必要上下文；文件成果保留旧版。</div>` : `<details class="composer-options">
+      <summary>执行选项 <span data-mode-label>自动执行</span></summary>
+      <div class="composer-option-fields"><label class="composer-template">执行方式
+        <select aria-label="执行方式"><option value="">自动执行</option><option value="material-report">资料报告</option><option value="activity-collaboration">活动协作（研究／视觉／评审）</option></select></label>
+        <label>使用技能 <select data-skill aria-label="使用技能"><option value="">默认技能</option></select></label></div>
+      <p class="composer-note">支持 UTF-8 .txt / .md / .csv / .json，最多3份，单份64 KiB、合计128 KiB。</p>
+    </details>`}
     <div class="error-text" role="alert" hidden></div>
   </form>`;
   const form = el.querySelector("form"), input = el.querySelector("textarea"), error = el.querySelector('[role="alert"]');
   const select = el.querySelector(".composer-template select");
   const skillSelect = el.querySelector("[data-skill]");
   if (skillSelect) {
-    skillSelect.addEventListener("change", () => { state.skillId = skillSelect.value; persist(); });
+    skillSelect.addEventListener("change", () => { state.skillId = skillSelect.value; persist(); updateMode(); });
     api.listSkills().then(skills => {
       if (destroyed) return;
       skillSelect.innerHTML = '<option value="">默认技能</option>' + skills.map(s =>
@@ -39,9 +42,15 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
       skillSelect.value = state.skillId || "";
     }).catch(() => { skillSelect.hidden = true; });
   }
+  function updateMode() {
+    const label = el.querySelector("[data-mode-label]");
+    if (label) label.textContent = (select?.selectedOptions[0]?.textContent || "自动执行")
+      + (state.skillId ? " · 已选择技能" : "");
+  }
   if (select) select.value = state.template;
+  updateMode();
   input.addEventListener("input", () => { state.goal = input.value; persist(); });
-  select?.addEventListener("change", () => { state.template = select.value; persist(); });
+  select?.addEventListener("change", () => { state.template = select.value; persist(); updateMode(); });
   function drawMaterials() {
     el.querySelector(".composer-materials").innerHTML = state.materials.map((m, i) =>
       `<span class="material-chip">${icon("doc", 13)} ${esc(m.name)} <small>${m.size.toLocaleString()} 字节</small>
@@ -117,7 +126,7 @@ export function mountComposer(el, { api, scope = "new", goal = "", template = ""
   return {
     setGoal(value, useTemplate = false) { state.goal = value; input.value = value;
       state.template = useTemplate ? "material-report" : ""; if (select) select.value = state.template;
-      persist(); input.focus(); },
+      updateMode(); persist(); input.focus(); },
     focus: () => input.focus(), destroy: () => { destroyed = true; dialog?.remove(); },
   };
 }

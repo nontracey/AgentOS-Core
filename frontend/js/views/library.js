@@ -49,18 +49,19 @@ export async function renderLibrary(ctx) {
           ? `<div class="lib-doc"><span class="doc-eyebrow">${esc(String(a.mime || "").includes("markdown")
               ? "MARKDOWN" : String(a.mime || "").includes("json") ? "JSON" : String(a.mime || "").includes("csv") ? "CSV" : "TEXT")}</span>
              <h3>${esc(assetTitle(a))}</h3>
-             <p>${a.version ? `v${a.version} · ` : ""}${esc(a.mime || "—")} ·
-                ${Number(a.size || 0).toLocaleString()} 字节</p>
+             <p>${a.version ? `版本 ${a.version}` : "文档成果"}</p>
              <div class="doc-divider"></div>
-             <p class="muted small">${a.sha256 ? `sha256 ${esc(String(a.sha256).slice(0, 16))}…`
-                : "校验值未记录"}</p></div>`
+             <span class="lib-paper-lines" aria-hidden="true"></span></div>`
           : `<div class="lib-media">${icon(/video/.test(a.mime || "") ? "play" : "image", 26)}
              <span>${esc(/video/.test(a.mime || "") ? "视频成果" : "媒体成果")} ·
                ${esc(a.mime || "—")}</span></div>`}</div>
         <h3 class="lib-title">${esc(assetTitle(a))}</h3>
         <p class="lib-meta">${a.version ? `v${a.version} · ` : ""}${a.parent_asset_id
-          ? "关联旧版本 · " : ""}${timeShort(a.created_at)} · 来源任务
-          <a href="#/tasks/${esc(a.run_id || "")}">${esc(String(a.run_id || "未记录"))}</a></p>
+          ? "关联旧版本 · " : ""}${timeShort(a.created_at)}</p>
+        <details class="lib-integrity"><summary>来源与文件信息</summary>
+          <p><a href="#/tasks/${esc(a.run_id || "")}">查看来源任务</a> · ${esc(a.mime || "未记录")} · ${Number(a.size || 0).toLocaleString()} 字节</p>
+          <p>${a.sha256 ? `SHA-256 ${esc(String(a.sha256))}` : "校验值未记录"}</p>
+        </details>
         <div class="lib-actions">
           <button class="btn small" data-lib-preview="${esc(a.id)}">${icon("eye", 14)} 预览</button>
           <button class="btn small" data-artifact-download="${esc(a.id)}"

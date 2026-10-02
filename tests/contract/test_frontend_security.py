@@ -51,7 +51,7 @@ def test_new_ui_dynamic_text_escaped() -> None:
     corpus = UI_JS + MAIN_JS + "".join(p.read_text(encoding="utf-8") for p in js_files)
     for needle in (
         'esc(run.goal)',                      # 任务卡目标
-        'esc(run.goal_text || run.goal',      # 详情标题
+        'esc(shortGoal(run.goal_text || run.goal',  # 详情短标题仍须转义
         'esc(what)',                          # 审批摘要（approvalCard，a.summary 归一）
         'esc(e.message)',                     # 错误提示
     ):
