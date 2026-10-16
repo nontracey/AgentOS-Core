@@ -50,7 +50,7 @@ class IntegrationFlow:
                 revision = self.revision
                 result = await workflow.execute_activity('agentos_flow_node',
                     {'tenant_id': binding['tenant_id'], 'run_id': binding['run_id'], 'node_id': node['id']},
-                    start_to_close_timeout=timedelta(minutes=10),
+                    start_to_close_timeout=timedelta(seconds=node.get('activity_timeout_s', 600)),
                     retry_policy=RetryPolicy(maximum_attempts=3, initial_interval=timedelta(seconds=2)))
                 if result['status'] == 'resource_busy':
                     await workflow.sleep(.5)

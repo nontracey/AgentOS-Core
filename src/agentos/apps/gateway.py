@@ -20,6 +20,7 @@ from agentos.apps.composition import SystemHandle, build_system
 from agentos.apps.config import Settings
 from agentos.kernel.errors import AgentOSError, ErrorCode
 from agentos.kernel.states import RunState
+from agentos.kernel.store import RunRecord
 from agentos.kernel.types import AuthContext, Receipt, Ref, utc_now
 from agentos.services.access import role_of
 from agentos.services.assets import to_public
@@ -41,6 +42,16 @@ def _http_error(exc: AgentOSError) -> HTTPException:
     status = _STATUS_MAP.get(exc.code, 500)
     headers = {"Retry-After": "5"} if exc.code in {ErrorCode.BUDGET_EXCEEDED, ErrorCode.UNAVAILABLE} else None
     return HTTPException(status_code=status, detail=exc.to_payload(), headers=headers)
+
+
+def _display_goal(run: RunRecord) -> str:
+    graph = json.loads(run.envelope_json or '{}').get('payload', {}).get('workflow_graph', {})
+    if str(graph.get('id', '')).startswith('aigc_') and graph.get('name'):
+        title = str(graph['name'])
+        head, sep, stage = title.rpartition(' · ')
+        labels = {'generate': '生成候选', 'speak': '本地配音', 'compose': '合成成片'}
+        return head + sep + labels[stage] if sep and stage in labels else title
+    return run.goal_text
 
 
 def create_app(
@@ -116,6 +127,10 @@ def create_app(
         actor = await _actor(authorization)
         handle.access.require_admin(actor, action)
         return actor
+
+    from agentos.apps.aigc import mount as mount_aigc
+
+    mount_aigc(app, handle, _actor)
 
     def _guest_or_404(exc: AgentOSError) -> HTTPException:
         """游客不可访问或不存在的资源统一 404：不泄露资源存在性。"""
@@ -281,6 +296,7 @@ def create_app(
             if (p.subject == actor.subject or is_admin) and str(p.call_id).startswith(f"{run_id}:")
         ]
         run_dto = run.model_dump(mode="json", exclude={"envelope_json", "checkpoint_json"})
+        run_dto['goal_text'] = _display_goal(run)
         if run_dto.get("error_json"):
             run_dto["error_json"] = public_json(run_dto["error_json"])
         return {
@@ -595,7 +611,7 @@ def create_app(
             raise HTTPException(
                 status_code=501, detail={"code": "unsupported", "message": "step has no tool to reconcile"}
             )
-        if not step.tool_name.endswith("_generate"):
+        if not step.tool_name.endswith("_generate") or "_aigc_" in step.tool_name:
             # 无外部探针的工具：仅当底层工具契约声明重放安全（pure/幂等键）
             # 才授权重放——同幂等键由外部去重保证效果恰好一次。gateway 侧节点
             # spec 一律 manual，须查节点能力快照里的底层声明（防谎报）。
@@ -759,12 +775,13 @@ def create_app(
             runs = [r for r in runs if r.state.value == state]
         if q:
             needle = q.lower()
-            runs = [r for r in runs if needle in (r.goal_text or "").lower()]
+            runs = [r for r in runs if needle in (_display_goal(r) or "").lower()
+                    or needle in (r.goal_text or "").lower()]
         return [
             {
                 "id": r.id,
                 "state": r.state.value,
-                "goal": r.goal_text[:80],
+                "goal": _display_goal(r)[:80],
                 "cost": handle.store.budget_totals(actor.tenant_id, r.id),
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "updated_at": r.updated_at.isoformat() if r.updated_at else None,

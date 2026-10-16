@@ -433,7 +433,8 @@ a { color: var(--accent); }
 .preview-head .icon-btn { margin-left: auto; }
 .preview-body { max-height: 70vh; overflow: auto; background: var(--panel); border: 1px solid var(--border);
   border-radius: 9px; padding: 16px; }
-.preview-body img, .preview-body video { max-width: 100%; border-radius: 6px; display: block; }
+.preview-body img, .preview-body video, .preview-body audio { max-width: 100%; border-radius: 6px; display: block; }
+.preview-body video { max-height: calc(70vh - 34px); object-fit: contain; margin-inline: auto; }
 .preview-body .md-view { background: var(--surface); padding: 18px; border-radius: 6px; }
 
 /* ---------- 旧工作台残留类的兼容收敛 ---------- */
@@ -500,6 +501,7 @@ a { color: var(--accent); }
   .bound-list > div, .guest-bounds > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .preview-mask { padding: 16px; align-items: stretch; }
   .preview-body { max-height: 60vh; }
+  .preview-body video { max-height: calc(60vh - 34px); }
   .bottom-nav a { font-size: 11px; }
 }
 @media (pointer: coarse) {
@@ -568,12 +570,12 @@ a { color: var(--accent); }
 }
 
 .hub-manage-actions { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }
-.knowledge-hit { border-top:1px solid var(--line); padding:14px 0; overflow-wrap:anywhere; }
+.knowledge-hit { border-top:1px solid var(--border); padding:14px 0; overflow-wrap:anywhere; }
 .dialog { max-height:90dvh; overflow:auto; }
 .dialog .field { display:grid; gap:6px; margin:14px 0; }
 .dialog input, .dialog textarea { width:100%; }
 .composer-tools { flex-wrap:wrap; }
-.composer-tools select { max-width:160px; background:var(--surface); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:6px; }
+.composer-tools select { max-width:160px; background:var(--surface); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px; }
 
 .nav-recent, .nav-recent a, .nav-recent .rlabel, .session>div { min-width:0; }
 .nav-recent a { max-width:100%; }
@@ -800,3 +802,26 @@ body { background:var(--bg); }
 .composer-options .composer-note { padding:0 0 12px; }
 .lib-paper-lines { display:block; height:38px; background:repeating-linear-gradient(to bottom,var(--border) 0 1px,transparent 1px 12px); width:75%; opacity:.65; }
 @media(max-width:700px) { .composer-options { padding-inline:16px; } .composer-option-fields { grid-template-columns:minmax(0,1fr); } }
+
+/* Local production workspace, reusing shell typography and control components. */
+.aigc-layout {display:grid;grid-template-columns:210px minmax(0,1fr);gap:24px;align-items:start}
+.aigc-page .panel {padding:24px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.aigc-projects {position:sticky;top:24px}
+.aigc-project {display:flex;flex-direction:column;gap:6px;width:100%;padding:12px;text-align:left;border:0;border-radius:8px;background:transparent;color:inherit;cursor:pointer}
+.aigc-project.active {background:var(--panel)}
+.aigc-project small {opacity:.65}
+.aigc-form label {display:flex;flex-direction:column;gap:8px;margin:16px 0;font-size:13px}
+.aigc-form input,.aigc-form select,.aigc-form textarea {width:100%;min-width:0}
+.aigc-fields {display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px}
+.aigc-shot {border:1px solid var(--border);padding:20px;border-radius:12px;margin:16px 0}
+.aigc-form .row,.aigc-results .row {flex-wrap:wrap;gap:10px}
+.aigc-actions {margin-top:24px}
+.aigc-results {margin-top:24px}
+.aigc-run {padding:18px 0;border-top:1px solid var(--line)}
+.aigc-candidate {padding:14px 0}
+.aigc-candidate>.row {margin:12px 0}
+.aigc-audio {margin:24px 0}
+@media(max-width:760px){.aigc-layout{grid-template-columns:1fr;gap:16px}.aigc-projects{position:static}.aigc-page .panel{padding:16px}.aigc-shot{padding:14px}.aigc-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.aigc-form input:not([type="file"]),.aigc-form select,.aigc-form textarea {font:inherit;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;line-height:1.5}
+.aigc-form textarea {resize:vertical}
+.aigc-form input[type="file"] {font:inherit;font-size:12px;color:var(--text-2)}

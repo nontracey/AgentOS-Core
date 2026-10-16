@@ -48,7 +48,7 @@ class WorkflowDriver:
     async def dispatch(self, run: RunRecord) -> RunRecord:
         if self.engine is None:
             raise AgentOSError(ErrorCode.UNAVAILABLE, 'custom flows require a configured Temporal engine')
-        await _refresh_actor(self.deps, run)
+        actor = await _refresh_actor(self.deps, run)
         payload = json.loads(run.envelope_json)['payload']
         graph = self.graph(payload)
         cp = json.loads(run.checkpoint_json or '{}')
@@ -56,9 +56,16 @@ class WorkflowDriver:
         if cp.get('workflow_engine'):
             await self.engine.signal(handle)
         else:
+            schedule = graph.schedule()
+            # Long media tools must fit their governed deadline. Resolve server contracts,
+            # rather than accepting timeout claims from editable graph configuration.
+            for item, node in zip(schedule, graph.nodes, strict=True):
+                if node.kind == 'tool':
+                    spec = await self.deps.tools.resolve(actor, str(node.config['tool']))
+                    item['activity_timeout_s'] = max(600, (spec.timeout_ms + 999) // 1000 + 120)
             # Stable workflow ID is the external idempotency key if the receipt is lost.
             await self.engine.start(handle, {'tenant_id': run.tenant_id, 'run_id': run.id,
-                                            'schedule': graph.schedule()})
+                                            'schedule': schedule})
             cp['workflow_engine'] = {'engine': 'temporal', 'handle': handle}
             self.deps.store.save_checkpoint(run.tenant_id, run.id, json.dumps(cp))
         self.deps.store.transition_run(run.tenant_id, run.id, {RunState.RUNNING}, RunState.AWAITING_RESOURCES)

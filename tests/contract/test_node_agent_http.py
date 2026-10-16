@@ -97,3 +97,17 @@ def test_auth_survives_beyond_one_hour(node_client: TestClient) -> None:
     for i in range(2):
         r = node_client.get("/tools", headers=auth(TOKEN))
         assert r.status_code == 200, f"round {i}: {r.text}"
+
+
+def test_media_upload_has_stable_content_reference_and_extension(node_client: TestClient) -> None:
+    import hashlib
+
+    data = b'synthetic-media'
+    headers = {**auth(TOKEN), 'X-Asset-Filename': 'input.png',
+               'X-Asset-Sha256': hashlib.sha256(data).hexdigest()}
+    first = node_client.post('/assets', content=data, headers=headers).json()
+    second = node_client.post('/assets', content=data, headers=headers).json()
+    assert first['asset_id'] == second['asset_id']
+    assert first['asset_id'].endswith('.png')
+    downloaded = node_client.get('/assets/'+first['asset_id'], headers=auth(TOKEN))
+    assert downloaded.content == data

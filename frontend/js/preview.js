@@ -50,8 +50,8 @@ export async function openPreview(api, assetId, opts = {}) {
     img.src = url;
     img.alt = opts.title || "图片成果";
     body.appendChild(img);
-  } else if (/^video\//.test(mime)) {
-    const video = document.createElement("video");
+  } else if (/^(video|audio)\//.test(mime)) {
+    const video = document.createElement(mime.startsWith("audio/") ? "audio" : "video");
     video.src = url;
     video.controls = true;
     body.appendChild(video);

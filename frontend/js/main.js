@@ -14,6 +14,7 @@ import { renderGuestAbout, renderGuestArtifacts, renderGuestExpired, renderGuest
 import { renderHub } from "./views/hub.js";
 import { renderInbox } from "./views/inbox.js";
 import { renderLibrary } from "./views/library.js";
+import { renderAigc } from "./views/aigc.js";
 import { renderSettings } from "./views/settings.js";
 import { renderTaskNew } from "./views/task-new.js";
 import { renderTasks } from "./views/tasks.js";
@@ -76,6 +77,7 @@ const poller = {
 const ADMIN_NAV = [
   { hash: "#/tasks", icon: "layers", label: "任务空间" },
   { hash: "#/library", icon: "files", label: "成果库" },
+  { hash: "#/aigc", icon: "image", label: "AIGC 制作" },
   { hash: "#/hub", icon: "blocks", label: "能力中心" },
   { hash: "#/workflows", icon: "flow", label: "工作流" },
 ];
@@ -379,11 +381,12 @@ async function renderEnter(el, reason) {
 
 /* ---------- 路由 ---------- */
 const ADMIN_ROUTES = { home: "新任务", tasks: "任务空间", library: "成果库", hub: "能力中心",
+  aigc: "AIGC 制作",
   settings: "偏好设置", workflows: "工作流", demo: "演示访问", inbox: "通知" };
 const GUEST_ROUTES = { guest: "演示任务", "guest/artifacts": "演示成果", "guest-about": "访问说明" };
 
 function ctxFor(el, params) {
-  return { el, api, params, session, bindCommon, navigate: (h) => { location.hash = h; }, saveBlob };
+  return { el, api, params, session, bindCommon, registerGuard: guard => { activeViewGuard = guard; }, navigate: (h) => { location.hash = h; }, saveBlob };
 }
 
 let routeVersion = 0;
@@ -496,6 +499,7 @@ async function route() {
     else if (view === "tasks" && params[0]) { ctx.params = params; out = await renderThread(ctx); }
     else if (view === "tasks") out = await renderTasks(ctx, { refreshRecents });
     else if (view === "library" || view === "artifacts") out = await renderLibrary(ctx);  // 旧链接兼容
+    else if (view === "aigc") out = await renderAigc(ctx);
     else if (view === "workflows") {
       if (!document.getElementById("workflow-css")) {
         const link = document.createElement("link"); link.id = "workflow-css";

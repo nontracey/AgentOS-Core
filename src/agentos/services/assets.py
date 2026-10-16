@@ -526,7 +526,7 @@ class AssetService:
         try:
             resp = httpx.get(url, headers={"Authorization": f"Bearer {node_token}"}, timeout=30.0, trust_env=False)
         except httpx.HTTPError as exc:
-            raise AgentOSError(ErrorCode.UNAVAILABLE, f"node unreachable: {exc}") from exc
+            raise AgentOSError(ErrorCode.UNAVAILABLE, "node media transfer unavailable") from exc
         if resp.status_code != 200:
             raise AgentOSError(ErrorCode.UNAVAILABLE, f"node asset fetch failed: HTTP {resp.status_code}")
         data = resp.content
@@ -571,9 +571,10 @@ class AssetService:
                     "X-Asset-Sha256": digest,
                 },
                 timeout=30.0,
+                trust_env=False,
             )
         except httpx.HTTPError as exc:
-            raise AgentOSError(ErrorCode.UNAVAILABLE, f"node unreachable: {exc}") from exc
+            raise AgentOSError(ErrorCode.UNAVAILABLE, "node media transfer unavailable") from exc
         if resp.status_code != 200:
             raise AgentOSError(ErrorCode.UNAVAILABLE, f"node asset push failed: HTTP {resp.status_code}")
         body = resp.json()

@@ -218,6 +218,8 @@ export function createApi() {
     getTrace: (id, cursor = 0) =>
       request(`/v1/tasks/${encodeURIComponent(id)}/trace?cursor=${cursor}&limit=200`),
     workflowRequest: (path, body) => request(path, body === undefined ? {} : {method: "POST", body}),
+    uploadAigc: (file, mime) => request("/v1/aigc/materials", {method: "POST", body: file,
+      headers: {"Content-Type": mime, "X-Media-Name": encodeURIComponent(file.name)}, timeoutMs: 120000}),
     getCapabilities: () => request("/v1/capabilities"),
     capabilityCatalog: () => request("/v1/capabilities/catalog"),
     submitTask: (payload) => request("/v1/tasks", { method: "POST", body: payload }),

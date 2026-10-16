@@ -17,7 +17,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import re
-import uuid
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -135,10 +134,14 @@ class NodeAgentApp:
         digest = hashlib.sha256(body).hexdigest()
         if expect_sha and not hmac.compare_digest(expect_sha, digest):
             raise HTTPException(status_code=422, detail="sha256 mismatch")
-        asset_id = f"{uuid.uuid4().hex[:12]}_{_SAFE_REF.sub('_', filename)[:60]}"
+        # Stable content references preserve suffixes and avoid duplicate uploads on recovery.
+        suffix = Path(filename).suffix.lower()
+        suffix = suffix if re.fullmatch(r'\.[a-z0-9]{1,8}', suffix) else '.bin'
+        asset_id = digest + suffix
         path = self._asset_path(asset_id)
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(body)
+        if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            path.write_bytes(body)
         return {"asset_id": asset_id, "sha256": digest, "size": len(body)}
 
     def asset_get(self, ref: str) -> tuple[bytes, str]:

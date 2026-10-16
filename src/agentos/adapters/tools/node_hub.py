@@ -66,7 +66,7 @@ class NodeHubAdapter:
                 timeout=30.0, trust_env=False,
             )
         except httpx.HTTPError as exc:
-            raise AgentOSError(ErrorCode.UNAVAILABLE, f"node unreachable: {node_id}: {exc}") from exc
+            raise AgentOSError(ErrorCode.UNAVAILABLE, f"node unavailable: {node_id}") from exc
         if resp.status_code == 401:
             raise AgentOSError(ErrorCode.DENIED, f"node token rejected: {node_id}")
         if resp.status_code != 200:
@@ -94,9 +94,10 @@ class NodeHubAdapter:
             version=str(cap.get("version") or ""),
             description=f"[node {node_id}] {cap.get('description') or ''}",
             input_schema=cap.get("input_schema") or {"type": "object"},
+            output_schema=cap.get("output_schema"),
             risks=list(cap.get("risks") or ["read"]),
             recovery="manual",  # 远程副作用：默认保守，需人工/对账兜底
-            timeout_ms=int(self._timeout * 1000),
+            timeout_ms=int((5460 if name.startswith("aigc.") else self._timeout) * 1000),
             discovery_status="refreshed",
         )
 
@@ -213,9 +214,35 @@ class NodeHubAdapter:
                 "step_id": ctx.step_id, "tool": tool_name, "node_id": node_id,
                 "os": str(row["os"]), "basis": "已配对节点的工具名称映射；使用节点能力快照",
             })
+        forwarded = dict(args)
+        if tool_name.startswith("aigc."):
+            if self._assets is None:
+                raise AgentOSError(ErrorCode.UNAVAILABLE, "production asset transfer unavailable")
+            # Asset IDs are authorized centrally; callers cannot inject node-local references.
+            if any(k.endswith(("_asset_ref", "_asset_refs")) for k in forwarded):
+                raise AgentOSError(ErrorCode.DENIED, "node media references are server managed")
+
+            async def push(asset_id: str) -> str:
+                assert self._assets is not None
+                meta = self._assets.get(ctx.actor, asset_id)
+                data = self._assets.read(ctx.actor, asset_id)
+                suffix = mimetypes.guess_extension(str(meta.get("mime") or "")) or ".bin"
+                transferred = await asyncio.to_thread(
+                    self._assets.push_to_node, ctx.actor, node_endpoint=str(row["endpoint"]),
+                    node_token=str(row["token_plain"]), data=data,
+                    filename=str(meta["sha256"]) + suffix,
+                )
+                return str(transferred["node_ref"])
+
+            for field in ("input_asset", "end_asset", "audio_asset"):
+                if forwarded.get(field + "_id"):
+                    forwarded[field + "_ref"] = await push(str(forwarded[field + "_id"]))
+            for field in ("clip_asset", "reference_asset", "dialogue_asset"):
+                if forwarded.get(field + "_ids"):
+                    forwarded[field + "_refs"] = [await push(str(x)) for x in forwarded[field + "_ids"]]
         body = {
             "tool_name": tool_name,
-            "args": args,
+            "args": forwarded,
             "call_id": ctx.call_id,
             "step_id": ctx.step_id,
             "run_id": ctx.run_id,
@@ -223,17 +250,18 @@ class NodeHubAdapter:
             "fence": ctx.fence,
         }
         # 相对时长避免两机时钟差；与剩余 deadline 对齐（长任务如 ComfyUI 冷启动
-        # +生成可能 >120s），上限 900s。
+        # +生成可能 >120s）；制作工具按独立受管期限。
+        ceiling = 5460.0 if tool_name.startswith("aigc.") else 900.0
         body["deadline_seconds"] = max(5.0, min(
             (ctx.deadline_at.timestamp() - utc_now().timestamp())
-            if ctx.deadline_at else self._timeout, 900.0))
+            if ctx.deadline_at else ceiling, ceiling))
         url = str(row["endpoint"]).rstrip("/") + "/execute"
         # 长任务（如 ComfyUI 冷启动+生成）按 ctx.deadline 剩余时间作为 HTTP 超时，
-        # 上限 900s；剩余不足时至少给 5s 完成请求。
-        http_timeout = self._timeout
+        # 使用服务端工具期限；剩余不足时至少给 5s 完成请求。
+        http_timeout = 5460.0 if tool_name.startswith("aigc.") else self._timeout
         if ctx.deadline_at:
             remaining = (ctx.deadline_at.timestamp() - utc_now().timestamp())
-            http_timeout = max(5.0, min(remaining, 2400.0))
+            http_timeout = max(5.0, min(remaining, http_timeout))
         try:
             # 同步 httpx 放线程池执行：不得阻塞事件循环（否则整个 gateway 冻结）
             resp = await asyncio.to_thread(
@@ -248,7 +276,7 @@ class NodeHubAdapter:
             ) from exc  # side_effect_unknown=True → reconciler 转 uncertain
         except httpx.HTTPError as exc:
             raise AgentOSError(
-                ErrorCode.UNAVAILABLE, f"node unreachable: {node_id}: {exc}"
+                ErrorCode.UNAVAILABLE, f"node unavailable: {node_id}"
             ) from exc
         if resp.status_code == 401:
             self._audit.record(
@@ -262,7 +290,26 @@ class NodeHubAdapter:
             )
         payload = resp.json()
         value = payload.get("value", {})
+        if (tool_name.startswith("aigc.") and self._assets is not None
+                and payload.get("status") == "completed" and isinstance(value, dict)
+                and isinstance(value.get("assets"), list)):
+            delivered = []
+            for entry in value["assets"]:
+                asset = await asyncio.to_thread(
+                    self._assets.fetch_from_node, ctx.actor,
+                    node_endpoint=str(row["endpoint"]), node_token=str(row["token_plain"]),
+                    remote_ref=str(entry["asset_ref"]), expect_sha256=str(entry["sha256"]),
+                    mime=str(entry.get("mime") or "application/octet-stream"),
+                    run_id=ctx.run_id if self._store.get_run(ctx.actor.tenant_id, ctx.run_id) else None,
+                    source_node=node_id, meta={"role": entry.get("role"), "job_id": value.get("job_id")},
+                )
+                delivered.append({**entry, "asset_id": asset["asset_id"]})
+                value[str(entry.get("role", "output")) + "_asset_id"] = asset["asset_id"]
+                if entry["asset_ref"] == value.get("asset_ref"):
+                    value["asset_id"] = asset["asset_id"]
+            value = {**value, "assets": delivered, "delivery": "registered"}
         if (self._assets is not None and payload.get("status") == "completed"
+                and not tool_name.startswith("aigc.")
                 and isinstance(value, dict) and value.get("asset_ref") and value.get("sha256")
                 and self._store.get_run(ctx.actor.tenant_id, ctx.run_id) is not None):
             try:
