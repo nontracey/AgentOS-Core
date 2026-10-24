@@ -38,6 +38,7 @@ const ICON_PATHS = {
   warnsign: "M12 4l8 15H4zM12 10v4M12 16.5v.5",
   eye: "M2 12s4-6 10-6 10 6 10 6-4 6-10 6-10-6-10-6zM12 10a2 2 0 100 4 2 2 0 000-4z",
   plug: "M9 3v6M15 3v6M7 9h10v3a5 5 0 01-10 0zM12 17v4",
+  package: "M21 8l-9-5-9 5v8l9 5 9-5zM3 8l9 5 9-5M12 13v8",
 };
 
 export function icon(name, size = 20) {
@@ -162,7 +163,7 @@ export function artifactCard(a, { previewable = false } = {}) {
   const isMd = String(a.mime || "").includes("markdown") || String(a.mime || "").includes("text");
   return `
   <div class="artifact-card">
-    <div class="icon">${isMd ? "📄" : "📦"}</div>
+    <div class="icon">${icon(isMd ? "doc" : "package", 20)}</div>
     <div style="min-width:0">
       <div class="name">${esc(assetTitle(a))}</div>
       <div class="meta">${esc(a.mime || "—")} · ${Number(a.size || 0).toLocaleString()} 字节
@@ -188,7 +189,7 @@ export function emptyState(icon, title, desc, action = "") {
 export function errorState(message, retry = true) {
   return `
   <div class="error-state">
-    <div class="icon">⚠️</div>
+    <div class="icon">${icon("warnsign", 28)}</div>
     <div class="title">出错了</div>
     <div class="desc">${esc(message)}</div>
     ${retry ? `<button class="btn" onclick="location.reload()">重试</button>` : ""}
