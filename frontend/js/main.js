@@ -619,16 +619,9 @@ try {
 } catch (_) { /* local login remains usable */ }
 buildShell();
 if ("serviceWorker" in navigator) {
-  // 静态外壳缓存升级由 sw.js 版本控制；API/私有素材不进缓存
-  const hadController = Boolean(navigator.serviceWorker.controller);
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
-    if (hadController) toast("界面已有更新，请先保存未提交内容，再刷新载入。", "");
-  });
-  navigator.serviceWorker.register("/ui/sw.js").then((reg) => {
-    const activate = () => reg.waiting?.postMessage({ type: "ACTIVATE_SHELL" });
-    activate();
-    reg.addEventListener("updatefound", () => reg.installing?.addEventListener("statechange", activate));
-  }).catch(() => { /* 无 SW 也能用 */ });
+  // v60 起不再使用离线外壳缓存：注销旧 SW 并清理缓存，避免新旧界面互相覆盖。
+  navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((reg) => reg.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then((keys) => keys.filter((k) => k.startsWith("agentos-shell-")).forEach((k) => caches.delete(k))).catch(() => {});
 }
 window.addEventListener("hashchange", () => { window.scrollTo(0,0); route(); });
 window.addEventListener("pagehide", () => { poller.stop(); activeViewCleanup?.(); });

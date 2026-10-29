@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
+import re
+import threading
+import time
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
@@ -10,7 +14,73 @@ from typing import Any
 from temporalio import activity, workflow
 from temporalio.client import Client
 from temporalio.common import RetryPolicy, WorkflowIDReusePolicy
+from temporalio.runtime import LogForwardingConfig, LoggingConfig, Runtime, TelemetryConfig, TelemetryFilter
 from temporalio.worker import Worker
+
+_CORE_LOGGER = "agentos.temporal"
+
+
+class RepeatLimiter(logging.Filter):
+    """Let a recurring message through once per window and report how many copies were held back.
+
+    When the Temporal server is unreachable, pollers and failed workflow tasks retry forever and
+    each attempt logs; without this a long outage fills the disk with identical lines.
+    """
+
+    def __init__(self, window_s: float = 300.0, max_keys: int = 256) -> None:
+        super().__init__()
+        self.window_s = window_s
+        self.max_keys = max_keys
+        self._seen: dict[str, tuple[float, int]] = {}
+        self._lock = threading.Lock()
+
+    @staticmethod
+    def _key(record: logging.LogRecord) -> str:
+        message = record.getMessage()
+        return record.name + "|" + re.sub(r"[0-9a-fA-F-]{8,}|\d+", "#", message)[:240]
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        key = self._key(record)
+        now = time.monotonic()
+        with self._lock:
+            entry = self._seen.get(key)
+            if entry is not None and now - entry[0] < self.window_s:
+                self._seen[key] = (entry[0], entry[1] + 1)
+                return False
+            held = entry[1] if entry is not None else 0
+            if entry is None and len(self._seen) >= self.max_keys:
+                oldest = min(self._seen, key=lambda k: self._seen[k][0])
+                del self._seen[oldest]
+            self._seen[key] = (now, 0)
+        if held:
+            record.msg = f"{record.getMessage()} [{held} similar messages suppressed in the last {self.window_s:.0f}s]"
+            record.args = None
+        return True
+
+
+_LIMITER = RepeatLimiter()
+_RUNTIME: Runtime | None = None
+
+
+def quiet_runtime() -> Runtime:
+    """One Temporal runtime whose core logs go through Python logging with repeat limiting."""
+    global _RUNTIME
+    if _RUNTIME is None:
+        core = logging.getLogger(_CORE_LOGGER)
+        if _LIMITER not in core.filters:
+            core.addFilter(_LIMITER)
+        # Worker heartbeats only feed server-side worker listings; during an outage they add a
+        # second stream of retry warnings, so they stay off for the personal single-worker setup.
+        _RUNTIME = Runtime(telemetry=TelemetryConfig(logging=LoggingConfig(
+            filter=TelemetryFilter(core_level="WARN", other_level="ERROR"),
+            forwarding=LogForwardingConfig(logger=core, append_target_to_name=False))),
+            worker_heartbeat_interval=None)
+    names = [n for n in list(logging.Logger.manager.loggerDict) if n.split(".")[0] == "temporalio"]
+    for name in names:
+        sdk_logger = logging.getLogger(name)
+        if _LIMITER not in sdk_logger.filters:
+            sdk_logger.addFilter(_LIMITER)
+    return _RUNTIME
 
 
 @workflow.defn
@@ -90,7 +160,7 @@ class TemporalWorkflowAdapter:
         self.worker: Worker | None = None
 
     async def open(self) -> None:
-        self.client = await Client.connect(self.address, namespace=self.namespace)
+        self.client = await Client.connect(self.address, namespace=self.namespace, runtime=quiet_runtime())
 
         @activity.defn(name='agentos_flow_node')
         async def dispatch(binding: dict[str, Any]) -> dict[str, Any]:

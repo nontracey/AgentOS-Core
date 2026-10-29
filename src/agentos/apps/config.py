@@ -37,6 +37,8 @@ class Settings:
     runtime_gateway_url: str = "http://127.0.0.1:8800"
     model_egress: str = "local"  # local | cloud, explicit privacy boundary
     temporal_address: str = ""
+    # Flow engine: "temporal" (default; needs temporal_address) or "local" (in-process, single host).
+    workflow_engine: str = "temporal"
     temporal_namespace: str = "default"
     temporal_queue: str = "agentos"
     model_provider: str = "scripted"  # scripted | openai_compat
@@ -71,6 +73,15 @@ class Settings:
     public_demo_enabled: bool = True        # 总开关（env AGENTOS_PUBLIC_DEMO_ENABLED）
     public_demo_ttl_hours: int = 24         # 单次访客会话/授权到期上限
     public_demo_max_sessions: int = 200     # 同时有效的免登访客名额（防无限增殖）
+    # 直连对话：模型端点按顺序发现（Ollama 原生或 OpenAI 兼容）；空=本机 Ollama + 已配置的模型网关。
+    # 每个端点声明 egress（local/cloud），model_egress=local 时云端端点只列出不调用。
+    chat_endpoints: list[dict[str, Any]] = field(default_factory=list)
+    chat_default_model: str = ""             # "端点ID/模型名"；空=自动选择已加载或第一个对话模型
+    # 与对话模型共用一张显卡的生成节点 ID；为空时不做显卡互斥（见 services/accelerator.py）
+    accelerator_nodes: list[str] = field(default_factory=list)
+    studio_enabled: bool = False             # 制作工作室（AIGC 一键模式）；需要工作流引擎与已配对的生成节点
+    studio_node_id: str = ""                 # 执行生成的已配对节点 ID，由部署方指定
+    studio_ffmpeg: str = ""                  # 控制面合成用 ffmpeg；空=自动查找
 
     def validate(self) -> None:
         if self.agent_runtime not in {"codex", "scripted"}:
@@ -80,6 +91,8 @@ class Settings:
                                "real models require Codex runtime; scripted runtime is fixture-only")
         if self.model_egress not in {"local", "cloud"}:
             raise AgentOSError(ErrorCode.INVALID, "unknown model egress")
+        if self.workflow_engine not in {"temporal", "local"}:
+            raise AgentOSError(ErrorCode.INVALID, f"unknown workflow engine: {self.workflow_engine}")
         if self.profile != "personal":
             raise AgentOSError(ErrorCode.INVALID, f"unknown profile: {self.profile}")
         if self.model_provider not in {"scripted", "openai_compat"}:
@@ -130,8 +143,34 @@ class Settings:
                     setattr(settings, key, data["model"][key])
                 elif key in data:
                     setattr(settings, key, data[key])
+        if source is not None and source.exists():
+            chat = data.get("chat", {})
+            if isinstance(chat.get("endpoints"), list):
+                settings.chat_endpoints = [dict(e) for e in chat["endpoints"] if isinstance(e, dict)]
+            if chat.get("default_model"):
+                settings.chat_default_model = str(chat["default_model"])
+            if isinstance(chat.get("accelerator_nodes"), list):
+                settings.accelerator_nodes = [str(n) for n in chat["accelerator_nodes"]]
+            studio = data.get("studio", {})
+            if "enabled" in studio:
+                settings.studio_enabled = bool(studio["enabled"])
+            for key in ("node_id", "ffmpeg"):
+                if studio.get(key):
+                    setattr(settings, "studio_" + key, str(studio[key]))
+        if (raw_endpoints := os.environ.get("AGENTOS_CHAT_ENDPOINTS")):
+            import json as _json
+
+            settings.chat_endpoints = [dict(e) for e in _json.loads(raw_endpoints) if isinstance(e, dict)]
+        settings.chat_default_model = os.environ.get("AGENTOS_CHAT_DEFAULT_MODEL", settings.chat_default_model)
+        if (raw_nodes := os.environ.get("AGENTOS_ACCELERATOR_NODES")) is not None:
+            settings.accelerator_nodes = [n.strip() for n in raw_nodes.split(",") if n.strip()]
+        if (raw_studio := os.environ.get("AGENTOS_STUDIO_ENABLED")) is not None:
+            settings.studio_enabled = raw_studio.strip().lower() in {"1", "true", "yes", "on"}
+        settings.studio_node_id = os.environ.get("AGENTOS_STUDIO_NODE_ID", settings.studio_node_id)
+        settings.studio_ffmpeg = os.environ.get("AGENTOS_STUDIO_FFMPEG", settings.studio_ffmpeg)
         for key in ("agent_runtime", "codex_binary", "codex_version", "runtime_gateway_url",
-                    "temporal_address", "temporal_namespace", "temporal_queue", "model_egress"):
+                    "temporal_address", "temporal_namespace", "temporal_queue", "workflow_engine",
+                    "model_egress"):
             if source is not None and source.exists() and key in data:
                 setattr(settings, key, str(data[key]))
             value = os.environ.get("AGENTOS_" + key.upper())

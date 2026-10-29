@@ -18,6 +18,7 @@ from agentos.adapters.tools.node_hub import NodeHubAdapter
 from agentos.apps.config import Settings
 from agentos.kernel.ports import ModelPort
 from agentos.kernel.store import StoreProtocol
+from agentos.kernel.types import AuthContext
 from agentos.runtime.executor import RuntimeDeps
 from agentos.runtime.loop import AgentLoop, LoopLimits
 from agentos.runtime.worker import Worker
@@ -65,6 +66,10 @@ class SystemHandle:
     workflow_driver: Any = None
     workflow_engine: Any = None
     auth_sessions: Any = None  # 登录会话服务（双 token；None=未装配）
+    accelerator: Any = None  # 可选显卡互斥（对话模型与生成节点共用一张卡时启用）
+    chat: Any = None  # 直连对话（ChatService）
+    studio: Any = None  # 制作工作室（StudioService）
+    grants: Any = None  # owner 预授权（GrantService，FR-GOV-02）
 
     def boot(self) -> str:
         """初始化数据目录与 owner 身份；返回 owner 令牌（仅首次生成时为新值）。
@@ -138,8 +143,12 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         knowledge_searcher=knowledge if knowledge.enabled else None,
     )
 
+    from agentos.services.accelerator import AcceleratorLease
+
+    accelerator = AcceleratorLease()
     inner_hub = McpHubAdapter(store, tools)
-    tool_hub = NodeHubAdapter(inner_hub, store, audit_service, assets=assets_service)
+    tool_hub = NodeHubAdapter(inner_hub, store, audit_service, assets=assets_service,
+                              accelerator=accelerator, accelerator_nodes=settings.accelerator_nodes)
     from agentos.services.capabilities import CapabilityCatalog
 
     catalog = CapabilityCatalog(tool_hub)
@@ -284,8 +293,13 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
     from agentos.runtime.workflow_driver import WorkflowDriver
 
     flow_driver = WorkflowDriver(deps, engine_driver)
-    flow_engine = None
-    if settings.temporal_address:
+    flow_engine: Any = None
+    if settings.workflow_engine == "local":
+        from agentos.adapters.workflow.local import LocalWorkflowAdapter
+
+        flow_engine = LocalWorkflowAdapter(flow_driver.node, flow_driver.finish, pending=flow_driver.pending)
+        flow_driver.engine = flow_engine
+    elif settings.temporal_address:
         from agentos.adapters.workflow.temporal import TemporalWorkflowAdapter
 
         flow_engine = TemporalWorkflowAdapter(settings.temporal_address, settings.temporal_namespace,
@@ -337,7 +351,47 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
     from agentos.services.auth_session import AuthSessionService
 
     auth_sessions = AuthSessionService(store, identity_backend)
+    from agentos.adapters.store.chat_sqlite import ChatStore
+    from agentos.services.chat import ChatService, chat_db_path, default_endpoints
+
+    def audit_model(actor: AuthContext, kind: str, detail: dict[str, Any]) -> None:
+        audit_service.record(actor.tenant_id, kind, subject=actor.subject, detail=detail)
+
+    chat = ChatService(
+        ChatStore(chat_db_path(settings.data_dir)),
+        default_endpoints(settings.chat_endpoints,
+                          gateway_url=settings.model_base_url if settings.model_provider == "openai_compat" else "",
+                          gateway_key=settings.model_api_key, gateway_egress=settings.model_egress),
+        lease=accelerator, egress_policy=settings.model_egress, audit=audit_model,
+        default_model=settings.chat_default_model,
+        read_asset=lambda actor, asset_id: (assets_service.get(actor, asset_id), assets_service.read(actor, asset_id)),
+    )
+
+    async def free_shared_card() -> None:
+        await chat.release_gpu()
+
+    accelerator.before_generation.append(free_shared_card)
+    from agentos.services.grants import GrantService
+
+    grants = GrantService(store, audit_service, catalog)
+    studio = None
+    if settings.studio_enabled:
+        from agentos.services.studio.media import MediaSigner
+        from agentos.services.studio.production import StudioNodes
+        from agentos.services.studio.service import StudioService
+
+        studio = StudioService(
+            store=store, drafts=drafts, workflows=workflows, catalog=catalog, assets=assets_service,
+            access=access, chat=chat, accelerator=accelerator,
+            signer=MediaSigner(settings.data_dir / "studio" / "media.key"), node_id=settings.studio_node_id,
+            ffmpeg=settings.studio_ffmpeg, cache_dir=settings.data_dir / "studio" / "cache",
+            engine=lambda: flow_driver.engine, tool_hub=tool_hub, grants=grants)
+        StudioNodes(studio).register(flow_driver.custom)
     return SystemHandle(
+        accelerator=accelerator,
+        chat=chat,
+        studio=studio,
+        grants=grants,
         settings=settings,
         store=store,
         deps=deps,

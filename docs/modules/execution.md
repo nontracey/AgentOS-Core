@@ -41,7 +41,7 @@ flowchart TB
     Govern -. 预留 Adapter .-> Future
 ```
 
-Temporal 是持久图工作流依赖；普通 Codex 任务可不接入 Temporal。模型端点可以部署于任意可达位置。知识实现当前为内置或 WeKnora，企业项目/额度/渠道图中虚线只表示预留 Port，未代表真实接入。
+Temporal 是持久图工作流依赖；单进程部署也可设置 `workflow_engine = "local"` 使用进程内引擎（同一路由语义，重启从检查点续跑，不适合多进程或长计时）。普通 Codex 任务可不接入任何工作流引擎。模型端点可以部署于任意可达位置。知识实现当前为内置或 WeKnora，企业项目/额度/渠道图中虚线只表示预留 Port，未代表真实接入。
 
 ## 2. 单次工具动作与恢复
 
@@ -83,7 +83,7 @@ sequenceDiagram
 | --- | --- |
 | 装配与模型闸门 | `apps/composition.py`、`services/model_gate.py` |
 | Codex 协议与线程 | `adapters/runtime/codex.py`、`runtime/agent_driver.py` |
-| Temporal 编排 | `adapters/workflow/temporal.py`、`runtime/workflow_driver.py` |
+| Temporal / 本地编排 | `adapters/workflow/temporal.py`、`adapters/workflow/local.py`、`runtime/workflow_driver.py` |
 | 副作用与恢复 | `runtime/executor.py`、`services/access.py` |
 
 通用引擎复用 Codex/Temporal，平台保留业务权限、审批、幂等和成果约束。业务策略与状态语义见 [工程设计](../02-工程设计.md)。

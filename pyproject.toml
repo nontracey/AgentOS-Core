@@ -58,8 +58,9 @@ only-include = [
     "frontend/js",
     "frontend/workflow-dist/editor.js",
     "frontend/workflow-dist/editor.css",
+    "frontend/app-dist",
 ]
-artifacts = ["/frontend/workflow-dist/editor.js", "/frontend/workflow-dist/editor.css"]
+artifacts = ["/frontend/workflow-dist/editor.js", "/frontend/workflow-dist/editor.css", "/frontend/app-dist/**"]
 dev-mode-dirs = ["src"]
 
 [tool.hatch.build.targets.wheel.sources]
@@ -79,6 +80,8 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 # 运维脚本（blind_run/e2e/eval 等）有意在常量定义后再导入部署配置（凭据只存 gitignored runtime.json），
 # 且包含长中文字符串与未用占位变量；E402/E501/F811/F841 按"脚本工具"口径豁免，src/tests 仍全量检查。
 "scripts/*.py" = ["E402", "E501", "F811", "F841", "SIM105"]
+# 导演提示词是中文散文，按段落保留原文更易审阅
+"src/agentos/domains/aigc/studio/director.py" = ["E501"]
 
 [tool.mypy]
 python_version = "3.13"

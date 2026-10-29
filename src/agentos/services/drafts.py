@@ -17,7 +17,7 @@ class DraftService:
 
     def _check(self, actor: AuthContext, kind: str, id: str = "draft") -> None:
         self.access.require(actor, "workflow.list")
-        if kind not in {"workflow", "mcp", "aigc"} or not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", id):
+        if kind not in {"workflow", "mcp", "aigc", "studio"} or not re.fullmatch(r"[a-zA-Z0-9_-]{1,64}", id):
             raise AgentOSError(ErrorCode.INVALID, "invalid draft kind or identifier")
 
     @staticmethod

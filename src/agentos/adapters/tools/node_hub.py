@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import mimetypes
 import re
@@ -43,12 +44,16 @@ class NodeHubAdapter:
         self, inner: ToolPort | McpHubAdapter, store: Any, audit: AuditService,
         *, call_timeout_s: float = _CALL_TIMEOUT_S,
         assets: AssetService | None = None,
+        accelerator: Any = None, accelerator_nodes: list[str] | None = None,
     ) -> None:
         self._inner = inner
         self._store = store
         self._audit = audit
         self._timeout = call_timeout_s
         self._assets = assets
+        # Optional AcceleratorLease: generation on these nodes shares a card with chat servers.
+        self._accelerator = accelerator
+        self._accelerator_nodes = set(accelerator_nodes or [])
         self._name_map: dict[str, tuple[str, str]] = {}  # 合规名 -> (node_id, 真实工具名)
 
     # ------------------------------------------------------------- 能力发现
@@ -262,14 +267,20 @@ class NodeHubAdapter:
         if ctx.deadline_at:
             remaining = (ctx.deadline_at.timestamp() - utc_now().timestamp())
             http_timeout = max(5.0, min(remaining, http_timeout))
+        lease: Any = contextlib.nullcontext()
+        if (self._accelerator is not None and node_id in self._accelerator_nodes
+                and tool_name.startswith("aigc.")):
+            lease = self._accelerator.hold("generation", f"{tool_name} · {node_id}",
+                                           detail={"run_id": ctx.run_id, "step_id": ctx.step_id})
         try:
-            # 同步 httpx 放线程池执行：不得阻塞事件循环（否则整个 gateway 冻结）
-            resp = await asyncio.to_thread(
-                httpx.post,
-                url, json=body,
-                headers={"Authorization": f"Bearer {row['token_plain']}"},
-                timeout=http_timeout, trust_env=False,
-            )
+            async with lease:
+                # 同步 httpx 放线程池执行：不得阻塞事件循环（否则整个 gateway 冻结）
+                resp = await asyncio.to_thread(
+                    httpx.post,
+                    url, json=body,
+                    headers={"Authorization": f"Bearer {row['token_plain']}"},
+                    timeout=http_timeout, trust_env=False,
+                )
         except httpx.TimeoutException as exc:
             raise AgentOSError(
                 ErrorCode.TIMEOUT, f"node call timeout: {node_id}:{tool_name}"

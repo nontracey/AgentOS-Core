@@ -149,6 +149,10 @@ class StoreProtocol(Protocol):
 
     def list_runs(self, tenant_id: str, subject: str | None = None) -> list[RunRecord]: ...
 
+    def list_engine_runs(self, engine: str) -> list[RunRecord]:
+        """Unfinished runs of every tenant whose flow is owned by the named workflow engine."""
+
+
     def create_step(self, step: StepRecord) -> StepRecord: ...
 
     def prepare_once(

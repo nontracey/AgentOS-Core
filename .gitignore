@@ -60,6 +60,8 @@ deploy/runtime.json
 # Workflow React island: production files are generated with npm run build.
 frontend/workflow/node_modules/
 frontend/workflow-dist/
+frontend/app/node_modules/
+frontend/app-dist/
 
 # Component secrets are supplied locally; public recipes contain placeholders.
 deploy/components/private.env

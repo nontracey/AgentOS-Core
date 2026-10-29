@@ -17,7 +17,11 @@ def test_ui_served(make_system: Callable[..., SystemHandle]) -> None:
     with TestClient(app) as client:
         r = client.get("/ui/")
         assert r.status_code == 200
-        assert "AgentOS 工作台" in r.text
+        # 新工作台已构建时 /ui/ 是 React 入口；未构建时回退到上一版工作台
+        assert '<div id="root">' in r.text or "AgentOS 工作台" in r.text
+        assert r.headers.get("cache-control") == "no-cache" or "AgentOS 工作台" in r.text
+        legacy = client.get("/ui/legacy/")
+        assert legacy.status_code == 200 and "AgentOS 工作台" in legacy.text
         # 旧控制台过渡期保留可运行
         r2 = client.get("/ui/legacy.html")
         assert r2.status_code == 200

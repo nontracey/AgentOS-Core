@@ -46,6 +46,8 @@ def _http_error(exc: AgentOSError) -> HTTPException:
 
 def _display_goal(run: RunRecord) -> str:
     graph = json.loads(run.envelope_json or '{}').get('payload', {}).get('workflow_graph', {})
+    if str(graph.get('id', '')).startswith('studio_') and graph.get('name'):
+        return str(graph['name'])
     if str(graph.get('id', '')).startswith('aigc_') and graph.get('name'):
         title = str(graph['name'])
         head, sep, stage = title.rpartition(' · ')
@@ -77,9 +79,13 @@ def create_app(
             async with mcp_server.session_manager.run():
                 stop = asyncio.Event()
                 task = asyncio.create_task(handle.worker.run_forever(stop))
+                if handle.studio is not None:
+                    await handle.studio.start()
                 try:
                     yield
                 finally:
+                    if handle.studio is not None:
+                        await handle.studio.stop()
                     stop.set()
                     try:
                         await asyncio.wait_for(task, 5)
@@ -131,6 +137,20 @@ def create_app(
     from agentos.apps.aigc import mount as mount_aigc
 
     mount_aigc(app, handle, _actor)
+
+    if handle.chat is not None:
+        from agentos.apps.chat import mount as mount_chat
+
+        def _register_chat_asset(actor: AuthContext, data: bytes, mime: str, name: str) -> dict[str, Any]:
+            return handle.assets.register_local(actor, data, mime=mime, name=name,
+                                                meta={"kind": "chat_attachment"}, source_node="upload")
+
+        mount_chat(app, handle.chat, _actor, write_guard=handle.access.require_write_allowed,
+                   register_asset=_register_chat_asset)
+    if handle.studio is not None:
+        from agentos.apps.studio import mount as mount_studio
+
+        mount_studio(app, handle, _actor)
 
     def _guest_or_404(exc: AgentOSError) -> HTTPException:
         """游客不可访问或不存在的资源统一 404：不泄露资源存在性。"""
@@ -926,7 +946,7 @@ def create_app(
         definition = handle.store.get_workflow_definition(actor.tenant_id, workflow_id, version)
         if (definition and json.loads(definition["definition_json"]).get("nodes")
                 and handle.workflow_driver.engine is None):
-            raise AgentOSError(ErrorCode.UNAVAILABLE, "workflow execution requires an available Temporal engine")
+            raise AgentOSError(ErrorCode.UNAVAILABLE, "workflow execution requires an available workflow engine")
         result = handle.workflows.start(actor, workflow_id, version, inputs, idempotency_key)
         return result
 
@@ -1169,6 +1189,23 @@ def create_app(
         if include_disabled and not handle.access.is_admin(actor):
             raise HTTPException(status_code=403, detail={"code": "denied", "message": "admin required"})
         return handle.skills.list(actor, include_disabled=include_disabled)
+
+    @app.get("/v1/grants")
+    async def list_grants(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
+        """Owner pre-authorizations of single tools (FR-GOV-02); each is bounded and revocable."""
+        return handle.grants.list(await _actor(authorization))  # type: ignore[no-any-return]
+
+    @app.post("/v1/grants", status_code=201)
+    async def issue_grant(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _write_actor(authorization, "policy.grant")
+        hours = body.get("hours", 24)
+        return await handle.grants.issue(actor, str(body.get("tool_name") or ""),  # type: ignore[no-any-return]
+                                         hours if type(hours) is int else -1)
+
+    @app.post("/v1/grants/{grant_id}/revoke")
+    async def revoke_grant(grant_id: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _write_actor(authorization, "policy.grant")
+        return handle.grants.revoke(actor, grant_id)  # type: ignore[no-any-return]
 
     @app.get("/v1/approvals")
     async def list_approvals(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
@@ -1936,7 +1973,35 @@ def create_app(
     if not frontend_dir.is_dir():
         frontend_dir = package_dir.parents[1] / "frontend"
     if frontend_dir.is_dir():
+        from fastapi.responses import FileResponse
         from fastapi.staticfiles import StaticFiles
+
+        # New workspace (React build) at /ui/; the previous workbench stays at /ui/legacy/.
+        # Without a build (fresh source checkout) /ui/ keeps serving the previous workbench.
+        app_dist = frontend_dir / "app-dist"
+        if not app_dist.is_dir():
+            app_dist = frontend_dir.parent / "app-dist"
+        no_store = {"Cache-Control": "no-cache"}
+
+        @app.get("/ui/legacy/", include_in_schema=False)
+        async def legacy_ui() -> FileResponse:
+            return FileResponse(frontend_dir / "index.html", headers=no_store)
+
+        if (app_dist / "index.html").is_file():
+
+            @app.get("/ui/", include_in_schema=False)
+            @app.get("/ui/index.html", include_in_schema=False)
+            async def workspace_ui() -> FileResponse:
+                return FileResponse(app_dist / "index.html", headers=no_store)
+
+            class ImmutableFiles(StaticFiles):
+                async def get_response(self, path: str, scope: Any) -> Any:
+                    response = await super().get_response(path, scope)
+                    if response.status_code == 200:
+                        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                    return response
+
+            app.mount("/ui/assets", ImmutableFiles(directory=str(app_dist / "assets")), name="ui-assets")
 
         app.mount("/ui", StaticFiles(directory=str(frontend_dir), html=True), name="ui")
 

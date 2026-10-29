@@ -21,7 +21,7 @@ from typing import Any
 
 from agentos.kernel.dto import PolicyGrant
 from agentos.kernel.errors import AgentOSError, ErrorCode
-from agentos.kernel.states import ApprovalState, RunState, StepState
+from agentos.kernel.states import RUN_TERMINAL_STATES, ApprovalState, RunState, StepState
 from agentos.kernel.store import (
     ApprovalRecord,
     AuditEvent,
@@ -579,6 +579,24 @@ class SqliteStore:
                     (tenant_id, subject),
                 ).fetchall()
         return [_row_to_run(r) for r in rows]
+
+    def list_engine_runs(self, engine: str) -> list[RunRecord]:
+        terminal = sorted(s.value for s in RUN_TERMINAL_STATES)
+        placeholders = ",".join("?" * len(terminal))
+        with self._lock:
+            rows = self._conn.execute(
+                f"SELECT * FROM runs WHERE state NOT IN ({placeholders}) AND checkpoint_json LIKE ? "
+                "ORDER BY created_at", (*terminal, '%"workflow_engine"%'),
+            ).fetchall()
+        runs = []
+        for row in rows:
+            try:
+                owner = json.loads(row["checkpoint_json"] or "{}").get("workflow_engine") or {}
+            except ValueError:
+                continue
+            if owner.get("engine") == engine:
+                runs.append(_row_to_run(row))
+        return runs
 
     def transition_run(
         self,

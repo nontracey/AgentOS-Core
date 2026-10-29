@@ -24,6 +24,10 @@ class WorkflowEngine(Protocol):
     async def cancel(self, workflow_id: str) -> None: ...
 
 
+def engine_name(engine: object) -> str:
+    return str(getattr(engine, 'name', 'temporal'))
+
+
 CustomNode = Callable[[dict[str, Any], dict[str, Any]], Awaitable[dict[str, Any]]]
 
 
@@ -47,7 +51,7 @@ class WorkflowDriver:
 
     async def dispatch(self, run: RunRecord) -> RunRecord:
         if self.engine is None:
-            raise AgentOSError(ErrorCode.UNAVAILABLE, 'custom flows require a configured Temporal engine')
+            raise AgentOSError(ErrorCode.UNAVAILABLE, 'custom flows require a configured workflow engine')
         actor = await _refresh_actor(self.deps, run)
         payload = json.loads(run.envelope_json)['payload']
         graph = self.graph(payload)
@@ -66,7 +70,7 @@ class WorkflowDriver:
             # Stable workflow ID is the external idempotency key if the receipt is lost.
             await self.engine.start(handle, {'tenant_id': run.tenant_id, 'run_id': run.id,
                                             'schedule': schedule})
-            cp['workflow_engine'] = {'engine': 'temporal', 'handle': handle}
+            cp['workflow_engine'] = {'engine': engine_name(self.engine), 'handle': handle}
             self.deps.store.save_checkpoint(run.tenant_id, run.id, json.dumps(cp))
         self.deps.store.transition_run(run.tenant_id, run.id, {RunState.RUNNING}, RunState.AWAITING_RESOURCES)
         return self.deps.store.get_run(run.tenant_id, run.id) or run
@@ -83,7 +87,7 @@ class WorkflowDriver:
         run = store.get_run(tenant, run_id)
         if run is None or run.state in RUN_TERMINAL or run.state == RunState.CANCEL_REQUESTED:
             return {'status': 'failed'}
-        owner = 'temporal-' + uuid.uuid4().hex
+        owner = engine_name(self.engine) + '-' + uuid.uuid4().hex
         lease = store.claim_run_lease(tenant, run_id, owner, 120)
         if lease is None:
             return {'status': 'resource_busy'}
@@ -192,7 +196,9 @@ class WorkflowDriver:
                 implementation = self.custom.get(node.config['adapter'])
                 if implementation is None:
                     raise AgentOSError(ErrorCode.UNSUPPORTED, 'custom adapter is not registered server-side')
-                output = await implementation(resolve(node.config.get('inputs', {})), context)
+                # Server-registered adapters act as the refreshed run identity, like tool steps.
+                output = await implementation(resolve(node.config.get('inputs', {})), {
+                    **context, 'actor': actor, 'tenant_id': tenant, 'run_id': run_id, 'node_id': node_id})
             else:
                 output = {'wait_completed': True}  # Durable timer already owned by Temporal.
             results = cp.setdefault('workflow_nodes', {})
@@ -202,7 +208,8 @@ class WorkflowDriver:
             store.transition_run(tenant, run_id, {RunState.RUNNING}, RunState.AWAITING_RESOURCES)
             return {'status': 'completed', 'branch': branch}
         except AgentOSError as exc:
-            store.event_append(tenant, run_id, 'workflow.node_failed', {'node_id': node_id, 'code': exc.code.value})
+            store.event_append(tenant, run_id, 'workflow.node_failed',
+                               {'node_id': node_id, 'code': exc.code.value, 'message': exc.message[:300]})
             return {'status': 'failed'}
         finally:
             renewing.cancel()
@@ -228,4 +235,16 @@ class WorkflowDriver:
             cp.setdefault('messages', []).append({'role': 'assistant', 'content': answer})
             self.deps.store.save_checkpoint(tenant, run_id, json.dumps(cp, ensure_ascii=False))
         self.deps.store.transition_run(tenant, run_id, {RunState.RUNNING, RunState.CANCEL_REQUESTED}, state)
-        self.deps.store.event_append(tenant, run_id, 'run.completed', {'state': state.value, 'engine': 'temporal'})
+        self.deps.store.event_append(tenant, run_id, 'run.completed',
+                                     {'state': state.value, 'engine': engine_name(self.engine)})
+
+    def pending(self, engine: str) -> list[tuple[str, dict[str, Any]]]:
+        """(handle, binding) of unfinished flows an in-process engine must resume after a restart."""
+        resumable = []
+        for run in self.deps.store.list_engine_runs(engine):
+            if run.state == RunState.CANCEL_REQUESTED:
+                continue
+            payload = json.loads(run.envelope_json)['payload']
+            resumable.append((self.handle(run), {'tenant_id': run.tenant_id, 'run_id': run.id,
+                                                 'schedule': self.graph(payload).schedule()}))
+        return resumable

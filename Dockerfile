@@ -5,6 +5,12 @@ COPY frontend/workflow/package.json frontend/workflow/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY frontend/workflow/ ./
 RUN npm run typecheck && npm run build
+# Workspace UI served at /ui/ (output: /build/frontend/app-dist).
+WORKDIR /build/frontend/app
+COPY frontend/app/package.json frontend/app/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY frontend/app/ ./
+RUN npm run build
 # The upstream CLI owns inference and compaction; no custom execution engine.
 ARG NPM_REGISTRY=https://registry.npmjs.org
 RUN npm install --prefix /opt/codex --omit=dev --no-audit --no-fund \
@@ -29,6 +35,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY src ./src
 COPY frontend ./frontend
 COPY --from=assets /build/frontend/workflow-dist ./frontend/workflow-dist
+COPY --from=assets /build/frontend/app-dist ./frontend/app-dist
 COPY --from=assets /opt/codex /opt/codex
 COPY --from=assets /usr/local/bin/node /usr/local/bin/node
 RUN uv sync --frozen --no-dev

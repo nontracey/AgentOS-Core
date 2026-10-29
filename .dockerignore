@@ -15,6 +15,7 @@
 **/*.pyc
 **/node_modules/
 frontend/workflow-dist/
+frontend/app-dist/
 **/.env*
 **/*.key
 **/*.pem

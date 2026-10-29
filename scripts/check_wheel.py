@@ -23,7 +23,7 @@ def main() -> int:
         required = {
             "agentos/web/index.html", "agentos/web/sw.js", "agentos/web/js/main.js",
             "agentos/web/workflow-dist/editor.js", "agentos/web/workflow-dist/editor.css",
-            "agentos/resources/material-report/SKILL.md",
+            "agentos/web/app-dist/index.html", "agentos/resources/material-report/SKILL.md",
         }
         if not required.issubset(names):
             raise SystemExit("Wheel is missing required public resources")
@@ -64,14 +64,18 @@ assert Path(agentos.__file__).resolve().is_relative_to(Path("venv").resolve())
 with TemporaryDirectory() as data:
     system = build_system(Settings(data_dir=Path(data)))
     with TestClient(create_app(system=system)) as client:
-        for route in ("/healthz", "/ui/", "/ui/js/main.js", "/ui/sw.js",
+        for route in ("/healthz", "/ui/", "/ui/legacy/", "/ui/js/main.js", "/ui/sw.js",
                       "/ui/workflow-dist/editor.js", "/ui/workflow-dist/editor.css"):
             response = client.get(route)
             assert response.status_code == 200, route
         response = client.get("/ui/js/main.js")
         assert "javascript" in response.headers["content-type"]
+        workspace = client.get("/ui/").text
+        assert '<div id="root">' in workspace and "/ui/assets/" in workspace
+        script = workspace.split('src="', 1)[1].split('"', 1)[0]
+        assert client.get(script).status_code == 200
     assert (Path(agentos.__file__).parent / "resources/material-report/SKILL.md").is_file()
-print("Isolated installed wheel: UI, editor, health and builtin Skill passed (synthetic)")
+print("Isolated installed wheel: workspace, legacy UI, editor, health and builtin Skill passed (synthetic)")
 '''
         result = subprocess.run([str(python), "-c", probe], cwd=work, env=environment,
                                 capture_output=True, text=True)

@@ -46,11 +46,24 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _public_kind(row: dict[str, Any]) -> str:
+    """来源类别（如 studio_render / tool-output）供界面分组；只取登记时写入的类别标签。"""
+    try:
+        meta = json.loads(row.get("meta_json") or "{}")
+    except (TypeError, ValueError):
+        return ""
+    if not isinstance(meta, dict):
+        return ""
+    kind = meta.get("kind") or meta.get("origin") or ""
+    return kind if isinstance(kind, str) and len(kind) <= 40 else ""
+
+
 def to_public(row: dict[str, Any]) -> dict[str, Any]:
     """客户端投影：剥离内部存储路径等字段。"""
     return {
         "id": row.get("id"),
         "name": row.get("name") or row.get("id"),
+        "kind": _public_kind(row),
         "mime": row.get("mime"),
         "size": row.get("size"),
         "sha256": row.get("sha256"),
