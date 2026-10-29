@@ -3,7 +3,7 @@
 > 版本：4.22
 > 更新日期：2026-10-29
 > 文档性质：当前交接
-> 适用范围：STUDIO-V2 新工作台、直连对话与制作工作室（分支 `feat/studio-core`）
+> 适用范围：STUDIO-V2 新工作台、直连对话与制作工作室（已合并到 `main`）
 
 ## 任务与变更
 
@@ -20,11 +20,11 @@
 
 ## 验证
 
-- 门禁：`uv run ruff check .`、`uv run mypy src/agentos`、`uv run lint-imports`、`uv run pytest`、`scripts/export_contracts.py --check`、`scripts/check_dependencies.py`、`scripts/check_documents.py`；前端 `npm run build`（含 `tsc --noEmit`）。结果见本次提交说明。
+- 门禁：`uv run ruff check .`、`uv run mypy src/agentos`、`uv run lint-imports`、`uv run pytest`、`scripts/export_contracts.py --check`、`scripts/check_dependencies.py`、`scripts/check_documents.py`；前端 `npm run build`（含 `tsc --noEmit`）。均通过；pytest 798 项中 792 通过、6 跳过。Gitleaks（`scripts/check_privacy.py`）需在部署方机器上运行，本轮未运行。
 - 工作室合成证据：假节点 + 脚本化导演覆盖审批、预授权、选片来源、核对重放、取消重试、一键串联与导出；规划参数按核心节点工具 schema 校验。容器内用两个开发替身跑通“梗概→剧本→分镜→定妆→画面→动态→导出”，并截图检查工作室、队列与设备页（桌面与手机宽度）。均为合成数据，不代表真实模型质量。
 
 ## 未完成与下一动作
 
 - 真实模型验证由部署方在自己的仓库与受保护目录完成：节点各 recipe 参数与耗时、配音参考音、口型、真实推理速度。
-- `docs/04-开发计划.md` 与 `docs/README.md` 有使用者尚未提交的修改，本轮未改 docs/04；待其提交后补 STUDIO-V2 工作单行。
+- 状态已记入 [开发计划](04-开发计划.md) 的 STUDIO-V2；成熟化方案 MATURITY-01（[成熟化升级方案](11-成熟化升级方案.md)）仍待使用者确认。
 - 物理手机检查后置；能力中心、工作流编辑器与演示访问仍在旧界面。
