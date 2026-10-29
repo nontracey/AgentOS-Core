@@ -33,6 +33,12 @@ class ChatEndpoint:
     use_proxy: bool = False
     timeout_s: float = 900.0
     enabled: bool = True
+    # Optional allowlist: only these model names are listed and called (e.g. the local routes of
+    # a gateway that also has cloud routes). Empty means every model the server reports.
+    models: list[str] = field(default_factory=list)
+
+    def offers(self, name: str) -> bool:
+        return not self.models or name in self.models
 
     @classmethod
     def from_dict(cls, raw: dict[str, Any]) -> ChatEndpoint:
@@ -48,6 +54,9 @@ class ChatEndpoint:
         egress = str(raw.get("egress") or ("local" if kind == "ollama" else "cloud"))
         if egress not in ("local", "cloud"):
             raise ValueError(f"chat endpoint egress must be local or cloud: {egress}")
+        models = raw.get("models") or []
+        if not isinstance(models, list) or not all(isinstance(m, str) and m.strip() for m in models):
+            raise ValueError("chat endpoint models must be a list of model names")
         return cls(
             id=endpoint_id, base_url=base_url, kind=kind,  # type: ignore[arg-type]
             label=str(raw.get("label") or endpoint_id), api_key=str(raw.get("api_key") or ""),
@@ -56,6 +65,7 @@ class ChatEndpoint:
             use_proxy=bool(raw.get("use_proxy", False)),
             timeout_s=float(raw.get("timeout_s", 900.0)),
             enabled=bool(raw.get("enabled", True)),
+            models=[m.strip() for m in models],
         )
 
     def public(self) -> dict[str, Any]:
@@ -122,7 +132,10 @@ def _ollama_root(base_url: str) -> str:
 
 
 async def list_models(endpoint: ChatEndpoint, *, timeout: float = 4.0) -> list[ModelInfo]:
-    """Discover models with their capabilities; raises EndpointError when unreachable."""
+    """Discover models with their capabilities; raises EndpointError when unreachable.
+
+    Only models the endpoint offers (its allowlist) are returned.
+    """
     try:
         async with _client(endpoint, timeout) as client:
             if endpoint.kind == "ollama":
@@ -132,7 +145,8 @@ async def list_models(endpoint: ChatEndpoint, *, timeout: float = 4.0) -> list[M
                 raise EndpointError(f"模型列表请求失败（HTTP {response.status_code}）", status=response.status_code)
             data = response.json().get("data") or []
             return [ModelInfo(endpoint=endpoint.id, name=str(item.get("id")), capabilities=["completion"])
-                    for item in data if isinstance(item, dict) and item.get("id")]
+                    for item in data if isinstance(item, dict) and item.get("id")
+                    and endpoint.offers(str(item.get("id")))]
     except httpx.HTTPError as exc:
         raise EndpointError(f"无法连接 {endpoint.label or endpoint.id}", retryable=True) from exc
 
@@ -153,7 +167,7 @@ async def _ollama_models(endpoint: ChatEndpoint, client: httpx.AsyncClient) -> l
     models: list[ModelInfo] = []
     for item in tags.json().get("models") or []:
         name = str(item.get("name") or item.get("model") or "")
-        if not name:
+        if not name or not endpoint.offers(name):
             continue
         details = item.get("details") or {}
         models.append(ModelInfo(

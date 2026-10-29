@@ -20,6 +20,11 @@ export interface EndpointInfo {
   gpu_shared: boolean;
   online: boolean;
   error: string;
+  egress: "local" | "cloud";
+  /** The egress policy refuses this endpoint for the purpose that was asked about. */
+  blocked: boolean;
+  /** Purposes a cloud endpoint is limited to under local egress; null when not limited. */
+  open_for: string[] | null;
 }
 
 export interface GpuSnapshot {
@@ -186,7 +191,7 @@ export interface Project {
   shots: Shot[];
   music: MusicCue[];
   subtitle: { enabled: boolean; size: number; position: number; speaker: boolean };
-  engines: { image: string; video: string; voice: string; lipsync: string };
+  engines: { image: string; video: string; voice: string; lipsync: string; director: string };
   smooth_motion: boolean;
   revision: number;
   updated_at: string;

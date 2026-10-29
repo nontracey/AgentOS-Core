@@ -1,8 +1,9 @@
 import { Clapperboard, PenLine, Wand2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { cn, duration } from "@/lib/format";
+import { cn, duration, modelLabel } from "@/lib/format";
 import { Button, Field, ProgressBar, Spinner } from "@/components/ui";
+import { CloudBadge, useModels } from "@/features/chat/ModelPicker";
 import type { ProjectApi } from "./data";
 import { ScriptEditor, ScriptHighlight } from "./ScriptEditor";
 
@@ -98,6 +99,7 @@ export function ScriptTab({ projectApi }: { projectApi: ProjectApi }) {
             >
               {hasScript ? "按要求改写" : "写剧本"}
             </Button>
+            <DirectorModelNote value={project.engines.director} />
           </div>
           <div className="border-t border-line pt-5">
             <div className="text-[14px] font-medium">拆分镜</div>
@@ -136,6 +138,20 @@ export function ScriptTab({ projectApi }: { projectApi: ProjectApi }) {
           </div>
         </div>
       </aside>
+    </div>
+  );
+}
+
+/** Which model the director will use, so a cloud choice is visible before writing. */
+function DirectorModelNote({ value }: { value: string }) {
+  const models = useModels("studio.director");
+  const ref = value || models.data?.default || "";
+  if (!ref) return null;
+  const endpoint = models.data?.endpoints.find((e) => e.id === ref.split("/", 1)[0]);
+  return (
+    <div className="flex items-center gap-1.5 text-[12px] text-ink-3">
+      <span className="truncate">导演模型：{modelLabel(ref)}</span>
+      {endpoint?.egress === "cloud" && <CloudBadge />}
     </div>
   );
 }

@@ -62,11 +62,12 @@ class StudioNodes:
     async def director(self, inputs: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
         actor, job_id = self._job(context)
         pid, task = str(inputs.get("project_id") or ""), str(inputs.get("task") or "")
-        model = str(inputs.get("model") or "")
         service = self.service
         try:
             doc, _revision, _stamp = service.load(actor, pid)
             project = doc.project
+            # The project's director model is read when the step runs, so one-click production uses it too.
+            model = str(inputs.get("model") or project.engines.director or "")
 
             async def complete_json(messages: list[dict[str, Any]], schema: dict[str, Any]) -> dict[str, Any]:
                 result: dict[str, Any] = await service.chat.complete_json(

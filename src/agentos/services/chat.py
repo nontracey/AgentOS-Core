@@ -4,8 +4,12 @@ A generation runs as a background task. Browsers subscribe to it; closing the pa
 not stop the answer, and reopening the conversation re-attaches to the live stream.
 
 Governance: every endpoint declares where prompts go (``egress`` local or cloud) and the
-deployment's ``model_egress`` decides whether cloud endpoints may be used at all. Each
-generation is audited with endpoint, model, token counts and outcome, never with content.
+deployment's ``model_egress`` decides whether cloud endpoints may be used at all. Under local
+egress a deployment may still open cloud endpoints for named purposes (``cloud_purposes``,
+for example only the studio director); every other purpose stays local. Cloud models are only
+used when someone chose them (a model reference or the deployment default), never picked
+implicitly. Each generation is audited with purpose, endpoint, egress, model, token counts and
+outcome, never with content.
 """
 from __future__ import annotations
 
@@ -72,6 +76,9 @@ BUILTIN_PRESETS: list[dict[str, Any]] = [
 
 DEFAULT_PARAMS: dict[str, Any] = {"temperature": 0.7, "top_p": 0.9, "num_ctx": 8192, "think": "auto",
                                   "keep_alive": "10m"}
+# Display names of model purposes; unknown purposes are shown as they are.
+PURPOSE_LABELS = {"chat": "对话", "studio.director": "工作室导演"}
+CLOUD_CLOSED = "出口策略只允许本地模型，这个云端端点已停用"
 TEXT_ATTACHMENT_LIMIT = 200_000
 
 
@@ -113,7 +120,8 @@ class LiveGeneration:
 class ChatService:
     def __init__(self, store: ChatStore, endpoints: list[ChatEndpoint], *, lease: AcceleratorLease,
                  egress_policy: str = "local", audit: AuditHook | None = None, default_model: str = "",
-                 read_asset: Callable[[AuthContext, str], tuple[dict[str, Any], bytes]] | None = None) -> None:
+                 read_asset: Callable[[AuthContext, str], tuple[dict[str, Any], bytes]] | None = None,
+                 cloud_purposes: list[str] | None = None) -> None:
         self.store = store
         self.endpoints = [e for e in endpoints if e.enabled]
         self.lease = lease
@@ -121,9 +129,11 @@ class ChatService:
         self.audit = audit
         self.default_model = default_model
         self.read_asset = read_asset
-        # Endpoints the deployment's egress boundary does not allow; listed, never called.
-        self.blocked = {e.id: "出口策略只允许本地模型，这个云端端点已停用" for e in self.endpoints
-                        if e.egress == "cloud" and egress_policy != "cloud"}
+        # Purposes that may use cloud endpoints although the deployment's egress is local.
+        self.cloud_purposes = sorted(set(cloud_purposes or [])) if egress_policy != "cloud" else []
+        # Endpoints the egress boundary closes for every purpose; listed, never called.
+        self.blocked = {e.id: CLOUD_CLOSED for e in self.endpoints
+                        if e.egress == "cloud" and egress_policy != "cloud" and not self.cloud_purposes}
         self.live: dict[str, LiveGeneration] = {}
         self._models: tuple[float, list[ModelInfo], dict[str, str]] | None = None
         self._models_lock = asyncio.Lock()
@@ -134,13 +144,32 @@ class ChatService:
         return any(ticket["kind"] != "chat" for ticket in self.lease.waiting)
 
     # ------------------------------------------------------------ discovery
-    def endpoint(self, endpoint_id: str) -> ChatEndpoint:
+    def refusal(self, endpoint: ChatEndpoint, purpose: str) -> str:
+        """Why prompts for ``purpose`` may not go to ``endpoint``; empty when they may."""
+        if endpoint.id in self.blocked:
+            return self.blocked[endpoint.id]
+        if endpoint.egress != "cloud" or self.egress_policy == "cloud" or purpose in self.cloud_purposes:
+            return ""
+        names = "、".join(PURPOSE_LABELS.get(p, p) for p in self.cloud_purposes)
+        return f"出口策略只允许本地模型；云端端点只用于{names}"
+
+    def open_for(self, endpoint: ChatEndpoint) -> list[str] | None:
+        """Purposes a cloud endpoint is limited to under local egress; None when not limited."""
+        if endpoint.egress == "cloud" and self.egress_policy != "cloud" and endpoint.id not in self.blocked:
+            return list(self.cloud_purposes)
+        return None
+
+    def endpoint(self, endpoint_id: str, purpose: str = "chat") -> ChatEndpoint:
         for endpoint in self.endpoints:
             if endpoint.id == endpoint_id:
-                if endpoint.id in self.blocked:
-                    raise AgentOSError(ErrorCode.DENIED, self.blocked[endpoint.id])
+                reason = self.refusal(endpoint, purpose)
+                if reason:
+                    raise AgentOSError(ErrorCode.DENIED, reason)
                 return endpoint
         raise AgentOSError(ErrorCode.INVALID, f"未配置的模型端点：{endpoint_id}")
+
+    def _find(self, endpoint_id: str) -> ChatEndpoint | None:
+        return next((e for e in self.endpoints if e.id == endpoint_id), None)
 
     async def models(self, *, refresh: bool = False) -> tuple[list[ModelInfo], dict[str, str]]:
         """All models from reachable, allowed endpoints plus a per-endpoint error map (cached 20 s)."""
@@ -159,6 +188,12 @@ class ChatService:
             self._models = (time.monotonic(), models, errors)
             return models, errors
 
+    async def models_for(self, purpose: str, *, refresh: bool = False) -> tuple[list[ModelInfo], dict[str, str]]:
+        """Models usable for ``purpose`` plus why the other endpoints are not (offline or refused)."""
+        models, errors = await self.models(refresh=refresh)
+        refused = {e.id: reason for e in self.endpoints if (reason := self.refusal(e, purpose))}
+        return [m for m in models if m.endpoint not in refused], {**errors, **refused}
+
     def _audit(self, actor: AuthContext | None, endpoint: ChatEndpoint, model: str, *, purpose: str,
                status: str, stats: dict[str, Any] | None = None) -> None:
         if self.audit is None or actor is None:
@@ -175,25 +210,42 @@ class ChatService:
         caps = set(model.capabilities)
         return "completion" in caps or "embedding" not in caps
 
-    async def resolve_model(self, ref: str = "") -> tuple[ChatEndpoint, str, ModelInfo | None]:
-        """Pick endpoint/model from a reference, the configured default, or the first chat model."""
+    async def resolve_model(self, ref: str = "", purpose: str = "chat") -> tuple[ChatEndpoint, str, ModelInfo | None]:
+        """Pick endpoint/model for ``purpose``: an explicit reference, the deployment default, or a local model.
+
+        An explicit reference the egress policy refuses for this purpose is an error. A refused
+        deployment default is skipped, and the implicit pick only considers local endpoints
+        (any endpoint when the whole deployment allows cloud egress).
+        """
         models, errors = await self.models()
-        wanted = ref or self.default_model
-        if wanted and "/" in wanted:
+        for wanted, explicit in ((ref, True), (self.default_model, False)):
+            if not wanted or "/" not in wanted:
+                continue
             endpoint_id, name = wanted.split("/", 1)
-            endpoint = self.endpoint(endpoint_id)
+            found = self._find(endpoint_id)
+            if found is None:
+                raise AgentOSError(ErrorCode.INVALID, f"未配置的模型端点：{endpoint_id}")
+            reason = self.refusal(found, purpose)
+            if reason:
+                if explicit:
+                    raise AgentOSError(ErrorCode.DENIED, reason)
+                continue
+            if not found.offers(name):
+                raise AgentOSError(ErrorCode.DENIED, f"{found.label or found.id} 不提供模型 {name}")
             info = next((m for m in models if m.endpoint == endpoint_id and m.name == name), None)
             if info is None and endpoint_id in errors:
                 raise AgentOSError(ErrorCode.UNAVAILABLE, errors[endpoint_id])
-            return endpoint, name, info
-        candidates = [m for m in models if self.chat_capable(m)]
+            return found, name, info
+        local = {e.id for e in self.endpoints
+                 if not self.refusal(e, purpose) and (e.egress == "local" or self.egress_policy == "cloud")}
+        candidates = [m for m in models if self.chat_capable(m) and m.endpoint in local]
         if not candidates:
             if errors:
                 raise AgentOSError(ErrorCode.UNAVAILABLE, "没有可用的模型端点：" + "；".join(errors.values()))
             raise AgentOSError(ErrorCode.UNAVAILABLE, "还没有配置可用的本地模型")
         loaded = [m for m in candidates if m.loaded]
         chosen = (loaded or candidates)[0]
-        return self.endpoint(chosen.endpoint), chosen.name, chosen
+        return self.endpoint(chosen.endpoint, purpose), chosen.name, chosen
 
     async def status(self) -> dict[str, Any]:
         models, errors = await self.models()
@@ -201,7 +253,7 @@ class ChatService:
         for endpoint in self.endpoints:
             own = [m for m in models if m.endpoint == endpoint.id]
             endpoints.append({**endpoint.public(), "online": endpoint.id not in errors,
-                              "blocked": endpoint.id in self.blocked,
+                              "blocked": endpoint.id in self.blocked, "open_for": self.open_for(endpoint),
                               "error": errors.get(endpoint.id, ""), "model_count": len(own),
                               "loaded": [m.public() for m in own if m.loaded]})
         return {"endpoints": endpoints, "gpu": self.lease.snapshot(),
@@ -365,7 +417,7 @@ class ChatService:
             self.store.update_conversation(actor.tenant_id, actor.subject, cid,
                                            title=title_from(content or "附件对话"))
         model_ref = str(body.get("model") or conversation.get("model") or "")
-        endpoint, model, info = await self.resolve_model(model_ref)
+        endpoint, model, info = await self.resolve_model(model_ref, "chat")
         if body.get("model") and body["model"] != conversation.get("model"):
             self.store.update_conversation(actor.tenant_id, actor.subject, cid, model=body["model"])
         assistant = self.store.add_message(cid, "assistant", model=f"{endpoint.id}/{model}", status="pending")
@@ -503,7 +555,7 @@ class ChatService:
                             purpose: str, model_ref: str = "", temperature: float = 0.4, num_ctx: int = 16384,
                             label: str = "制作助手") -> dict[str, Any]:
         """Structured output for other modules (one repair attempt); audited under ``purpose``."""
-        endpoint, model, info = await self.resolve_model(model_ref)
+        endpoint, model, info = await self.resolve_model(model_ref, purpose)
         if info and info.context_length:
             num_ctx = min(num_ctx, info.context_length)
         options = {"temperature": temperature, "num_ctx": num_ctx if endpoint.kind == "ollama" else None}
@@ -530,7 +582,7 @@ class ChatService:
                           model_ref: str = "", temperature: float = 0.85, num_ctx: int = 16384,
                           label: str = "制作助手") -> AsyncIterator[str]:
         """Stream answer text (thinking dropped); audited under ``purpose``."""
-        endpoint, model, info = await self.resolve_model(model_ref)
+        endpoint, model, info = await self.resolve_model(model_ref, purpose)
         if info and info.context_length:
             num_ctx = min(num_ctx, info.context_length)
         options = {"temperature": temperature, "num_ctx": num_ctx if endpoint.kind == "ollama" else None}
@@ -552,7 +604,7 @@ class ChatService:
     async def complete_text(self, actor: AuthContext, messages: list[dict[str, Any]], *, purpose: str,
                             model_ref: str = "", temperature: float = 0.8, num_ctx: int = 16384,
                             label: str = "制作助手") -> str:
-        endpoint, model, info = await self.resolve_model(model_ref)
+        endpoint, model, info = await self.resolve_model(model_ref, purpose)
         if info and info.context_length:
             num_ctx = min(num_ctx, info.context_length)
         options = {"temperature": temperature, "num_ctx": num_ctx if endpoint.kind == "ollama" else None}

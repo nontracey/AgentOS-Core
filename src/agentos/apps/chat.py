@@ -66,19 +66,22 @@ def mount(app: FastAPI, service: ChatService, actor_for: Callable[[str | None], 
 
     @app.get("/v1/chat/models")
     async def chat_models(refresh: int = Query(default=0, ge=0, le=1),
+                          purpose: str = Query(default="chat", pattern=r"^[a-z][a-z0-9_.-]{0,63}$"),
                           authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        """Models usable for ``purpose``; endpoints the egress policy refuses carry the reason."""
         await actor_for(authorization)
-        models, errors = await service.models(refresh=bool(refresh))
+        models, errors = await service.models_for(purpose, refresh=bool(refresh))
         default = ""
         try:
-            endpoint, name, _info = await service.resolve_model("")
+            endpoint, name, _info = await service.resolve_model("", purpose)
             default = f"{endpoint.id}/{name}"
         except AgentOSError:
             pass
         return {"models": [m.public() for m in models if service.chat_capable(m)],
                 "endpoints": [{**e.public(), "online": e.id not in errors, "error": errors.get(e.id, ""),
-                               "blocked": e.id in service.blocked} for e in service.endpoints],
-                "default": default}
+                               "blocked": bool(service.refusal(e, purpose)), "open_for": service.open_for(e)}
+                              for e in service.endpoints],
+                "default": default, "purpose": purpose}
 
     @app.get("/v1/chat/presets")
     async def presets(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:

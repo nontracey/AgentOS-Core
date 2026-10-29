@@ -1,7 +1,9 @@
 """Development stand-in for an Ollama server (UI work without a GPU).
 
 uv run python scripts/dev_mock_ollama.py --port 11500
-Point a chat endpoint at it (AGENTOS_CHAT_ENDPOINTS or [chat] in agentos.toml). Pair
+Point a chat endpoint at it (AGENTOS_CHAT_ENDPOINTS or [chat] in agentos.toml); it also answers
+the OpenAI-compatible /v1/models and /v1/chat/completions, so a second endpoint of kind "openai"
+can stand in for a gateway or a cloud service (declare its egress). Pair
 scripts/dev_mock_node.py as the generation node to try the studio end to end.
 Answers are canned synthetic content; structured requests (cast/storyboard JSON) return valid data.
 """
@@ -140,7 +142,8 @@ async def tags() -> dict[str, Any]:
 
 @app.get("/api/ps")
 async def ps() -> dict[str, Any]:
-    return {"models": [{"name": n, "model": n, "size_vram": int(MODELS[n]["bytes"] * 0.42)} for n in sorted(loaded)]}
+    return {"models": [{"name": n, "model": n, "size_vram": int(MODELS[n]["bytes"] * 0.42)}
+                       for n in sorted(loaded) if n in MODELS]}
 
 
 @app.post("/api/show")
@@ -211,6 +214,41 @@ async def chat(request: Request) -> Any:
     if body.get("think") and "thinking" not in MODELS[body["model"]]["caps"]:
         return JSONResponse({"error": f"\"{body['model']}\" does not support thinking"}, status_code=400)
     return StreamingResponse(stream(body), media_type="application/x-ndjson")
+
+
+# OpenAI-compatible surface, so the same process can stand in for a model gateway or a cloud
+# endpoint (declare it with kind "openai" and the egress you want to try).
+GATEWAY_MODELS = ["demo-gateway-chat", "demo-cloud-writer"]
+
+
+@app.get("/v1/models")
+async def openai_models() -> dict[str, Any]:
+    return {"object": "list", "data": [{"id": name, "object": "model"} for name in GATEWAY_MODELS]}
+
+
+@app.post("/v1/chat/completions")
+async def openai_chat(request: Request) -> Any:
+    body = await request.json()
+    if body.get("model") not in GATEWAY_MODELS:
+        return JSONResponse({"error": {"message": f"model {body.get('model')} not found"}}, status_code=404)
+    schema = ((body.get("response_format") or {}).get("json_schema") or {}).get("schema")
+    native = {"model": body["model"], "messages": body.get("messages") or [], "format": schema}
+
+    async def events() -> AsyncIterator[bytes]:
+        async for line in stream(native):
+            chunk = json.loads(line)
+            text = (chunk.get("message") or {}).get("content") or ""
+            if text:
+                yield ("data: " + json.dumps({"choices": [{"delta": {"content": text}}]}, ensure_ascii=False)
+                       + "\n\n").encode()
+            if chunk.get("done"):
+                usage = {"prompt_tokens": chunk.get("prompt_eval_count", 0),
+                         "completion_tokens": chunk.get("eval_count", 0)}
+                yield ("data: " + json.dumps({"choices": [{"delta": {}, "finish_reason": "stop"}],
+                                              "usage": usage}) + "\n\n").encode()
+        yield b"data: [DONE]\n\n"
+
+    return StreamingResponse(events(), media_type="text/event-stream")
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { cn, duration, relativeTime } from "@/lib/format";
 import { ACTIVE_JOB_STATES, type Job } from "@/lib/types";
 import { Button, Dialog, Field, IconButton, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, ProgressBar, Select, Spinner, Switch } from "@/components/ui";
+import { ModelPicker } from "@/features/chat/ModelPicker";
 import { CastTab } from "./CastTab";
 import { useOverview, useProject, type ProjectApi } from "./data";
 import { FilmTab } from "./FilmTab";
@@ -163,8 +164,18 @@ function SettingsDialog({ projectApi, open, onOpenChange }: { projectApi: Projec
   const setEngine = (kind: "image" | "video" | "voice" | "lipsync", value: string) =>
     projectApi.edit((p) => ({ ...p, engines: { ...p.engines, [kind]: value } }));
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="项目设置" description="生成引擎和画风对之后的新生成生效，已有结果不变。" width={600}>
+    <Dialog open={open} onOpenChange={onOpenChange} title="项目设置" description="模型、生成引擎和画风对之后的新任务生效，已有结果不变。" width={600}>
       <div className="flex flex-col gap-5 pb-3">
+        <Field label="导演模型" hint="写剧本、拆分镜和改写提示词用的模型，一键制作也用它。选云端模型时只发送故事文字，画面和素材不外发。">
+          <div className="flex h-10 items-center rounded-[10px] border border-line-strong px-1">
+            <ModelPicker
+              value={project.engines.director || ""}
+              purpose="studio.director"
+              defaultLabel="跟随默认模型"
+              onChange={(ref) => projectApi.edit((p) => ({ ...p, engines: { ...p.engines, director: ref } }))}
+            />
+          </div>
+        </Field>
         <Field label="出图引擎">
           <Select value={project.engines.image} onChange={(v) => setEngine("image", v)} options={options("image")} />
         </Field>
@@ -343,7 +354,7 @@ export default function ProjectPage() {
                 导出 1080p 成片
               </MenuItem>
               <MenuItem icon={<Settings2 />} onSelect={() => setSettings(true)}>
-                引擎与画风
+                项目设置
               </MenuItem>
               <MenuSeparator />
               <MenuItem

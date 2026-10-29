@@ -1046,7 +1046,7 @@ def create_app(
     async def knowledge_delete_source(
         source_id: str, authorization: str | None = Header(default=None)
     ) -> dict[str, Any]:
-        actor = await _write_actor(authorization, "knowledge.delete")
+        actor = await _admin_actor(authorization, "knowledge.delete")
         try:
             await handle.knowledge.delete(actor, source_id)
         except AgentOSError as exc:
@@ -1207,6 +1207,28 @@ def create_app(
         actor = await _write_actor(authorization, "policy.grant")
         return handle.grants.revoke(actor, grant_id)  # type: ignore[no-any-return]
 
+    @app.get("/v1/agent-tokens")
+    async def list_agent_tokens(authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        """Tokens the owner issued to external agents; never includes token material."""
+        actor = await _admin_actor(authorization, "auth.agent_token")
+        return handle.agent_tokens.overview(actor)  # type: ignore[no-any-return]
+
+    @app.post("/v1/agent-tokens", status_code=201)
+    async def issue_agent_token(body: dict[str, Any], authorization: str | None = Header(default=None)
+                                ) -> dict[str, Any]:
+        """Issue a scoped, expiring token for one external agent; the plaintext is returned once."""
+        actor = await _admin_actor(authorization, "auth.agent_token")
+        scopes = body.get("scopes", ["read", "write"])
+        days = body.get("days", 30)
+        return handle.agent_tokens.issue(  # type: ignore[no-any-return]
+            actor, str(body.get("label") or ""), [str(s) for s in scopes] if isinstance(scopes, list) else ["?"],
+            days if type(days) is int else -1)
+
+    @app.post("/v1/agent-tokens/{token_id}/revoke")
+    async def revoke_agent_token(token_id: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+        actor = await _admin_actor(authorization, "auth.agent_token")
+        return handle.agent_tokens.revoke(actor, token_id)  # type: ignore[no-any-return]
+
     @app.get("/v1/approvals")
     async def list_approvals(authorization: str | None = Header(default=None)) -> list[dict[str, Any]]:
         creds = _credentials(authorization)
@@ -1339,7 +1361,7 @@ def create_app(
 
     @app.post("/v1/nodes/pair")
     async def pair_node(body: dict[str, Any], authorization: str | None = Header(default=None)) -> dict[str, Any]:
-        actor = await _write_actor(authorization, "node.pair")
+        actor = await _admin_actor(authorization, "node.pair")
         try:
             return handle.nodes.pair(
                 actor,
@@ -1373,7 +1395,7 @@ def create_app(
 
     @app.post("/v1/nodes/{node_id}/revoke")
     async def revoke_node(node_id: str, authorization: str | None = Header(default=None)) -> dict[str, Any]:
-        actor = await _write_actor(authorization, "node.revoke")
+        actor = await _admin_actor(authorization, "node.revoke")
         try:
             return handle.nodes.revoke(actor, node_id)
         except AgentOSError as exc:

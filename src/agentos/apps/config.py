@@ -6,6 +6,7 @@ profile: personal —— 默认单机、SQLite、content_telemetry=false（FR-OB
 from __future__ import annotations
 
 import os
+import re
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -77,6 +78,9 @@ class Settings:
     # 每个端点声明 egress（local/cloud），model_egress=local 时云端端点只列出不调用。
     chat_endpoints: list[dict[str, Any]] = field(default_factory=list)
     chat_default_model: str = ""             # "端点ID/模型名"；空=自动选择已加载或第一个对话模型
+    # model_egress=local 时的例外：云端对话端点只用于这些用途（如 "studio.director"）；
+    # 空=云端端点全部停用。只影响直连对话服务，智能体任务的模型网关不受影响。
+    chat_cloud_purposes: list[str] = field(default_factory=list)
     # 与对话模型共用一张显卡的生成节点 ID；为空时不做显卡互斥（见 services/accelerator.py）
     accelerator_nodes: list[str] = field(default_factory=list)
     studio_enabled: bool = False             # 制作工作室（AIGC 一键模式）；需要工作流引擎与已配对的生成节点
@@ -108,6 +112,9 @@ class Settings:
             raise AgentOSError(ErrorCode.INVALID, "public_demo_ttl_hours must be 1..720")
         if not 1 <= self.public_demo_max_sessions <= 5000:
             raise AgentOSError(ErrorCode.INVALID, "public_demo_max_sessions must be 1..5000")
+        for purpose in self.chat_cloud_purposes:
+            if not re.fullmatch(r"[a-z][a-z0-9_.-]{0,63}", purpose):
+                raise AgentOSError(ErrorCode.INVALID, f"invalid chat cloud purpose: {purpose!r}")
         if self.knowledge_backend not in {"disabled", "builtin", "weknora"}:
             raise AgentOSError(
                 ErrorCode.INVALID, f"unknown knowledge backend: {self.knowledge_backend}")
@@ -149,6 +156,8 @@ class Settings:
                 settings.chat_endpoints = [dict(e) for e in chat["endpoints"] if isinstance(e, dict)]
             if chat.get("default_model"):
                 settings.chat_default_model = str(chat["default_model"])
+            if isinstance(chat.get("cloud_purposes"), list):
+                settings.chat_cloud_purposes = [str(p) for p in chat["cloud_purposes"]]
             if isinstance(chat.get("accelerator_nodes"), list):
                 settings.accelerator_nodes = [str(n) for n in chat["accelerator_nodes"]]
             studio = data.get("studio", {})
@@ -162,6 +171,8 @@ class Settings:
 
             settings.chat_endpoints = [dict(e) for e in _json.loads(raw_endpoints) if isinstance(e, dict)]
         settings.chat_default_model = os.environ.get("AGENTOS_CHAT_DEFAULT_MODEL", settings.chat_default_model)
+        if (raw_purposes := os.environ.get("AGENTOS_CHAT_CLOUD_PURPOSES")) is not None:
+            settings.chat_cloud_purposes = [p.strip() for p in raw_purposes.split(",") if p.strip()]
         if (raw_nodes := os.environ.get("AGENTOS_ACCELERATOR_NODES")) is not None:
             settings.accelerator_nodes = [n.strip() for n in raw_nodes.split(",") if n.strip()]
         if (raw_studio := os.environ.get("AGENTOS_STUDIO_ENABLED")) is not None:

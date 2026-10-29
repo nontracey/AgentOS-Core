@@ -5,6 +5,7 @@ import { api, clearSession } from "@/lib/api";
 import { Button, ErrorNote, Field, Segmented } from "@/components/ui";
 import { useTheme, type ThemeChoice } from "@/hooks/useTheme";
 import { ModelPicker } from "@/features/chat/ModelPicker";
+import { AgentTokens } from "./AgentTokens";
 
 function Row({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
@@ -78,6 +79,7 @@ export default function SettingsPage() {
               }}
             />
           </Row>
+          <AgentTokens />
           <Row title="更多管理功能" hint="能力中心（MCP、Skills、知识库）、工作流编辑器和演示访问仍在旧版界面里。">
             <a href="/ui/legacy/" className="inline-flex h-9 items-center gap-2 rounded-[8px] border border-line-strong px-3.5 text-[14px] hover:bg-surface-2">
               打开旧版界面

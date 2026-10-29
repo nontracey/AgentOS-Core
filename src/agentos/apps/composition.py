@@ -70,6 +70,7 @@ class SystemHandle:
     chat: Any = None  # 直连对话（ChatService）
     studio: Any = None  # 制作工作室（StudioService）
     grants: Any = None  # owner 预授权（GrantService，FR-GOV-02）
+    agent_tokens: Any = None  # 外部 Agent 令牌（AgentTokenService）
 
     def boot(self) -> str:
         """初始化数据目录与 owner 身份；返回 owner 令牌（仅首次生成时为新值）。
@@ -365,6 +366,7 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         lease=accelerator, egress_policy=settings.model_egress, audit=audit_model,
         default_model=settings.chat_default_model,
         read_asset=lambda actor, asset_id: (assets_service.get(actor, asset_id), assets_service.read(actor, asset_id)),
+        cloud_purposes=settings.chat_cloud_purposes,
     )
 
     async def free_shared_card() -> None:
@@ -374,6 +376,10 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
     from agentos.services.grants import GrantService
 
     grants = GrantService(store, audit_service, catalog)
+    from agentos.services.agent_tokens import AgentTokenService
+
+    agent_tokens = AgentTokenService(identity_backend, audit_service,
+                                     mcp_url=settings.runtime_gateway_url.rstrip("/") + "/mcp/")
     studio = None
     if settings.studio_enabled:
         from agentos.services.studio.media import MediaSigner
@@ -392,6 +398,7 @@ def build_system(settings: Settings, *, model_script: list[dict[str, object]] | 
         chat=chat,
         studio=studio,
         grants=grants,
+        agent_tokens=agent_tokens,
         settings=settings,
         store=store,
         deps=deps,

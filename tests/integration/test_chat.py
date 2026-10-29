@@ -21,6 +21,7 @@ from agentos.adapters.model import chat_endpoints
 from agentos.adapters.model.chat_endpoints import ChatEndpoint, _InlineThinkSplitter
 from agentos.apps.composition import SystemHandle
 from agentos.apps.gateway import create_app
+from agentos.kernel.errors import AgentOSError, ErrorCode
 from agentos.services.chat import estimate_tokens, parse_json_object, title_from
 from tests.conftest import owner_token
 
@@ -117,7 +118,7 @@ ENDPOINTS = [{"id": "lab", "label": "GPU 服务器", "kind": "ollama", "base_url
 def chat_client(make_system: Callable[..., SystemHandle], **settings: Any
                 ) -> Iterator[tuple[TestClient, SystemHandle, dict[str, str]]]:
     handle = make_system(chat_endpoints=settings.pop("endpoints", ENDPOINTS),
-                         chat_default_model="lab/reasoner:30b", **settings)
+                         chat_default_model=settings.pop("chat_default_model", "lab/reasoner:30b"), **settings)
     with TestClient(create_app(system=handle)) as c:
         yield c, handle, {"Authorization": f"Bearer {owner_token(handle)}"}
 
@@ -309,6 +310,78 @@ def test_cloud_endpoint_stays_listed_but_unused_under_local_egress(
         refused = c.post(f"/v1/chat/conversations/{cid}/messages", headers=headers, json={"content": "hi"})
         assert refused.status_code in (401, 403) and "出口策略" in refused.text
         assert not any(r["path"] == "/v1/chat/completions" for r in fake.requests)
+
+
+CLOUD = [*ENDPOINTS[:1], {"id": "remote", "label": "云端服务", "kind": "openai",
+                          "base_url": "https://api.example.invalid/v1", "api_key": "secret-key"}]
+
+
+def test_cloud_purpose_opens_cloud_endpoint_for_that_purpose_only(
+        make_system: Callable[..., SystemHandle], fake: FakeModelServer) -> None:
+    with chat_client(make_system, endpoints=CLOUD, chat_cloud_purposes=["studio.director"]) as (c, handle, headers):
+        chat = c.get("/v1/chat/models", headers=headers).json()
+        remote = next(e for e in chat["endpoints"] if e["id"] == "remote")
+        assert remote["blocked"] and remote["open_for"] == ["studio.director"] and "工作室导演" in remote["error"]
+        assert not any(m["endpoint"] == "remote" for m in chat["models"])
+        director = c.get("/v1/chat/models?purpose=studio.director", headers=headers).json()
+        remote = next(e for e in director["endpoints"] if e["id"] == "remote")
+        assert not remote["blocked"] and remote["online"]
+        assert "remote/gateway-model" in {m["ref"] for m in director["models"]}
+        assert director["default"] == "lab/reasoner:30b"   # cloud is never the implicit choice
+
+        cid = c.post("/v1/chat/conversations", headers=headers, json={"model": "remote/gateway-model"}).json()["id"]
+        refused = c.post(f"/v1/chat/conversations/{cid}/messages", headers=headers, json={"content": "hi"})
+        assert refused.status_code in (401, 403) and "工作室导演" in refused.text
+        assert not any(r["path"] == "/v1/chat/completions" for r in fake.requests)
+
+        portal = c.portal
+        assert portal is not None
+
+        async def direct() -> str:
+            actor = await handle.deps.identity.authenticate({"token": headers["Authorization"][7:]})
+            return await handle.chat.complete_text(actor, [{"role": "user", "content": "剧本梗概"}],
+                                                   purpose="studio.director", model_ref="remote/gateway-model")
+
+        assert portal.call(direct) == "网关回答"
+        rows = handle.store._conn.execute(  # type: ignore[attr-defined]
+            "SELECT detail_json FROM audit_log WHERE kind='model.chat'").fetchall()
+        detail = json.loads(rows[-1]["detail_json"])
+        assert detail["purpose"] == "studio.director" and detail["egress"] == "cloud" and detail["endpoint"] == "remote"
+        assert "剧本梗概" not in rows[-1]["detail_json"]
+
+
+def test_cloud_only_deployment_never_picks_cloud_implicitly(
+        make_system: Callable[..., SystemHandle], fake: FakeModelServer) -> None:
+    with chat_client(make_system, endpoints=CLOUD[1:], chat_cloud_purposes=["studio.director"],
+                     chat_default_model="") as (c, handle, headers):
+        director = c.get("/v1/chat/models?purpose=studio.director", headers=headers).json()
+        assert director["default"] == "" and director["models"]
+        portal = c.portal
+        assert portal is not None
+
+        async def implicit() -> str:
+            actor = await handle.deps.identity.authenticate({"token": headers["Authorization"][7:]})
+            return await handle.chat.complete_text(actor, [{"role": "user", "content": "x"}],
+                                                   purpose="studio.director")
+
+        with pytest.raises(AgentOSError) as caught:
+            portal.call(implicit)
+        assert caught.value.code == ErrorCode.UNAVAILABLE
+        assert not any(r["path"] == "/v1/chat/completions" for r in fake.requests)
+
+
+def test_endpoint_model_allowlist_limits_listing_and_calls(
+        make_system: Callable[..., SystemHandle], fake: FakeModelServer) -> None:
+    gateway = [ENDPOINTS[0], {**ENDPOINTS[1], "models": ["local-route"]}]
+    with chat_client(make_system, endpoints=gateway) as (c, _handle, headers):
+        body = c.get("/v1/chat/models", headers=headers).json()
+        assert not any(m["endpoint"] == "gw" for m in body["models"])
+        cid = c.post("/v1/chat/conversations", headers=headers, json={"model": "gw/gateway-model"}).json()["id"]
+        refused = c.post(f"/v1/chat/conversations/{cid}/messages", headers=headers, json={"content": "hi"})
+        assert refused.status_code in (401, 403) and "不提供模型" in refused.text
+        assert not any(r["path"] == "/v1/chat/completions" for r in fake.requests)
+    with pytest.raises(ValueError):
+        ChatEndpoint.from_dict({**ENDPOINTS[1], "models": "local-route"})
 
 
 def test_generations_are_audited_without_content(make_system: Callable[..., SystemHandle],

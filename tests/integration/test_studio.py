@@ -166,12 +166,24 @@ class FakeNode:
             "assets": [{"asset_ref": ref, "sha256": sha, "mime": mime, "role": "output"}]}})
 
 
-def script_director(handle: SystemHandle, monkeypatch: pytest.MonkeyPatch) -> list[str]:
-    purposes: list[str] = []
+class DirectorCalls(list[str]):
+    """Audited purposes of scripted director calls, plus the model each call asked for."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.models: list[str] = []
+
+    def record(self, kw: dict[str, Any]) -> None:
+        self.append(kw["purpose"])
+        self.models.append(str(kw.get("model_ref") or ""))
+
+
+def script_director(handle: SystemHandle, monkeypatch: pytest.MonkeyPatch) -> DirectorCalls:
+    purposes = DirectorCalls()
 
     async def complete_json(actor: AuthContext, messages: list[dict[str, Any]], schema: dict[str, Any],
                             **kw: Any) -> dict[str, Any]:
-        purposes.append(kw["purpose"])
+        purposes.record(kw)
         properties = schema.get("properties", {})
         if "characters" in properties:
             return json.loads(json.dumps(CAST))
@@ -181,7 +193,7 @@ def script_director(handle: SystemHandle, monkeypatch: pytest.MonkeyPatch) -> li
         return {"image_prompt": "refined still", "motion_prompt": "refined motion"}
 
     async def stream_text(actor: AuthContext, messages: list[dict[str, Any]], **kw: Any) -> AsyncIterator[str]:
-        purposes.append(kw["purpose"])
+        purposes.record(kw)
         for line in SCRIPT.splitlines(keepends=True):
             await asyncio.sleep(0)
             yield line
@@ -193,7 +205,7 @@ def script_director(handle: SystemHandle, monkeypatch: pytest.MonkeyPatch) -> li
 
 @pytest.fixture
 def studio(make_system: Callable[..., SystemHandle], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-           ) -> tuple[SystemHandle, FakeNode, list[str]]:
+           ) -> tuple[SystemHandle, FakeNode, DirectorCalls]:
     node = FakeNode(tmp_path / "node")
     monkeypatch.setattr(httpx, "get", node.get)
     monkeypatch.setattr(httpx, "post", node.post)
@@ -350,15 +362,19 @@ def test_project_to_film_with_approvals_grants_and_provenance(studio: tuple[Syst
         assert "policy.grant_issued" in audit and "tool.called" in audit and "workflow.started" in audit
 
 
-def test_one_click_production_chains_stage_runs(studio: tuple[SystemHandle, FakeNode, list[str]]) -> None:
+def test_one_click_production_chains_stage_runs(studio: tuple[SystemHandle, FakeNode, DirectorCalls]) -> None:
     handle, node, purposes = studio
     with TestClient(create_app(system=handle)) as c:
         token = owner_token(handle)
         pair(c, token)
         assert c.post("/v1/studio/permissions", headers=auth(token), json={"hours": 1}).status_code == 201
-        pid = c.post("/v1/studio/projects", headers=auth(token),
-                     json={"title": "灯塔与猫", "premise": "风夜里，守灯人和孙女等一条迟归的渔船。"}).json()[
-            "project"]["id"]
+        created = c.post("/v1/studio/projects", headers=auth(token),
+                         json={"title": "灯塔与猫", "premise": "风夜里，守灯人和孙女等一条迟归的渔船。"}).json()
+        pid, project = created["project"]["id"], created["project"]
+        assert project["engines"]["director"] == ""
+        project["engines"]["director"] = "writer/story-model"   # the project's director model
+        assert c.put(f"/v1/studio/projects/{pid}", headers=auth(token),
+                     json={"revision": project["revision"], "project": project}).status_code == 200
         started = c.post(f"/v1/studio/projects/{pid}/autopilot", headers=auth(token), json={})
         assert started.status_code == 202, started.text
         assert started.json()["jobs"][0]["kind"] == "director:script"
@@ -372,6 +388,7 @@ def test_one_click_production_chains_stage_runs(studio: tuple[SystemHandle, Fake
         notes = [n for j in view["jobs"] if j["kind"].startswith("stage:") for n in j["result"].get("skipped", [])]
         assert any("没有参考音" in n for n in notes)
         assert purposes.count("studio.director") == 4
+        assert purposes.models == ["writer/story-model"] * 4   # one-click steps use the project's model
         frame_call = next(e for e in node.executions if e["tool_name"] == "aigc.image"
                           and len(e["args"].get("reference_asset_ids", [])) >= 1)
         assert frame_call["args"]["recipe"] == "klein-image"   # frames use the picked references

@@ -1,6 +1,6 @@
 import * as Popover from "@radix-ui/react-popover";
 import { useQuery } from "@tanstack/react-query";
-import { Brain, Check, ChevronDown, Eye, RefreshCw, Search, Wrench, WifiOff } from "lucide-react";
+import { Brain, Check, ChevronDown, Cloud, Eye, Lock, RefreshCw, Search, Wrench, WifiOff } from "lucide-react";
 import { useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { bytes, cn, modelLabel } from "@/lib/format";
@@ -10,15 +10,26 @@ export interface ModelsPayload {
   models: ModelInfo[];
   endpoints: EndpointInfo[];
   default: string;
+  purpose: string;
 }
 
-export function useModels() {
+/** Models usable for one purpose ("chat", "studio.director"); the server applies the egress policy. */
+export function useModels(purpose = "chat") {
   return useQuery({
-    queryKey: ["chat", "models"],
-    queryFn: () => api<ModelsPayload>("/v1/chat/models"),
+    queryKey: ["chat", "models", purpose],
+    queryFn: () => api<ModelsPayload>(`/v1/chat/models?purpose=${encodeURIComponent(purpose)}`),
     staleTime: 20_000,
     refetchInterval: 30_000,
   });
+}
+
+export function CloudBadge() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-blue-soft px-1.5 py-px text-[11px] font-medium text-blue">
+      <Cloud className="size-3" />
+      云端
+    </span>
+  );
 }
 
 export function capabilityBadges(model: ModelInfo) {
@@ -32,12 +43,28 @@ export function capabilityBadges(model: ModelInfo) {
   );
 }
 
-export function ModelPicker({ value, onChange, align = "start" }: { value: string; onChange: (ref: string) => void; align?: "start" | "end" }) {
-  const models = useModels();
+export function ModelPicker({
+  value,
+  onChange,
+  align = "start",
+  purpose = "chat",
+  defaultLabel,
+}: {
+  value: string;
+  onChange: (ref: string) => void;
+  align?: "start" | "end";
+  purpose?: string;
+  /** Offer an empty choice that follows the deployment default, shown with this label. */
+  defaultLabel?: string;
+}) {
+  const models = useModels(purpose);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const current = value || models.data?.default || "";
+  const current = value || (defaultLabel ? "" : models.data?.default || "");
   const selected = models.data?.models.find((m) => m.ref === current);
+  const cloudIds = new Set((models.data?.endpoints || []).filter((e) => e.egress === "cloud").map((e) => e.id));
+  const selectedCloud = Boolean(current) && cloudIds.has(current.split("/", 1)[0]);
+  const fallback = models.data?.default ? `${defaultLabel}（${modelLabel(models.data.default)}）` : defaultLabel;
   const groups = useMemo(() => {
     const data = models.data;
     if (!data) return [];
@@ -55,7 +82,8 @@ export function ModelPicker({ value, onChange, align = "start" }: { value: strin
       <Popover.Trigger asChild>
         <button className="inline-flex h-8 max-w-[260px] items-center gap-2 rounded-[9px] px-2.5 text-[13.5px] font-medium hover:bg-surface-3">
           <span className={cn("size-2 shrink-0 rounded-full", selected?.loaded ? "bg-green" : "bg-line-strong")} />
-          <span className="truncate">{modelLabel(current) || (models.isLoading ? "读取模型…" : "选择模型")}</span>
+          <span className="truncate">{modelLabel(current) || (current ? "" : fallback) || (models.isLoading ? "读取模型…" : "选择模型")}</span>
+          {selectedCloud && <CloudBadge />}
           <ChevronDown className="size-3.5 shrink-0 text-ink-3" />
         </button>
       </Popover.Trigger>
@@ -78,16 +106,37 @@ export function ModelPicker({ value, onChange, align = "start" }: { value: strin
             </button>
           </div>
           <div className="max-h-[min(60vh,440px)] overflow-y-auto p-1.5">
+            {defaultLabel && (
+              <button
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className={cn("flex w-full items-center gap-3 rounded-[9px] px-2.5 py-2 text-left hover:bg-surface-3", !current && "bg-accent-soft hover:bg-accent-soft")}
+              >
+                <span className="size-2 shrink-0 rounded-full bg-line" />
+                <span className="min-w-0 flex-1 truncate text-[13.5px] font-medium">{fallback}</span>
+                {!current && <Check className="size-4 text-accent-ink" />}
+              </button>
+            )}
             {groups.map(({ endpoint, models: list }) => (
               <div key={endpoint.id} className="mb-1">
-                <div className="flex items-center justify-between px-2 pt-2 pb-1 text-[12px] text-ink-3">
-                  <span className="font-medium text-ink-2">{endpoint.label}</span>
-                  <span>{endpoint.online ? endpoint.host : "离线"}</span>
+                <div className="flex items-center justify-between gap-2 px-2 pt-2 pb-1 text-[12px] text-ink-3">
+                  <span className="flex items-center gap-1.5 font-medium text-ink-2">
+                    {endpoint.label}
+                    {endpoint.egress === "cloud" && <CloudBadge />}
+                  </span>
+                  <span>{endpoint.online ? endpoint.host : endpoint.blocked ? "未开放" : "离线"}</span>
                 </div>
                 {!endpoint.online && (
                   <div className="mx-2 mb-1 flex items-start gap-2 rounded-[8px] bg-surface-2 px-2.5 py-2 text-[12px] leading-relaxed text-ink-3">
-                    <WifiOff className="mt-0.5 size-3.5 shrink-0" />
+                    {endpoint.blocked ? <Lock className="mt-0.5 size-3.5 shrink-0" /> : <WifiOff className="mt-0.5 size-3.5 shrink-0" />}
                     {endpoint.error || "无法连接"}
+                  </div>
+                )}
+                {endpoint.online && endpoint.egress === "cloud" && (
+                  <div className="mx-2 mb-1 rounded-[8px] bg-blue-soft px-2.5 py-2 text-[12px] leading-relaxed text-ink-2">
+                    选这里的模型时，文字内容会发给第三方服务。
                   </div>
                 )}
                 {list.map((model) => (

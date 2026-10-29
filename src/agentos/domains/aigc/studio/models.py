@@ -142,6 +142,9 @@ class EnginePrefs(Doc):
     video: str = DEFAULT_ENGINES["video"]
     voice: str = DEFAULT_ENGINES["voice"]
     lipsync: str = DEFAULT_ENGINES["lipsync"]
+    # Model for script, breakdown and prompt rewriting ("endpoint/model"); empty = deployment default.
+    # Whether a cloud model may be used is decided by the chat service's egress policy, not here.
+    director: str = Field(default="", max_length=200)
 
 
 class Project(Doc):

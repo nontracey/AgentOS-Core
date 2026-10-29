@@ -25,6 +25,13 @@ from agentos.kernel.errors import AgentOSError, ErrorCode
 from agentos.kernel.types import AuthContext, utc_now
 
 OWNER_SCOPES = ["read", "write", "approve", "exec", "egress"]
+AGENT_PREFIX = "agent:"
+#: Scopes an external agent token may carry; approving is never delegated to an agent.
+AGENT_SCOPES = ("read", "write", "exec", "egress")
+
+
+def token_digest(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 _PBKDF2_ITERATIONS = 200_000
 _ACCESS_TOKEN_TTL_S = 30 * 60  # 双 token：access 短时；refresh 轮换由会话服务承担
 
@@ -210,6 +217,54 @@ class LocalTokenIdentity:
         }
         self._write_json(data)
 
+    # ------------------------------------------- 外部 Agent 主体（独立 subject，令牌只存哈希）
+    def register_agent_subject(
+        self, subject: str, *, token_sha256: str, scopes: list[str], expires_at: str, label: str,
+        created_by: str, tenant_id: str = "default",
+    ) -> None:
+        """Register an external agent as its own subject (member role, never admin or approve).
+
+        Only the token's SHA-256 is stored; the plaintext is shown to the owner once.
+        """
+        if not subject.startswith(AGENT_PREFIX) or not set(scopes) <= set(AGENT_SCOPES) or "read" not in scopes:
+            raise AgentOSError(ErrorCode.INVALID, "invalid agent subject")
+        data = self._load_json()
+        subjects = data.setdefault("subjects", {})
+        if subject in subjects:
+            raise AgentOSError(ErrorCode.CONFLICT, "agent subject exists")
+        subjects[subject] = {
+            "token": "", "token_sha256": token_sha256, "scopes": list(scopes), "tenant_id": tenant_id,
+            "role": "agent", "expires_at": expires_at,
+            "agent": {"label": label, "scopes": list(scopes), "created_at": utc_now().isoformat(),
+                      "created_by": created_by},
+        }
+        self._write_json(data)
+
+    def agent_subjects(self, tenant_id: str) -> list[dict[str, Any]]:
+        """Agent subjects of a tenant without any credential material, newest first."""
+        rows = []
+        for subject, entry in self._load_json().get("subjects", {}).items():
+            if not subject.startswith(AGENT_PREFIX) or entry.get("tenant_id") != tenant_id:
+                continue
+            meta = entry.get("agent") or {}
+            rows.append({"subject": subject, "label": str(meta.get("label") or ""),
+                         "scopes": list(meta.get("scopes") or []), "created_at": str(meta.get("created_at") or ""),
+                         "created_by": str(meta.get("created_by") or ""),
+                         "expires_at": str(entry.get("expires_at") or ""), "revoked": bool(entry.get("revoked"))})
+        return sorted(rows, key=lambda r: r["created_at"], reverse=True)
+
+    def remove_agent_subjects(self, subjects: list[str]) -> None:
+        """Drop revoked or expired agent subjects from the identity file (keeps it bounded)."""
+        data = self._load_json()
+        known = data.get("subjects", {})
+        changed = False
+        for subject in subjects:
+            if subject.startswith(AGENT_PREFIX) and subject in known:
+                del known[subject]
+                changed = True
+        if changed:
+            self._write_json(data)
+
     def revoke_subject(self, subject: str) -> None:
         """撤销主体（撤权即时生效）：后续签发/刷新一律 DENIED。"""
         if subject == "owner":
@@ -265,10 +320,15 @@ class LocalTokenIdentity:
         access = self.verify_access_token(token)
         if access is not None:
             return access
+        digest = token_digest(token)
         for subject, entry in self._load().items():
             stored = str(entry.get("token") or "")
             # 游客主体没有静态令牌：空串永不命中，防止用空令牌冒充游客
             if stored and secrets.compare_digest(token, stored):
+                return self._issue(subject, entry)
+            # 外部 Agent 只存令牌哈希；撤销/过期由 _issue 拒绝
+            hashed = str(entry.get("token_sha256") or "")
+            if hashed and secrets.compare_digest(digest, hashed):
                 return self._issue(subject, entry)
         raise AgentOSError(ErrorCode.DENIED, "credentials rejected")
 
